@@ -6,6 +6,7 @@ import { cn } from "@/utils/utils";
 interface SessionGridProps {
   children: React.ReactNode;
   isEmpty?: boolean;
+  count?: number;
 }
 
 export function SessionGrid({ children, isEmpty }: SessionGridProps) {

@@ -117,7 +117,7 @@ export default function DashboardPage() {
               isEmpty={!sessions || sessions.length === 0} 
               count={sessions?.length || 0}
             >
-              {sessions?.map((session: any) => (
+              {sessions?.map((session: FishingSession) => (
                 <SessionCard key={session.id} session={session} />
               ))}
             </SessionGrid>

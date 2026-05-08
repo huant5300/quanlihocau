@@ -12,9 +12,10 @@ export interface FishingSession {
   hut_number: string;
   customer_name: string;
   phone_number: string;
-  start_time: string;
+  start_time?: string;
   end_time: string;
   total_amount: number;
+  product_count?: number;
   products?: SessionProduct[];
   status: SessionStatus;
 }

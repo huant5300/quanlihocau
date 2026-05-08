@@ -1,94 +1,71 @@
 "use client";
 
 import React from "react";
-import { Plus, Minus, Package, AlertTriangle } from "lucide-react";
-import { motion } from "framer-motion";
+import { Plus, ShoppingCart, Tag } from "lucide-react";
 import { cn } from "@/utils/utils";
-import { Skeleton } from "@/components/skeletons/skeleton";
-
-export interface Product {
-  id: string;
-  name: string;
-  price: number;
-  stock: number;
-  category: string;
-  image_url?: string;
-}
+import { Product } from "../types/product.types";
+import { InventoryStatusBadge } from "./inventory-status-badge";
+import { motion } from "framer-motion";
 
 interface ProductCardProps {
   product: Product;
-  onAdd?: (product: Product) => void;
-  onRemove?: (product: Product) => void;
-  quantity?: number;
+  onQuickAdd?: (product: Product) => void;
 }
 
-export function ProductCard({ product, onAdd, onRemove, quantity = 0 }: ProductCardProps) {
-  const isOutOfStock = product.stock <= 0;
-  const isLowStock = product.stock > 0 && product.stock <= 5;
-
+export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
   return (
     <motion.div
+      layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className={cn(
-        "bg-card rounded-[2rem] border-2 transition-all duration-300 overflow-hidden flex flex-col group relative",
-        quantity > 0 ? "border-primary/40 shadow-lg shadow-primary/5" : "border-border/50 hover:border-primary/20"
-      )}
+      className="glass-card group flex flex-col overflow-hidden rounded-[2rem] transition-all hover:scale-[1.02]"
     >
-      {/* Stock Badge */}
-      <div className="absolute top-4 left-4 z-10">
-        {isOutOfStock ? (
-          <span className="bg-destructive text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase">Hết hàng</span>
-        ) : isLowStock ? (
-          <span className="bg-orange-500 text-white text-[10px] font-black px-2.5 py-1 rounded-full uppercase flex items-center gap-1">
-            <AlertTriangle size={10} /> Chỉ còn {product.stock}
-          </span>
-        ) : null}
-      </div>
-
-      {/* Image / Thumbnail */}
-      <div className="aspect-square bg-muted/30 relative flex items-center justify-center overflow-hidden">
-        {product.image_url ? (
+      {/* Product Image / Placeholder */}
+      <div className="relative aspect-square w-full bg-muted overflow-hidden">
+        {product.thumbnail ? (
           <img 
-            src={product.image_url} 
+            src={product.thumbnail} 
             alt={product.name} 
-            className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
           />
         ) : (
-          <Package size={48} className="text-muted-foreground/20" />
-        )}
-        
-        {/* Quantity Overlay */}
-        {quantity > 0 && (
-          <div className="absolute inset-0 bg-primary/10 backdrop-blur-[2px] flex items-center justify-center">
-            <div className="w-12 h-12 bg-primary text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-xl">
-              {quantity}
-            </div>
+          <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
+            <Tag size={64} strokeWidth={1} />
           </div>
         )}
+        
+        {/* Category Badge */}
+        <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10">
+          {product.category}
+        </div>
       </div>
 
-      {/* Info */}
-      <div className="p-5 space-y-1">
-        <h3 className="font-bold text-sm line-clamp-1">{product.name}</h3>
-        <p className="text-primary font-black text-lg">{product.price.toLocaleString()}đ</p>
-      </div>
+      {/* Product Info */}
+      <div className="p-5 flex flex-col flex-1">
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className="font-black text-sm tracking-tight line-clamp-2 leading-tight">
+            {product.name}
+          </h3>
+          <InventoryStatusBadge stock={product.stock} />
+        </div>
 
-      {/* Actions */}
-      <div className="p-3 pt-0 mt-auto grid grid-cols-2 gap-2">
+        <p className="text-xl font-black text-primary tracking-tighter mb-4">
+          {product.price.toLocaleString()}đ
+        </p>
+
+        {/* Action Button */}
         <button
-          onClick={() => onRemove?.(product)}
-          disabled={quantity <= 0}
-          className="h-12 bg-accent/50 rounded-xl flex items-center justify-center hover:bg-accent active:scale-90 transition-all disabled:opacity-30"
+          onClick={() => onQuickAdd?.(product)}
+          disabled={product.stock === 0}
+          className={cn(
+            "mt-auto h-12 w-full rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95",
+            product.stock === 0 
+              ? "bg-muted text-muted-foreground cursor-not-allowed" 
+              : "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
+          )}
         >
-          <Minus size={20} />
-        </button>
-        <button
-          onClick={() => onAdd?.(product)}
-          disabled={isOutOfStock}
-          className="h-12 bg-primary text-white rounded-xl flex items-center justify-center hover:shadow-lg hover:shadow-primary/20 active:scale-90 transition-all disabled:opacity-50"
-        >
-          <Plus size={20} />
+          <Plus size={16} strokeWidth={3} />
+          Thêm nhanh
         </button>
       </div>
     </motion.div>

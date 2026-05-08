@@ -1,57 +1,61 @@
 "use client";
 
-import React, { useState } from "react";
-import { MainLayout } from "@/components/layouts/main-layout";
-import { ProductGrid } from "@/modules/products/components/product-grid";
-import { AddProductDrawer } from "@/modules/products/components/add-product-drawer";
+import React from "react";
+import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
+import { ProductList } from "@/modules/products/components/product-list";
 import { Plus, Package } from "lucide-react";
-import { Product } from "@/modules/products/components/product-card";
-
-const MOCK_PRODUCTS: Product[] = [
-  { id: "1", name: "Cám cá tra D1", price: 45000, stock: 20, category: "Mồi câu" },
-  { id: "2", name: "Mồi xả tổng hợp", price: 65000, stock: 5, category: "Mồi câu" },
-  { id: "3", name: "Nước suối Aquafina", price: 10000, stock: 48, category: "Đồ uống" },
-  { id: "4", name: "Bò húc", price: 20000, stock: 0, category: "Đồ uống" },
-  { id: "5", name: "Mì ly Modern", price: 15000, stock: 12, category: "Thức ăn" },
-  { id: "6", name: "Lưỡi câu BKK", price: 85000, stock: 15, category: "Dụng cụ" },
-  { id: "7", name: "Dây cước Shimano", price: 120000, stock: 3, category: "Dụng cụ" },
-];
 
 export default function ProductsPage() {
-  const [isAddDrawerOpen, setIsAddDrawerOpen] = useState(false);
-
   return (
-    <MainLayout>
+    <DashboardLayout
+      header={
+        <DashboardHeader 
+          title="Sản phẩm & Kho" 
+          subtitle="Quản lý hàng hóa, dịch vụ và tồn kho tại hồ câu."
+          actions={
+            <button className="h-14 px-6 bg-primary text-white rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
+              <Plus size={20} strokeWidth={3} />
+              <span>Thêm hàng mới</span>
+            </button>
+          }
+        />
+      }
+    >
       <div className="space-y-10">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-3 text-primary">
-              <Package size={28} />
-              <h1 className="text-3xl font-black tracking-tight">Kho Sản phẩm</h1>
+        {/* Quick Inventory Summary */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="glass-card p-6 rounded-[2rem] flex items-center gap-4">
+            <div className="w-12 h-12 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center">
+              <Package size={24} />
             </div>
-            <p className="text-muted-foreground">Quản lý hàng hóa, tồn kho và danh mục sản phẩm.</p>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tổng mặt hàng</p>
+              <h4 className="text-xl font-black">124</h4>
+            </div>
           </div>
-
-          <button 
-            onClick={() => setIsAddDrawerOpen(true)}
-            className="h-14 bg-primary text-white px-8 rounded-2xl font-black flex items-center justify-center gap-2 shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
-          >
-            <Plus size={24} /> Thêm Sản phẩm
-          </button>
+          <div className="glass-card p-6 rounded-[2rem] flex items-center gap-4 border-orange-500/20">
+            <div className="w-12 h-12 bg-orange-500/10 text-orange-500 rounded-xl flex items-center justify-center">
+              <Package size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Sắp hết hàng</p>
+              <h4 className="text-xl font-black text-orange-500">12</h4>
+            </div>
+          </div>
+          <div className="glass-card p-6 rounded-[2rem] flex items-center gap-4 border-destructive/20">
+            <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-xl flex items-center justify-center">
+              <Package size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Đã hết hàng</p>
+              <h4 className="text-xl font-black text-destructive">5</h4>
+            </div>
+          </div>
         </div>
 
-        {/* Product Grid Container */}
-        <section className="bg-muted/10 p-6 md:p-10 rounded-[3rem] border-2 border-border/50">
-          <ProductGrid products={MOCK_PRODUCTS} />
-        </section>
+        {/* Product List Section */}
+        <ProductList />
       </div>
-
-      {/* Drawer */}
-      <AddProductDrawer 
-        isOpen={isAddDrawerOpen} 
-        onClose={() => setIsAddDrawerOpen(false)} 
-      />
-    </MainLayout>
+    </DashboardLayout>
   );
 }

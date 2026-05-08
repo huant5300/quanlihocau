@@ -14,26 +14,12 @@ import {
 import { useTheme } from "next-themes";
 import { useAuthStore } from "@/stores/auth-store";
 import { useUIStore } from "@/stores/ui-store";
-import { cn } from "@/utils/utils";
+import { SyncStatusIndicator } from "@/modules/offline/components/sync-status-indicator";
 
 export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { user } = useAuthStore();
-  const { tenantName, isOffline, setIsOffline } = useUIStore();
-
-  useEffect(() => {
-    setIsOffline(!navigator.onLine);
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, [setIsOffline]);
+  const { tenantName } = useUIStore();
 
   return (
     <header className="sticky top-0 z-30 w-full p-4 lg:p-6 pointer-events-none">
@@ -62,14 +48,8 @@ export function Topbar() {
 
         {/* Right Side: Actions */}
         <div className="flex items-center gap-2 lg:gap-4">
-          {/* Connection Status */}
-          <div className={cn(
-            "hidden md:flex items-center gap-2 px-3 py-2 rounded-xl border font-black text-[9px] uppercase tracking-widest transition-colors",
-            isOffline ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-500" : "border-green-500/20 bg-green-500/10 text-green-500"
-          )}>
-            {isOffline ? <WifiOff size={14} /> : <Wifi size={14} />}
-            <span>{isOffline ? "Offline" : "Online"}</span>
-          </div>
+          {/* Connection Status & Sync */}
+          <SyncStatusIndicator />
 
           {/* Theme Toggle */}
           <button 

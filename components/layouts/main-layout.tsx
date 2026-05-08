@@ -10,6 +10,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { OpenSessionModal } from "@/modules/sessions/components/open-session";
 import { PaymentModal } from "@/modules/payments/components/payment-modal";
 import { PrinterManager } from "@/components/shared/printer-manager";
+import { OfflineBanner } from "@/modules/offline/components/offline-banner";
+import { useNetworkStatus } from "@/hooks/use-network-status";
+import { OfflineQueueManager } from "@/modules/offline/components/offline-queue-manager";
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -25,8 +28,13 @@ export function MainLayout({ children }: MainLayoutProps) {
     setPaymentModalOpen
   } = useUIStore();
 
+  const [isQueueOpen, setIsQueueOpen] = React.useState(false);
+  useNetworkStatus();
+
   return (
     <div className="min-h-screen bg-background text-foreground flex overflow-hidden">
+      <OfflineBanner />
+      <OfflineQueueManager isOpen={isQueueOpen} onClose={() => setIsQueueOpen(false)} />
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar />

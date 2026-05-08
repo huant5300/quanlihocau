@@ -4,15 +4,15 @@ import React from "react";
 import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
 import { QuickActions } from "@/modules/dashboard/components/quick-actions";
 import { StatsCards } from "@/modules/dashboard/components/stats-cards";
-import { SessionGrid } from "@/modules/dashboard/components/session-grid";
+import { SessionGrid } from "@/modules/sessions/components/session-grid";
+import { SessionCard } from "@/modules/sessions/components/session-card";
+import { SessionGridSkeleton } from "@/modules/sessions/skeletons/session-skeleton";
+import { FishingSession } from "@/modules/sessions/types/session.types";
 import { useDashboardData } from "@/modules/dashboard/hooks/use-dashboard-data";
-import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 import { AlertCircle, X, Sparkles, Plus } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useUIStore } from "@/stores/ui-store";
-
-import { FishingSession } from "@/types/sessions";
-import { SessionCard } from "@/modules/dashboard/components/session-card";
+import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 
 const MOCK_SESSIONS: FishingSession[] = [
   {

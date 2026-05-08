@@ -1,10 +1,10 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/lib/supabase/client";
 import { useAuthStore } from "@/stores/auth-store";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { UserRole } from "@/types/auth";
+import { UserRole } from "@/types/auth/auth.types";
 
 export function useAuth() {
   const supabase = createClient();

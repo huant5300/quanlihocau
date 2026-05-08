@@ -1,8 +1,13 @@
 import { createClient } from "@/lib/supabase/client";
 import { useUIStore } from "@/stores/ui-store";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export class RealtimeService {
-  private supabase = createClient();
+  private _supabase: SupabaseClient | null = null;
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) this._supabase = createClient() as unknown as SupabaseClient;
+    return this._supabase;
+  }
 
   subscribeToSessions(callback: (payload: any) => void) {
     const channel = this.supabase
@@ -11,7 +16,6 @@ export class RealtimeService {
         "postgres_changes",
         { event: "*", schema: "public", table: "sessions" },
         (payload) => {
-          console.log("Realtime session update:", payload);
           callback(payload);
         }
       )

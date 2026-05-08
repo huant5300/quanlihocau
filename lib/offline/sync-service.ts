@@ -4,7 +4,11 @@ import { toast } from "sonner";
 
 export class SyncService {
   private static isSyncing = false;
-  private static supabase = createClient();
+  private static _supabase: ReturnType<typeof createClient> | null = null;
+  private static get supabase() {
+    if (!this._supabase) this._supabase = createClient();
+    return this._supabase;
+  }
 
   /**
    * Add an action to the offline queue

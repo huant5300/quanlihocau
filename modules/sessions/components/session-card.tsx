@@ -44,7 +44,7 @@ export function SessionCard({ session }: SessionCardProps) {
             </div>
             <div className="flex items-center gap-2 mt-1">
               <Phone size={12} className="text-muted-foreground" />
-              <p className="text-[11px] font-bold text-muted-foreground">{session.phone_number}</p>
+              <p className="text-[11px] font-bold text-muted-foreground">{session.phone}</p>
             </div>
           </div>
         </div>

@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { MainLayout } from "@/components/layouts/main-layout";
 import { 
   Waves, 

@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useAuth } from "@/hooks/use-auth";
-import { UserRole } from "@/types/auth";
+import { UserRole } from "@/types/auth/auth.types";
 import { redirect } from "next/navigation";
 import { Loader2 } from "lucide-react";
 

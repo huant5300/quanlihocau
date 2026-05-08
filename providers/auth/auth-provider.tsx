@@ -2,11 +2,12 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
-import { AppUser, AuthStatus } from "@/types/auth/auth.types";
+import { UserProfile, AuthStatus, mapUserToProfile } from "@/types/auth/auth.types";
 import { useAuthStore } from "@/stores/auth-store";
+import { AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 interface AuthContextType {
-  user: AppUser | null;
+  user: UserProfile | null;
   status: AuthStatus;
 }
 
@@ -16,7 +17,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AppUser | null>(null);
+  const [user, setUser] = useState<UserProfile | null>(null);
   const [status, setStatus] = useState<AuthStatus>("loading");
   const supabase = createClient();
   const { setUser: setStoreUser } = useAuthStore();
@@ -24,13 +25,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     // 1. Get initial session
     const initAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const appUser = session.user as AppUser;
-        setUser(appUser);
-        setStoreUser(appUser);
-        setStatus("authenticated");
-      } else {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const profile = mapUserToProfile(session.user);
+          setUser(profile);
+          setStoreUser(profile);
+          setStatus("authenticated");
+        } else {
+          setStatus("unauthenticated");
+        }
+      } catch (error) {
+        console.error("Init Auth Error:", error);
         setStatus("unauthenticated");
       }
     };
@@ -38,19 +44,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     initAuth();
 
     // 2. Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth Event:", event);
-      if (session?.user) {
-        const appUser = session.user as AppUser;
-        setUser(appUser);
-        setStoreUser(appUser);
-        setStatus("authenticated");
-      } else {
-        setUser(null);
-        setStoreUser(null);
-        setStatus("unauthenticated");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event: AuthChangeEvent, session: Session | null) => {
+        if (session?.user) {
+          const profile = mapUserToProfile(session.user);
+          setUser(profile);
+          setStoreUser(profile);
+          setStatus("authenticated");
+        } else {
+          setUser(null);
+          setStoreUser(null);
+          setStatus("unauthenticated");
+        }
       }
-    });
+    );
 
     return () => {
       subscription.unsubscribe();

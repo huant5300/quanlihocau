@@ -52,8 +52,72 @@ export interface Database {
           price: number
           stock: number
           is_active: boolean
+          thumbnail: string | null
         }
-        // ... more tables
+        Insert: {
+          id?: string
+          name: string
+          category: string
+          price: number
+          stock?: number
+          is_active?: boolean
+          thumbnail?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          category?: string
+          price?: number
+          stock?: number
+          is_active?: boolean
+          thumbnail?: string | null
+        }
+      }
+      customers: {
+        Row: {
+          id: string
+          full_name: string
+          phone: string
+          role: string
+          tenant_id: string
+        }
+        Insert: {
+          id?: string
+          full_name: string
+          phone: string
+          role?: string
+          tenant_id: string
+        }
+        Update: {
+          id?: string
+          full_name?: string
+          phone?: string
+          role?: string
+          tenant_id?: string
+        }
+      }
+      payments: {
+        Row: {
+          id: string
+          session_id: string
+          amount: number
+          method: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          session_id: string
+          amount: number
+          method: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          session_id?: string
+          amount?: number
+          method?: string
+          created_at?: string
+        }
       }
     }
     Views: {

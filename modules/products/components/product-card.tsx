@@ -7,7 +7,6 @@ import { Product } from "../types/product.types";
 import { InventoryStatusBadge } from "./inventory-status-badge";
 import { motion } from "framer-motion";
 
-import { Product } from "../types/product.types";
 
 interface ProductCardProps {
   product: Product;

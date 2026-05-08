@@ -2,9 +2,14 @@
 
 import { createClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export class AuthService {
-  private supabase = createClient();
+  private _supabase: SupabaseClient | null = null;
+  private get supabase(): SupabaseClient {
+    if (!this._supabase) this._supabase = createClient() as unknown as SupabaseClient;
+    return this._supabase;
+  }
 
   async signInWithGoogle() {
     try {
@@ -14,11 +19,10 @@ export class AuthService {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
-
       if (error) throw error;
     } catch (error: any) {
       toast.error("Lỗi đăng nhập", {
-        description: error.message || "Không thể kết nối với Google."
+        description: error.message || "Không thể kết nối với Google.",
       });
     }
   }
@@ -29,9 +33,7 @@ export class AuthService {
       if (error) throw error;
       window.location.href = "/login";
     } catch (error: any) {
-      toast.error("Lỗi đăng xuất", {
-        description: error.message
-      });
+      toast.error("Lỗi đăng xuất", { description: error.message });
     }
   }
 

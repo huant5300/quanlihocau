@@ -1,8 +1,6 @@
 "use client";
 
 import React from "react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { cn } from "@/utils/utils";
 import { 
   LayoutDashboard, 
@@ -17,6 +15,7 @@ import {
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { useUIStore } from "@/stores/ui-store";
+import { NavLink } from "@/components/shared/nav-link";
 
 const sidebarItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -28,7 +27,6 @@ const sidebarItems = [
 ];
 
 export function Sidebar() {
-  const pathname = usePathname();
   const { sidebarCollapsed: isCollapsed, toggleSidebar } = useUIStore();
 
   return (
@@ -50,61 +48,35 @@ export function Sidebar() {
               animate={{ opacity: 1, x: 0 }}
               className="flex flex-col"
             >
-              <span className="font-black text-xl tracking-tight leading-none">FISH POS</span>
+              <span className="font-black text-xl tracking-tight leading-none uppercase">Fish POS</span>
               <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Management</span>
             </motion.div>
           )}
         </div>
 
         {/* Nav Items */}
-        <nav className="flex-1 px-4 space-y-2">
-          {sidebarItems.map((item) => {
-            const isActive = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-4 px-4 py-4 rounded-[1.5rem] transition-all duration-300 group relative overflow-hidden",
-                  isActive 
-                    ? "bg-primary text-white shadow-xl shadow-primary/20" 
-                    : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                )}
-              >
-                <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} className="shrink-0" />
-                {!isCollapsed && (
-                  <span className="font-bold text-sm tracking-wide">{item.label}</span>
-                )}
-                
-                {/* Collapsed Tooltip */}
-                {isCollapsed && (
-                  <div className="absolute left-full ml-6 px-4 py-2 bg-popover text-popover-foreground text-[10px] font-black uppercase tracking-widest rounded-xl opacity-0 group-hover:opacity-100 transition-all translate-x-[-10px] group-hover:translate-x-0 z-50 pointer-events-none shadow-2xl border border-white/10">
-                    {item.label}
-                  </div>
-                )}
-                
-                {isActive && (
-                  <motion.div
-                    layoutId="activeSidebar"
-                    className="absolute inset-0 bg-white/10"
-                    transition={{ type: "spring", duration: 0.6 }}
-                  />
-                )}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-4 space-y-2 no-scrollbar overflow-y-auto">
+          {sidebarItems.map((item) => (
+            <NavLink
+              key={item.href}
+              href={item.href}
+              icon={item.icon}
+              label={item.label}
+              collapsed={isCollapsed}
+            />
+          ))}
         </nav>
 
         {/* Bottom Actions */}
-        <div className="p-4 space-y-2">
-          <button className="flex w-full items-center gap-4 px-4 py-4 rounded-[1.5rem] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all">
+        <div className="p-4 space-y-2 border-t border-white/5">
+          <button className="flex w-full items-center gap-4 px-4 py-4 rounded-[1.5rem] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all min-h-[48px]">
             <LogOut size={22} />
             {!isCollapsed && <span className="font-bold text-sm">Đăng xuất</span>}
           </button>
           
           <button
             onClick={toggleSidebar}
-            className="flex w-full items-center justify-center p-4 rounded-[1.5rem] bg-accent/30 hover:bg-accent transition-all group"
+            className="flex w-full items-center justify-center p-4 rounded-[1.5rem] bg-accent/30 hover:bg-accent transition-all group min-h-[48px]"
           >
             <ChevronLeft 
               size={20} 

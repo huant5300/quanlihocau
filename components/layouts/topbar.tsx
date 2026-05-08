@@ -13,17 +13,18 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useAuthStore } from "@/stores/auth-store";
+import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/utils/utils";
 
 export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { user } = useAuthStore();
-  const [isOnline, setIsOnline] = useState(true);
+  const { tenantName, isOffline, setIsOffline } = useUIStore();
 
   useEffect(() => {
-    setIsOnline(navigator.onLine);
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    setIsOffline(!navigator.onLine);
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -32,64 +33,75 @@ export function Topbar() {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, []);
+  }, [setIsOffline]);
 
   return (
     <header className="sticky top-0 z-30 w-full p-4 lg:p-6 pointer-events-none">
       <div className="bg-card/80 backdrop-blur-xl border border-border/50 h-20 rounded-[2rem] px-6 flex items-center justify-between shadow-xl pointer-events-auto">
-        {/* Search Bar */}
-        <div className="hidden md:flex items-center flex-1 max-w-md relative group">
-          <Search className="absolute left-4 text-muted-foreground group-focus-within:text-primary transition-colors" size={20} />
+        
+        {/* Left Side: Tenant Info */}
+        <div className="flex items-center gap-4">
+          <div className="lg:hidden w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xs">
+            POS
+          </div>
+          <div className="hidden sm:flex flex-col">
+            <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none">Cửa hàng</h2>
+            <p className="text-sm font-black mt-1 tracking-tight">{tenantName}</p>
+          </div>
+        </div>
+
+        {/* Center: Search (POS Style) */}
+        <div className="hidden md:flex items-center flex-1 max-w-sm mx-8 relative group">
+          <Search className="absolute left-4 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
           <input 
             type="text" 
-            placeholder="Tìm kiếm nhanh... (Ctrl + K)"
-            className="w-full h-12 pl-12 pr-4 bg-background/50 rounded-2xl border-2 border-transparent focus:border-primary/20 focus:bg-background outline-none transition-all font-medium text-sm"
+            placeholder="Tìm kiếm nhanh..."
+            className="w-full h-11 pl-11 pr-4 bg-background/50 rounded-2xl border-2 border-transparent focus:border-primary/20 focus:bg-background outline-none transition-all font-bold text-xs"
           />
         </div>
 
-        {/* Mobile Brand Placeholder */}
-        <div className="lg:hidden flex items-center gap-2">
-          <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white">
-            <span className="font-black text-xs uppercase">POS</span>
-          </div>
-        </div>
-
-        {/* Right Side Actions */}
+        {/* Right Side: Actions */}
         <div className="flex items-center gap-2 lg:gap-4">
-          {/* Status Badge */}
+          {/* Connection Status */}
           <div className={cn(
-            "hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl border font-bold text-[10px] uppercase tracking-widest transition-colors",
-            isOnline ? "border-green-500/20 bg-green-500/10 text-green-500" : "border-yellow-500/20 bg-yellow-500/10 text-yellow-500"
+            "hidden md:flex items-center gap-2 px-3 py-2 rounded-xl border font-black text-[9px] uppercase tracking-widest transition-colors",
+            isOffline ? "border-yellow-500/20 bg-yellow-500/10 text-yellow-500" : "border-green-500/20 bg-green-500/10 text-green-500"
           )}>
-            {isOnline ? <Wifi size={14} /> : <WifiOff size={14} />}
-            <span>{isOnline ? "Online" : "Offline"}</span>
+            {isOffline ? <WifiOff size={14} /> : <Wifi size={14} />}
+            <span>{isOffline ? "Offline" : "Online"}</span>
           </div>
 
-          <button className="p-3 rounded-xl hover:bg-accent transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full border-2 border-background" />
-          </button>
-
+          {/* Theme Toggle */}
           <button 
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="p-3 rounded-xl hover:bg-accent transition-colors"
+            className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors"
           >
             {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+
+          {/* Notifications */}
+          <button className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors relative">
+            <Bell size={20} />
+            <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full border-2 border-background" />
           </button>
 
           <div className="h-8 w-[1px] bg-border mx-1" />
 
           {/* User Profile */}
-          <button className="flex items-center gap-3 p-1.5 pr-4 rounded-2xl hover:bg-accent transition-all group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white font-bold shadow-lg shadow-primary/20">
-              <User size={20} />
+          <button className="flex items-center gap-3 p-1 rounded-2xl hover:bg-accent transition-all group">
+            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 overflow-hidden">
+              {user?.avatar_url ? (
+                <img src={user.avatar_url} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                <User size={20} />
+              )}
             </div>
-            <div className="hidden sm:flex flex-col items-start">
+            <div className="hidden lg:flex flex-col items-start">
               <div className="flex items-center gap-1">
-                <span className="text-[13px] font-black leading-none">{user?.full_name || "Admin"}</span>
+                <span className="text-[13px] font-black leading-none">{user?.full_name || "Quản trị viên"}</span>
                 <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary transition-colors" />
               </div>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">{user?.role || "Owner"}</span>
+              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">{user?.role || "Chủ hồ"}</span>
             </div>
           </button>
         </div>

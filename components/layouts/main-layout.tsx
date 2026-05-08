@@ -8,7 +8,7 @@ import { ErrorBoundary } from "@/components/error-boundaries/root-error-boundary
 import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/utils/utils";
 import { motion, AnimatePresence } from "framer-motion";
-import { OpenSessionModal } from "@/modules/sessions/components/open-session-modal";
+import { OpenSessionModal } from "@/modules/sessions/components/open-session";
 import { PaymentModal } from "@/modules/payments/components/payment-modal";
 import { PrinterManager } from "@/components/shared/printer-manager";
 

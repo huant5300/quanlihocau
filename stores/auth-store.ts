@@ -1,10 +1,10 @@
 import { create } from "zustand";
-import { UserProfile } from "@/types/auth";
+import { AppUser } from "@/types/auth/auth.types";
 
 interface AuthStore {
-  user: UserProfile | null;
+  user: AppUser | null;
   isLoading: boolean;
-  setUser: (user: UserProfile | null) => void;
+  setUser: (user: AppUser | null) => void;
   setLoading: (isLoading: boolean) => void;
   logout: () => void;
 }

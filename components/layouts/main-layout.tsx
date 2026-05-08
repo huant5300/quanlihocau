@@ -8,7 +8,7 @@ import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/utils/utils";
 import { motion, AnimatePresence } from "framer-motion";
 import { OpenSessionModal } from "@/modules/sessions/components/open-session";
-import { PaymentModal } from "@/modules/payments/components/payment-modal";
+import { PaymentModal } from "@/modules/payment/components/payment-modal";
 import { PrinterManager } from "@/components/shared/printer-manager";
 import { OfflineBanner } from "@/modules/offline/components/offline-banner";
 import { useNetworkStatus } from "@/hooks/use-network-status";

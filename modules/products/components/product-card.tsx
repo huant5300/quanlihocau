@@ -7,12 +7,17 @@ import { Product } from "../types/product.types";
 import { InventoryStatusBadge } from "./inventory-status-badge";
 import { motion } from "framer-motion";
 
+import { Product } from "../types/product.types";
+
 interface ProductCardProps {
   product: Product;
+  quantity?: number;
+  onAdd?: (product: Product) => void;
+  onRemove?: (product: Product) => void;
   onQuickAdd?: (product: Product) => void;
 }
 
-export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
+export function ProductCard({ product, quantity = 0, onAdd, onRemove, onQuickAdd }: ProductCardProps) {
   return (
     <motion.div
       layout
@@ -53,20 +58,41 @@ export function ProductCard({ product, onQuickAdd }: ProductCardProps) {
           {product.price.toLocaleString()}đ
         </p>
 
-        {/* Action Button */}
-        <button
-          onClick={() => onQuickAdd?.(product)}
-          disabled={product.stock === 0}
-          className={cn(
-            "mt-auto h-12 w-full rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95",
-            product.stock === 0 
-              ? "bg-muted text-muted-foreground cursor-not-allowed" 
-              : "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
-          )}
-        >
-          <Plus size={16} strokeWidth={3} />
-          Thêm nhanh
-        </button>
+        {onQuickAdd && (
+          <button
+            onClick={() => onQuickAdd?.(product)}
+            disabled={product.stock === 0}
+            className={cn(
+              "mt-auto h-12 w-full rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95",
+              product.stock === 0 
+                ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                : "bg-primary text-white shadow-lg shadow-primary/20 hover:bg-primary/90"
+            )}
+          >
+            <Plus size={16} strokeWidth={3} />
+            Thêm nhanh
+          </button>
+        )}
+
+        {(onAdd || onRemove) && (
+          <div className="mt-auto flex items-center gap-2">
+            <button
+              onClick={() => onRemove?.(product)}
+              disabled={quantity === 0}
+              className="w-10 h-10 bg-accent rounded-lg flex items-center justify-center font-black"
+            >
+              -
+            </button>
+            <span className="flex-1 text-center font-black">{quantity}</span>
+            <button
+              onClick={() => onAdd?.(product)}
+              disabled={product.stock <= quantity}
+              className="w-10 h-10 bg-primary text-white rounded-lg flex items-center justify-center font-black"
+            >
+              +
+            </button>
+          </div>
+        )}
       </div>
     </motion.div>
   );

@@ -1,21 +1,28 @@
 import { create } from "zustand";
-import { FishingSession } from "@/types/sessions";
+import { FishingSession } from "@/modules/sessions/types/session.types";
+
+export type ConnectionStatus = "stable" | "reconnecting" | "offline";
 
 interface UIState {
-  // Sidebar State
+  // Sidebar & Nav State
   sidebarCollapsed: boolean;
   setSidebarCollapsed: (collapsed: boolean) => void;
   toggleSidebar: () => void;
   
+  isMobileNavOpen: boolean;
+  setIsMobileNavOpen: (open: boolean) => void;
+  
   // Connection Status
+  connectionStatus: ConnectionStatus;
+  setConnectionStatus: (status: ConnectionStatus) => void;
   isOffline: boolean;
   setIsOffline: (status: boolean) => void;
   
   // Modals
-  openSessionModalOpen: boolean;
+  isOpenSessionModalOpen: boolean;
   setOpenSessionModalOpen: (open: boolean) => void;
   
-  paymentModalOpen: boolean;
+  isPaymentModalOpen: boolean;
   setPaymentModalOpen: (open: boolean) => void;
   
   activeSessionForPayment: FishingSession | null;
@@ -31,14 +38,19 @@ export const useUIStore = create<UIState>((set) => ({
   setSidebarCollapsed: (collapsed) => set({ sidebarCollapsed: collapsed }),
   toggleSidebar: () => set((state) => ({ sidebarCollapsed: !state.sidebarCollapsed })),
   
+  isMobileNavOpen: false,
+  setIsMobileNavOpen: (open) => set({ isMobileNavOpen: open }),
+  
+  connectionStatus: "stable",
+  setConnectionStatus: (status) => set({ connectionStatus: status }),
   isOffline: false,
-  setIsOffline: (status) => set({ isOffline: status }),
+  setIsOffline: (status) => set({ isOffline: status, connectionStatus: status ? "offline" : "stable" }),
   
-  openSessionModalOpen: false,
-  setOpenSessionModalOpen: (open) => set({ openSessionModalOpen: open }),
+  isOpenSessionModalOpen: false,
+  setOpenSessionModalOpen: (open) => set({ isOpenSessionModalOpen: open }),
   
-  paymentModalOpen: false,
-  setPaymentModalOpen: (open) => set({ paymentModalOpen: open }),
+  isPaymentModalOpen: false,
+  setPaymentModalOpen: (open) => set({ isPaymentModalOpen: open }),
   
   activeSessionForPayment: null,
   setActiveSessionForPayment: (session) => set({ activeSessionForPayment: session }),

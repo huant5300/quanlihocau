@@ -2,7 +2,8 @@
 
 import React, { useState } from "react";
 import { Search, Filter, ShoppingCart } from "lucide-react";
-import { Product, ProductCard } from "./product-card";
+import { Product } from "../types/product.types";
+import { ProductCard } from "./product-card";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/utils";
 

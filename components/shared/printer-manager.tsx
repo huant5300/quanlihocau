@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { Printer, Bluetooth, BluetoothConnected, BluetoothOff, Settings } from "lucide-react";
-import { PrinterService } from "@/lib/printer/printer-service";
+import React, { useState, useEffect } from "react";
+import { Printer, Bluetooth, BluetoothOff, CheckCircle2, AlertCircle } from "lucide-react";
+import { printerService } from "@/services/printer/printer-service";
 import { cn } from "@/utils/utils";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -10,47 +10,57 @@ export function PrinterManager() {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsConnected(printerService.isConnected());
+    }, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
   const handleConnect = async () => {
     setIsConnecting(true);
-    const success = await PrinterService.connect();
+    const success = await printerService.connect();
     setIsConnected(success);
     setIsConnecting(false);
   };
 
   return (
-    <div className="fixed bottom-24 right-8 z-40">
+    <div className="fixed bottom-24 right-6 sm:right-8 z-50">
       <AnimatePresence>
         <motion.div
-          initial={{ opacity: 0, scale: 0.8, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
           className={cn(
-            "flex items-center gap-3 p-3 bg-card border-2 rounded-2xl shadow-xl transition-all",
-            isConnected ? "border-green-500/20" : "border-border/50"
+            "flex items-center gap-3 p-3 pl-4 rounded-2xl border backdrop-blur-xl shadow-2xl transition-all",
+            isConnected 
+              ? "bg-green-500/10 border-green-500/20 text-green-500" 
+              : "bg-background/80 border-border shadow-black/5"
           )}
         >
-          <div className={cn(
-            "w-10 h-10 rounded-xl flex items-center justify-center transition-colors",
-            isConnected ? "bg-green-500/10 text-green-500" : "bg-muted text-muted-foreground"
-          )}>
-            {isConnected ? <BluetoothConnected size={20} /> : <Bluetooth size={20} />}
-          </div>
-          
-          <div className="pr-2">
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Máy in Bill</p>
-            <p className="text-xs font-bold">{isConnected ? "Đã kết nối" : "Chưa kết nối"}</p>
+          <div className="flex flex-col">
+            <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Máy in 58mm</span>
+            <span className="text-[10px] font-black uppercase tracking-tight">
+              {isConnected ? "Sẵn sàng" : "Chưa kết nối"}
+            </span>
           </div>
 
           <button
-            onClick={handleConnect}
+            onClick={isConnected ? () => printerService.disconnect() : handleConnect}
             disabled={isConnecting}
             className={cn(
-              "px-4 py-2 rounded-xl text-xs font-black uppercase transition-all",
+              "w-10 h-10 rounded-xl flex items-center justify-center transition-all active:scale-90",
               isConnected 
-                ? "bg-accent hover:bg-accent/80 text-foreground" 
-                : "bg-primary text-white shadow-lg shadow-primary/20"
+                ? "bg-green-500 text-white" 
+                : "bg-accent hover:bg-muted text-muted-foreground"
             )}
           >
-            {isConnecting ? "Đang kết nối..." : isConnected ? "Cài đặt" : "Kết nối"}
+            {isConnecting ? (
+              <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            ) : isConnected ? (
+              <Bluetooth size={18} />
+            ) : (
+              <BluetoothOff size={18} />
+            )}
           </button>
         </motion.div>
       </AnimatePresence>

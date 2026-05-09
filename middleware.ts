@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
@@ -16,10 +16,8 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
-          cookiesToSet.forEach(({ name, value, options }) =>
-            request.cookies.set(name, value)
-          );
+        setAll(cookiesToSet: { name: string; value: string; options: CookieOptions }[]) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({
             request: {
               headers: request.headers,
@@ -33,19 +31,33 @@ export async function middleware(request: NextRequest) {
     }
   );
 
+
+  // This will refresh session if expired - essential for SSR
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protected routes pattern
-  const isProtectedRoute = request.nextUrl.pathname.startsWith("/dashboard");
-  const isAuthRoute = request.nextUrl.pathname.startsWith("/login");
+  const pathname = request.nextUrl.pathname;
 
-  if (isProtectedRoute && !user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+  // Define public paths
+  const isPublicPath =
+    pathname === "/" ||
+    pathname === "/login" ||
+    pathname.startsWith("/auth") ||
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname.includes("favicon.ico");
+
+  // If user is not signed in and is trying to access protected page → redirect to login
+  if (!user && !isPublicPath) {
+    const loginUrl = new URL("/login", request.url);
+    loginUrl.searchParams.set("next", pathname);
+    return NextResponse.redirect(loginUrl);
   }
 
-  if (isAuthRoute && user) {
+  // If user is signed in and is on landing or login page, redirect to dashboard
+  // We EXCLUDE /auth paths here to allow the callback to handle redirects or finish logic
+  if (user && (pathname === "/" || pathname === "/login")) {
     return NextResponse.redirect(new URL("/dashboard", request.url));
   }
 

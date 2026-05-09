@@ -1,4 +1,4 @@
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/client";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { toast } from "sonner";
 
@@ -7,13 +7,11 @@ export class BaseService {
 
   protected get supabase(): SupabaseClient {
     if (!this._supabase) {
-      this._supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL ?? "https://placeholder.supabase.co",
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "placeholder-key"
-      );
+      this._supabase = createClient() as unknown as SupabaseClient;
     }
     return this._supabase;
   }
+
 
   protected handleError(error: unknown, context: string) {
     const msg = error instanceof Error ? error.message : "Đã có lỗi xảy ra, vui lòng thử lại.";

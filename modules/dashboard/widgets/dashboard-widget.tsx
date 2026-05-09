@@ -12,6 +12,7 @@ interface DashboardWidgetProps {
   children: React.ReactNode;
   className?: string;
   onMoreClick?: () => void;
+  headerAction?: React.ReactNode;
 }
 
 export function DashboardWidget({ 
@@ -20,7 +21,8 @@ export function DashboardWidget({
   icon: Icon, 
   children, 
   className,
-  onMoreClick 
+  onMoreClick,
+  headerAction
 }: DashboardWidgetProps) {
   return (
     <motion.div
@@ -46,6 +48,7 @@ export function DashboardWidget({
         </div>
         
         <div className="flex items-center gap-2">
+          {headerAction}
           <button className="p-2 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all cursor-grab active:cursor-grabbing">
             <GripVertical size={18} />
           </button>

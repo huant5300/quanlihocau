@@ -8,7 +8,8 @@ import {
   RotateCcw, 
   CreditCard,
   User,
-  Phone
+  Phone,
+  Loader2
 } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { FishingSession } from "../types/session.types";
@@ -18,19 +19,27 @@ import { motion } from "framer-motion";
 
 interface SessionCardProps {
   session: FishingSession;
+  isUpdating?: boolean;
 }
 
-export function SessionCard({ session }: SessionCardProps) {
+export function SessionCard({ session, isUpdating = false }: SessionCardProps) {
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       className={cn(
-        "glass-card p-6 rounded-[2.5rem] flex flex-col gap-6 group transition-all",
-        session.status === "WARNING" && "border-orange-500/30 bg-orange-500/5"
+        "glass-card p-6 rounded-[2.5rem] flex flex-col gap-6 group transition-all relative",
+        session.status === "WARNING" && "border-orange-500/30 bg-orange-500/5",
+        isUpdating && "opacity-75"
       )}
     >
+      {isUpdating && (
+        <div className="absolute inset-0 bg-background/50 rounded-[2.5rem] flex items-center justify-center z-10">
+          <Loader2 className="animate-spin text-primary" size={32} />
+        </div>
+      )}
+
       {/* Header: Hut & Status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
@@ -55,7 +64,7 @@ export function SessionCard({ session }: SessionCardProps) {
       <div className="bg-background/50 rounded-3xl p-6 border border-white/5 space-y-4">
         <div className="flex items-center justify-between">
           <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Thời gian còn lại</p>
-          <CountdownTimer endTime={session.end_time} />
+          <CountdownTimer endTime={session.end_time} sessionId={session.id} />
         </div>
         
         <div className="flex items-center justify-between pt-4 border-t border-white/5">
@@ -71,16 +80,28 @@ export function SessionCard({ session }: SessionCardProps) {
 
       {/* Actions Grid */}
       <div className="grid grid-cols-2 gap-3">
-        <button className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95">
+        <button 
+          disabled={isUpdating}
+          className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Plus size={16} /> Thêm đồ
         </button>
-        <button className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95">
+        <button 
+          disabled={isUpdating}
+          className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <Clock size={16} /> Gia hạn
         </button>
-        <button className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95">
+        <button 
+          disabled={isUpdating}
+          className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <RotateCcw size={16} /> Thu cá
         </button>
-        <button className="h-12 bg-primary text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95">
+        <button 
+          disabled={isUpdating}
+          className="h-12 bg-primary text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           <CreditCard size={16} /> Thanh toán
         </button>
       </div>

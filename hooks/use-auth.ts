@@ -17,7 +17,11 @@ export function useAuth() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          // Ensure redirect goes to our server callback which will exchange the code
+          redirectTo: `${process.env.NEXT_PUBLIC_APP_URL || window.location.origin}/auth/callback`,
+          // Request offline access and prompt consent to ensure refresh token behavior
+          // Supabase will append these as query params to the provider URL
+          queryParams: { access_type: "offline", prompt: "consent" },
         },
       });
 

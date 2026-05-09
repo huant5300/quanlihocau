@@ -33,12 +33,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           setStoreUser(profile);
           setStatus("authenticated");
         } else {
+          setUser(null);
+          setStoreUser(null);
           setStatus("unauthenticated");
         }
       } catch (error) {
         console.error("Init Auth Error:", error);
+        setUser(null);
+        setStoreUser(null);
         setStatus("unauthenticated");
       }
+
     };
 
     initAuth();

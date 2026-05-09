@@ -10,13 +10,3 @@ const nextConfig: NextConfig = {
       },
     ],
   },
-  // Tối ưu hóa build
-  typescript: {
-    ignoreBuildErrors: false,
-  },
-  eslint: {
-    ignoreDuringBuilds: false,
-  },
-};
-
-export default nextConfig;

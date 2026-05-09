@@ -11,25 +11,42 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { useTheme } from "next-themes";
-
-const data = [
-  { name: "Thứ 2", revenue: 4000000, sessions: 12 },
-  { name: "Thứ 3", revenue: 3000000, sessions: 10 },
-  { name: "Thứ 4", revenue: 2000000, sessions: 8 },
-  { name: "Thứ 5", revenue: 2780000, sessions: 11 },
-  { name: "Thứ 6", revenue: 1890000, sessions: 9 },
-  { name: "Thứ 7", revenue: 6390000, sessions: 22 },
-  { name: "CN", revenue: 8490000, sessions: 35 },
-];
+import { useQuery } from "@tanstack/react-query";
+import { reportService } from "@/services/supabase/report-service";
+import { motion } from "framer-motion";
 
 export function RevenueChart() {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
+  const { data: rawData, isLoading } = useQuery({
+    queryKey: ["monthly-revenue"],
+    queryFn: () => reportService.getMonthlyRevenue(),
+  });
+
+  // Format data for Recharts
+  const chartData = (rawData || []).map(item => ({
+    name: item.month, // YYYY-MM
+    revenue: Number(item.revenue),
+    count: item.payment_count
+  }));
+
+  if (isLoading) {
+    return (
+      <div className="h-[350px] w-full flex items-center justify-center">
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="h-[350px] w-full pt-4">
       <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={data}>
+        <AreaChart data={chartData}>
           <defs>
             <linearGradient id="colorRev" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
@@ -47,12 +64,20 @@ export function RevenueChart() {
             tickLine={false}
             tick={{ fontSize: 10, fontWeight: 900, fill: "currentColor", opacity: 0.5 }}
             dy={10}
+            tickFormatter={(value) => {
+              const [year, month] = value.split("-");
+              return `Tháng ${month}/${year.slice(2)}`;
+            }}
           />
           <YAxis 
             axisLine={false}
             tickLine={false}
             tick={{ fontSize: 10, fontWeight: 900, fill: "currentColor", opacity: 0.5 }}
-            tickFormatter={(value) => `${value / 1000000}M`}
+            tickFormatter={(value) => {
+              if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+              if (value >= 1000) return `${(value / 1000).toFixed(0)}k`;
+              return value;
+            }}
           />
           <Tooltip 
             contentStyle={{ 
@@ -63,6 +88,10 @@ export function RevenueChart() {
               fontWeight: 900,
               fontSize: "12px"
             }}
+            formatter={(value: number) => [
+              new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(value),
+              "Doanh thu"
+            ]}
           />
           <Area 
             type="monotone" 

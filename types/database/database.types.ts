@@ -15,9 +15,10 @@ export interface Database {
           hut_number: string
           customer_id: string | null
           start_time: string
-          end_time: string
+          end_time: string | null
           status: string
           total_amount: number
+          tenant_id: string
           created_at: string
           updated_at: string
         }
@@ -26,9 +27,10 @@ export interface Database {
           hut_number: string
           customer_id?: string | null
           start_time?: string
-          end_time: string
+          end_time?: string | null
           status?: string
           total_amount?: number
+          tenant_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -37,9 +39,10 @@ export interface Database {
           hut_number?: string
           customer_id?: string | null
           start_time?: string
-          end_time?: string
+          end_time?: string | null
           status?: string
           total_amount?: number
+          tenant_id?: string
           created_at?: string
           updated_at?: string
         }
@@ -53,6 +56,9 @@ export interface Database {
           stock: number
           is_active: boolean
           thumbnail: string | null
+          tenant_id: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
           id?: string
@@ -62,6 +68,9 @@ export interface Database {
           stock?: number
           is_active?: boolean
           thumbnail?: string | null
+          tenant_id?: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -71,6 +80,9 @@ export interface Database {
           stock?: number
           is_active?: boolean
           thumbnail?: string | null
+          tenant_id?: string
+          created_at?: string
+          updated_at?: string
         }
       }
       customers: {
@@ -80,13 +92,17 @@ export interface Database {
           phone: string
           role: string
           tenant_id: string
+          created_at: string
+          updated_at: string
         }
         Insert: {
-          id?: string
+          id: string
           full_name: string
-          phone: string
+          phone?: string
           role?: string
-          tenant_id: string
+          tenant_id?: string
+          created_at?: string
+          updated_at?: string
         }
         Update: {
           id?: string
@@ -94,6 +110,8 @@ export interface Database {
           phone?: string
           role?: string
           tenant_id?: string
+          created_at?: string
+          updated_at?: string
         }
       }
       payments: {
@@ -102,6 +120,7 @@ export interface Database {
           session_id: string
           amount: number
           method: string
+          tenant_id: string
           created_at: string
         }
         Insert: {
@@ -109,6 +128,7 @@ export interface Database {
           session_id: string
           amount: number
           method: string
+          tenant_id?: string
           created_at?: string
         }
         Update: {
@@ -116,12 +136,49 @@ export interface Database {
           session_id?: string
           amount?: number
           method?: string
+          tenant_id?: string
           created_at?: string
+        }
+      }
+      dashboard_stats: {
+        Row: {
+          id: string
+          total_revenue: number
+          active_sessions_count: number
+          total_customers: number
+          inventory_alerts_count: number
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          total_revenue?: number
+          active_sessions_count?: number
+          total_customers?: number
+          inventory_alerts_count?: number
+          tenant_id?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          total_revenue?: number
+          active_sessions_count?: number
+          total_customers?: number
+          inventory_alerts_count?: number
+          tenant_id?: string
+          updated_at?: string
         }
       }
     }
     Views: {
-      [_ in never]: never
+      monthly_revenue_stats: {
+        Row: {
+          tenant_id: string
+          month: string
+          revenue: number
+          payment_count: number
+        }
+      }
     }
     Functions: {
       [_ in never]: never

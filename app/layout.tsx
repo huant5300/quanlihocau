@@ -10,7 +10,7 @@ export const metadata: Metadata = {
   description: "Giải pháp quản lý hồ câu toàn diện cho chủ hồ và ngư dân.",
 };
 
-// import { PWARegistration } from "@/components/shared/pwa-registration";
+import { PWARegistration } from "@/components/shared/pwa-registration";
 
 export default function RootLayout({
   children,
@@ -22,7 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <Providers>
           {children}
-          {/* <PWARegistration /> */}
+          <PWARegistration />
         </Providers>
       </body>
     </html>

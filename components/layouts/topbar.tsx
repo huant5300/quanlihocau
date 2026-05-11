@@ -12,13 +12,13 @@ import {
   ChevronDown
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useAuthStore } from "@/stores/auth-store";
+import { useAuthContext } from "@/providers/auth/auth-provider";
 import { useUIStore } from "@/stores/ui-store";
 import { SyncStatusIndicator } from "@/modules/offline/components/sync-status-indicator";
 
 export function Topbar() {
   const { theme, setTheme } = useTheme();
-  const { user } = useAuthStore();
+  const { user } = useAuthContext();
   const { tenantName } = useUIStore();
 
   return (

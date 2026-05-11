@@ -1,46 +1,34 @@
 "use client";
 
-import { createClient } from "@/utils/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { useRealtimeSubscription } from "@/services/realtime-service";
-
-import { DashboardStats } from "@/types/dashboard";
+import { sessionService } from "@/services/api/session-service";
+import type { DashboardStats, Session } from "@/types";
 
 export function useDashboardData() {
-  const supabase = createClient();
-
   // Fetch Stats
-  const { data: stats, isLoading: statsLoading } = useQuery({
+  const { data: stats, isLoading: statsLoading } = useQuery<DashboardStats>({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("dashboard_stats")
-        .select("*")
-        .single();
-      
-      if (error) throw error;
-      return data as DashboardStats;
+      const data = await sessionService.getStats();
+      return {
+        activeCount: data.activeCount || 0,
+        todayRevenue: data.todayRevenue || 0,
+        customerCount: data.customerCount || 0,
+        lowStockCount: data.lowStockCount || 0,
+      };
     },
   });
 
   // Fetch Active Sessions
-  const { data: sessions, isLoading: sessionsLoading } = useQuery({
+  const { data: sessions, isLoading: sessionsLoading } = useQuery<Session[]>({
     queryKey: ["active-sessions"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("sessions")
-        .select("*")
-        .eq("status", "ACTIVE")
-        .order("start_time", { ascending: false });
-      
-      if (error) throw error;
-      return data;
+      return await sessionService.getSessions("ACTIVE");
     },
   });
 
-  // Subscriptions
-  useRealtimeSubscription({ table: "sessions", queryKey: ["active-sessions"] });
-  useRealtimeSubscription({ table: "dashboard_stats", queryKey: ["dashboard-stats"] });
+  // Realtime is disabled for now as we migrated to Django.
+  // Future: Use WebSockets with Django Channels.
 
   return {
     stats,

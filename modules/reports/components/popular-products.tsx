@@ -3,14 +3,15 @@
 import React from "react";
 import { ShoppingBag, TrendingUp } from "lucide-react";
 
-const products = [
-  { name: "Mồi Cám Xanh", sales: 450, revenue: "11.2Mđ" },
-  { name: "Nước Suối 500ml", sales: 320, revenue: "3.2Mđ" },
-  { name: "Mồi Giun Đỏ", sales: 210, revenue: "3.1Mđ" },
-  { name: "Bánh Mì Kẹp", sales: 180, revenue: "2.7Mđ" },
-];
+import type { PopularProduct } from "@/types";
 
-export function PopularProducts() {
+interface PopularProductsProps {
+  initialProducts?: PopularProduct[];
+}
+
+export function PopularProducts({ initialProducts = [] }: PopularProductsProps) {
+  const displayProducts = initialProducts.length > 0 ? initialProducts : [];
+
   return (
     <div className="glass-card p-8 rounded-[2.5rem] space-y-6">
       <div className="flex items-center justify-between">
@@ -21,22 +22,25 @@ export function PopularProducts() {
       </div>
 
       <div className="space-y-4">
-        {products.map((p, i) => (
-          <div key={p.name} className="flex items-center justify-between group">
+        {displayProducts.map((p, i) => (
+          <div key={p.id || i} className="flex items-center justify-between group">
             <div className="flex items-center gap-4">
               <span className="text-xs font-black text-muted-foreground/50 w-4">0{i+1}</span>
               <p className="text-sm font-bold group-hover:text-primary transition-colors">{p.name}</p>
             </div>
             <div className="text-right">
-              <p className="text-xs font-black">{p.revenue}</p>
-              <p className="text-[10px] font-bold text-muted-foreground">{p.sales} lượt</p>
+              <p className="text-sm font-black">{p.revenue.toLocaleString()}đ</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase">{p.sold_count} đã bán</p>
             </div>
           </div>
         ))}
+        {displayProducts.length === 0 && (
+          <p className="text-[10px] font-black uppercase text-muted-foreground text-center py-4 opacity-50">Không có dữ liệu</p>
+        )}
       </div>
 
       <button className="w-full h-12 bg-accent/50 hover:bg-accent rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">
-        Xem tất cả
+        Xem chi tiết
       </button>
     </div>
   );

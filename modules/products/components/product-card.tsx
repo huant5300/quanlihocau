@@ -26,17 +26,9 @@ export function ProductCard({ product, quantity = 0, onAdd, onRemove, onQuickAdd
     >
       {/* Product Image / Placeholder */}
       <div className="relative aspect-square w-full bg-muted overflow-hidden">
-        {product.thumbnail ? (
-          <img 
-            src={product.thumbnail} 
-            alt={product.name} 
-            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-          />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
-            <Tag size={64} strokeWidth={1} />
-          </div>
-        )}
+        <div className="flex h-full w-full items-center justify-center text-muted-foreground/20">
+          <Tag size={64} strokeWidth={1} />
+        </div>
         
         {/* Category Badge */}
         <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10">

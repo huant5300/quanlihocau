@@ -49,7 +49,7 @@ function AuthErrorContent() {
 
         <div className="mt-8 pt-6 border-t border-white/5">
           <p className="text-xs text-muted-foreground">
-            Nếu lỗi vẫn tiếp diễn, vui lòng kiểm tra lại cấu hình Google OAuth trong Supabase Dashboard.
+            Nếu lỗi vẫn tiếp diễn, vui lòng kiểm tra lại cấu hình Backend Dashboard.
           </p>
         </div>
       </motion.div>

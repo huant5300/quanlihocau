@@ -1,80 +1,425 @@
-# Fishing Lake Management SaaS Initial Architecture Plan
+# Fishing Lake Management SaaS — Revised Production Architecture Plan
 
-The goal is to set up the initial production-ready architecture for a Fishing Lake Management SaaS.
+## Overview
 
-## User Review Required
+This project is a production-oriented Fishing Lake Management SaaS platform.
 
-Please review the proposed architecture and tech stack versions. Since `npx` and `node` are not available in the current environment, I will manually generate all the necessary foundational files including `package.json`, `tsconfig.json`, `tailwind.config.ts`, and the required directory structure.
+The architecture has been revised to remove legacy Supabase dependencies and standardize the stack around:
 
-## Proposed Changes
+* Frontend: Next.js + TypeScript
+* Backend: Django REST Framework
+* Database: PostgreSQL
+* Authentication: JWT (SimpleJWT)
+* State Management: Zustand
+* Data Fetching: React Query
+* Styling: TailwindCSS + Shadcn/UI
 
-We will create a modular, scalable foundation with the following directory structure and core files:
+---
 
-### Configuration Files
-#### [NEW] package.json
-Contains dependencies: Next.js 15, React 19, TypeScript, TailwindCSS, Shadcn/UI components, Zustand, Supabase (@supabase/supabase-js, @supabase/ssr), Tanstack Query, Sonner, Framer Motion, and Lucide Icons.
+# Final Target Architecture
 
-#### [NEW] tsconfig.json
-Standard Next.js TypeScript configuration with strict mode and path aliases (`@/*`).
+```text
+Next.js Frontend
+↓
+Axios API Client
+↓
+Django REST Framework API
+↓
+PostgreSQL Database
+```
 
-#### [NEW] tailwind.config.ts
-Tailwind configuration including dark mode setup, custom animations for Shadcn/UI, and Shadcn default theme colors.
+---
 
-#### [NEW] postcss.config.mjs
-Standard PostCSS setup for Tailwind CSS.
+# IMPORTANT ARCHITECTURE RULES
 
-### App Directory Structure
-#### [NEW] app/layout.tsx
-Root layout that includes the `Providers` wrapper, Theme system, and `Sonner` Toaster.
+## We are NO LONGER using:
 
-#### [NEW] app/page.tsx
-Basic entry point page to verify the setup.
+* Supabase Auth
+* Supabase Database
+* Supabase Realtime
+* Supabase Storage
+* Supabase Client SDK
 
-#### [NEW] app/globals.css
-Tailwind directives and base Shadcn CSS variables for theming (dark mode ready).
+All business logic must go through Django REST APIs.
 
-#### [NEW] app/providers.tsx
-Client component wrapper for `ThemeProvider` and `QueryClientProvider` (Tanstack Query).
+---
 
-### Modules & Components
-#### [NEW] components/ui/sonner.tsx
-Setup for Sonner toast component integration.
+# Frontend Stack
 
-#### [NEW] components/layouts/sidebar.tsx
-Responsive sidebar layout component.
+## Core
 
-#### [NEW] components/layouts/topbar.tsx
-Top navigation bar component.
+* Next.js 15
+* React 19
+* TypeScript Strict Mode
+* TailwindCSS
+* Shadcn/UI
+* Framer Motion
 
-#### [NEW] components/layouts/main-layout.tsx
-Main layout wrapper that combines the sidebar, topbar, and main content area.
+## State + Data
 
-### Core Architecture Directories
-I will create the necessary directory structure for future implementation:
-- `modules/` - Feature-based domain modules (e.g., lakes, users, bookings).
-- `components/` - Shared and UI components.
-- `services/` - API and Supabase service calls.
-- `stores/` - Zustand global state stores.
-- `hooks/` - Reusable React hooks.
-- `types/` - Shared TypeScript interfaces and types.
-- `utils/` - Helper functions and utilities (e.g., `cn` utility for Tailwind).
+* Zustand
+* Tanstack React Query
+* Axios
 
-#### [NEW] utils/utils.ts
-Standard `cn` (clsx + twMerge) utility used by Shadcn/UI.
+## Validation + Forms
 
-#### [NEW] utils/supabase/client.ts
-Supabase client configuration using `@supabase/ssr`.
+* Zod
+* React Hook Form
 
-#### [NEW] utils/supabase/server.ts
-Supabase server-side client configuration.
+---
 
-#### [NEW] stores/theme-store.ts
-Example Zustand store setup (if needed, though standard theming uses next-themes. I will include a basic Zustand store for demonstration of the architecture).
+# Backend Stack
 
-## Verification Plan
+## Core
 
-### Automated Tests
-- Once files are created, we will attempt to build or review the structure to ensure all imports match and there are no syntax errors.
+* Django
+* Django REST Framework
+* SimpleJWT
+* PostgreSQL
+* drf-yasg Swagger
+* django-filter
+* django-cors-headers
 
-### Manual Verification
-- You will be able to run `npm install` and `npm run dev` to verify the foundational structure runs successfully in your local environment.
+---
+
+# Production Folder Structure
+
+```text
+project-root/
+│
+├── backend/
+│   ├── config/
+│   ├── users/
+│   ├── customers/
+│   ├── sessions/
+│   ├── products/
+│   ├── payments/
+│   ├── reports/
+│   ├── fish_buyback/
+│   ├── common/
+│   ├── manage.py
+│   └── requirements.txt
+│
+├── app/
+├── components/
+├── modules/
+├── services/
+├── stores/
+├── hooks/
+├── types/
+├── utils/
+├── providers/
+├── public/
+├── package.json
+└── tsconfig.json
+```
+
+---
+
+# Frontend Architecture
+
+## app/
+
+Contains:
+
+* layouts
+* pages
+* route groups
+* dashboard pages
+* auth pages
+
+## components/
+
+Reusable shared UI:
+
+* buttons
+* modals
+* cards
+* tables
+* forms
+* loading states
+
+## modules/
+
+Feature-based domain modules:
+
+```text
+modules/
+├── crm/
+├── sessions/
+├── products/
+├── reports/
+├── payments/
+├── fish-buyback/
+└── dashboard/
+```
+
+Each module should contain:
+
+```text
+components/
+hooks/
+services/
+types/
+utils/
+```
+
+---
+
+# API Architecture
+
+## Centralized Axios Client
+
+```text
+services/api/client.ts
+```
+
+Responsibilities:
+
+* baseURL
+* JWT token injection
+* refresh token flow
+* error interceptors
+* auth redirect handling
+
+---
+
+# Authentication Flow
+
+## JWT Endpoints
+
+```text
+POST /api/token/
+POST /api/token/refresh/
+```
+
+## Auth Responsibilities
+
+* login
+* logout
+* token persistence
+* refresh handling
+* protected routes
+* session restoration
+
+## Storage
+
+Use secure browser storage strategy.
+
+---
+
+# Shared Types Architecture
+
+```text
+types/
+├── api.types.ts
+├── auth.types.ts
+├── customer.types.ts
+├── session.types.ts
+├── payment.types.ts
+└── report.types.ts
+```
+
+Rules:
+
+* No duplicate interfaces
+* No inline anonymous API types
+* Types must match Django serializers exactly
+* Shared entities must be centralized
+
+---
+
+# State Management Rules
+
+## Zustand
+
+Use ONLY for:
+
+* auth state
+* UI state
+* sidebar state
+* modal state
+* persistent lightweight state
+
+## React Query
+
+Use for:
+
+* server state
+* API caching
+* CRUD requests
+* background refetching
+
+---
+
+# Database Rules
+
+## Development
+
+SQLite allowed temporarily.
+
+## Production
+
+PostgreSQL only.
+
+---
+
+# Core Business Modules
+
+## 1. Customer Management
+
+Features:
+
+* customer list
+* create customer
+* update customer
+* delete customer
+* search customer
+
+---
+
+## 2. Fishing Session Workflow
+
+Features:
+
+* ticket creation
+* active sessions
+* fish tracking
+* fish buyback
+* checkout
+* revenue tracking
+
+---
+
+## 3. Revenue Dashboard
+
+Features:
+
+* daily revenue
+* active sessions
+* customer analytics
+* inventory analytics
+* transaction history
+
+---
+
+# UI/UX Standards
+
+Requirements:
+
+* responsive layout
+* mobile navigation
+* stable rendering
+* loading skeletons
+* empty states
+* proper spacing
+* accessible forms
+* dashboard consistency
+
+---
+
+# Stability Requirements
+
+The app must:
+
+* avoid runtime crashes
+* avoid hydration mismatch
+* avoid infinite loading
+* avoid undefined state access
+* avoid stale schemas
+* avoid circular dependencies
+* avoid duplicated business logic
+
+---
+
+# TypeScript Rules
+
+Strict mode is mandatory.
+
+Fix:
+
+* implicit any
+* never types
+* invalid nullable types
+* stale interfaces
+* duplicate exports
+* invalid imports
+
+---
+
+# API Rules
+
+Frontend must NEVER:
+
+* use fake data
+* use mock arrays in production modules
+* bypass backend validation
+* directly manipulate database state
+
+All persistence must go through Django REST APIs.
+
+---
+
+# Production Readiness Checklist
+
+## Backend
+
+* Django server stable
+* JWT works
+* Swagger works
+* migrations stable
+* PostgreSQL stable
+
+## Frontend
+
+* no black screen
+* no runtime crash
+* no major TypeScript errors
+* stable auth flow
+* stable CRUD
+
+## Integration
+
+* frontend calls real APIs
+* database persistence verified
+* DBeaver shows real records
+
+---
+
+# Deployment Targets
+
+## Frontend
+
+* Vercel
+
+## Backend
+
+* Railway or Render
+
+## Database
+
+* Neon PostgreSQL
+
+---
+
+# Final Goal
+
+Transform the project from:
+
+```text
+prototype / mixed architecture
+```
+
+into:
+
+```text
+stable production-ready SaaS foundation
+```
+
+with:
+
+* clean architecture
+* scalable modules
+* stable APIs
+* centralized types
+* strong authenti

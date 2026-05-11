@@ -10,8 +10,14 @@ interface MembershipBadgeProps {
   showIcon?: boolean;
 }
 
+interface MembershipConfig {
+  label: string;
+  className: string;
+  icon: React.ComponentType<{ size?: number }>;
+}
+
 export function MembershipBadge({ level, showIcon = true }: MembershipBadgeProps) {
-  const config = {
+  const config: Record<MembershipLevel, MembershipConfig> = {
     Regular: {
       label: "Thành viên",
       className: "bg-slate-500/10 text-slate-500 border-slate-500/20",

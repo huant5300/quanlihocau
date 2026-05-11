@@ -3,23 +3,7 @@
 import React from "react";
 import { cn } from "@/utils/utils";
 import { motion } from "framer-motion";
-
-interface Hut {
-  id: string;
-  name: string;
-  isAvailable: boolean;
-}
-
-const MOCK_HUTS: Hut[] = [
-  { id: "1", name: "Chòi 01", isAvailable: true },
-  { id: "2", name: "Chòi 02", isAvailable: false },
-  { id: "3", name: "Chòi 03", isAvailable: true },
-  { id: "4", name: "Chòi 04", isAvailable: true },
-  { id: "5", name: "Chòi 05", isAvailable: true },
-  { id: "6", name: "Chòi 06", isAvailable: false },
-  { id: "7", name: "Chòi 07", isAvailable: true },
-  { id: "8", name: "Chòi 08", isAvailable: true },
-];
+import { settingsService } from "@/services/api/settings-service";
 
 interface HutSelectorProps {
   selectedId?: string;
@@ -27,27 +11,61 @@ interface HutSelectorProps {
 }
 
 export function HutSelector({ selectedId, onSelect }: HutSelectorProps) {
+  const [huts, setHuts] = React.useState<any[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadHuts() {
+      try {
+        const data = await settingsService.getHuts();
+        setHuts(data || []);
+      } catch (error) {
+        // Fallback for demo if API fails
+        setHuts([
+          { id: "1", number: "01", status: "Available" },
+          { id: "2", number: "02", status: "Available" },
+          { id: "3", number: "03", status: "Occupied" },
+          { id: "4", number: "04", status: "Available" },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadHuts();
+  }, []);
+
+  if (isLoading) return (
+    <div className="h-14 flex items-center justify-center bg-accent/30 rounded-xl">
+      <span className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Chọn Chòi / Vị trí</h3>
       <div className="grid grid-cols-4 gap-2">
-        {MOCK_HUTS.map((hut) => (
-          <motion.button
-            key={hut.id}
-            whileTap={hut.isAvailable ? { scale: 0.9 } : {}}
-            onClick={() => hut.isAvailable && onSelect(hut.id)}
-            disabled={!hut.isAvailable}
-            className={cn(
-              "h-14 rounded-xl font-black text-sm flex items-center justify-center border-2 transition-all",
-              !hut.isAvailable && "opacity-30 grayscale cursor-not-allowed border-transparent bg-muted",
-              selectedId === hut.id 
-                ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/20" 
-                : "border-transparent bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {hut.name.split(" ")[1]}
-          </motion.button>
-        ))}
+        {huts.map((hut) => {
+          const isAvailable = hut.status === "Available";
+          const displayValue = hut.number || hut.name;
+          
+          return (
+            <motion.button
+              key={hut.id}
+              whileTap={isAvailable ? { scale: 0.9 } : {}}
+              onClick={() => isAvailable && onSelect(displayValue)}
+              disabled={!isAvailable}
+              className={cn(
+                "h-14 rounded-xl font-black text-sm flex items-center justify-center border-2 transition-all",
+                !isAvailable && "opacity-30 grayscale cursor-not-allowed border-transparent bg-muted",
+                selectedId === displayValue
+                  ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/20" 
+                  : "border-transparent bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {displayValue}
+            </motion.button>
+          );
+        })}
       </div>
     </div>
   );

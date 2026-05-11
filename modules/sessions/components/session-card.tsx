@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useTransition, useState } from "react";
 import { 
   ShoppingBag, 
   Plus, 
@@ -16,95 +16,151 @@ import { FishingSession } from "../types/session.types";
 import { CountdownTimer } from "./countdown-timer";
 import { SessionStatusBadge } from "./session-status-badge";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { AddProductModal } from "./add-product-modal";
+import { ExtendSessionModal } from "./extend-session-modal";
+import { FishBuybackModal } from "./fish-buyback-modal";
+import { PaymentModal } from "@/modules/payment/components/payment-modal";
 
 interface SessionCardProps {
   session: FishingSession;
-  isUpdating?: boolean;
 }
 
-export function SessionCard({ session, isUpdating = false }: SessionCardProps) {
+export function SessionCard({ session }: SessionCardProps) {
+  const [isPending, startTransition] = useTransition();
+  const [isWarning, setIsWarning] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+
+  const handleCheckout = () => {
+    setIsPaymentOpen(true);
+  };
+
+  const onWarning = () => {
+    if (!isWarning) {
+      setIsWarning(true);
+      // Play professional alert sound
+      const audio = new Audio("/sounds/alert.mp3");
+      audio.volume = 0.5;
+      audio.play().catch(() => console.log("Audio play blocked - user interaction required"));
+      toast.error(`CẢNH BÁO: Chòi ${session.hut_number} sắp hết thời gian!`, {
+        duration: 10000,
+        position: "top-center",
+      });
+    }
+  };
+
   return (
-    <motion.div
-      layout
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className={cn(
-        "glass-card p-6 rounded-[2.5rem] flex flex-col gap-6 group transition-all relative",
-        session.status === "WARNING" && "border-orange-500/30 bg-orange-500/5",
-        isUpdating && "opacity-75"
-      )}
-    >
-      {isUpdating && (
-        <div className="absolute inset-0 bg-background/50 rounded-[2.5rem] flex items-center justify-center z-10">
-          <Loader2 className="animate-spin text-primary" size={32} />
-        </div>
-      )}
-
-      {/* Header: Hut & Status */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center shadow-xl shadow-primary/20">
-            <span className="font-black text-2xl tracking-tighter">{session.hut_number}</span>
+    <>
+      <motion.div
+        layout
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        whileHover={{ y: -5 }}
+        className={cn(
+          "glass-card p-6 rounded-[2.5rem] flex flex-col gap-6 group transition-all relative border-2",
+          isWarning 
+            ? "border-red-500 bg-red-500/5 shadow-[0_0_40px_rgba(239,68,68,0.2)]" 
+            : "border-transparent hover:border-primary/20",
+          isPending && "opacity-75"
+        )}
+      >
+        {isWarning && (
+          <div className="absolute -top-3 -right-3 z-20 bg-red-500 text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg animate-bounce">
+            Sắp hết giờ
           </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <User size={14} className="text-muted-foreground" />
-              <p className="font-black text-sm tracking-tight uppercase">{session.customer_name}</p>
-            </div>
-            <div className="flex items-center gap-2 mt-1">
-              <Phone size={12} className="text-muted-foreground" />
-              <p className="text-[11px] font-bold text-muted-foreground">{session.phone}</p>
-            </div>
+        )}
+        {isPending && (
+          <div className="absolute inset-0 bg-background/50 rounded-[2.5rem] flex items-center justify-center z-10">
+            <Loader2 className="animate-spin text-primary" size={32} />
           </div>
-        </div>
-        <SessionStatusBadge status={session.status} />
-      </div>
+        )}
 
-      {/* Timer & Info */}
-      <div className="bg-background/50 rounded-3xl p-6 border border-white/5 space-y-4">
+        {/* Header: Hut & Status */}
         <div className="flex items-center justify-between">
-          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Thời gian còn lại</p>
-          <CountdownTimer endTime={session.end_time} sessionId={session.id} />
-        </div>
-        
-        <div className="flex items-center justify-between pt-4 border-t border-white/5">
-          <div className="flex items-center gap-2 text-muted-foreground">
-            <ShoppingBag size={14} />
-            <span className="text-[11px] font-bold uppercase tracking-wider">{session.products?.length || 0} Sản phẩm</span>
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-colors relative overflow-hidden",
+              isWarning ? "bg-red-500 shadow-red-500/20 animate-pulse" : "bg-primary shadow-primary/20"
+            )}>
+              <span className="font-black text-2xl tracking-tighter text-white">{session.hut_number}</span>
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <User size={14} className="text-muted-foreground" />
+                <p className="font-black text-sm tracking-tight uppercase">{session.customer_name}</p>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <Phone size={12} className="text-muted-foreground" />
+                <p className="text-[11px] font-bold text-muted-foreground">{session.phone}</p>
+              </div>
+            </div>
           </div>
-          <p className="text-xl font-black text-primary tracking-tight">
-            {session.total_amount.toLocaleString()}đ
-          </p>
+          <SessionStatusBadge status={isWarning ? "WARNING" : session.status} />
         </div>
-      </div>
 
-      {/* Actions Grid */}
-      <div className="grid grid-cols-2 gap-3">
-        <button 
-          disabled={isUpdating}
-          className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Plus size={16} /> Thêm đồ
-        </button>
-        <button 
-          disabled={isUpdating}
-          className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Clock size={16} /> Gia hạn
-        </button>
-        <button 
-          disabled={isUpdating}
-          className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <RotateCcw size={16} /> Thu cá
-        </button>
-        <button 
-          disabled={isUpdating}
-          className="h-12 bg-primary text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <CreditCard size={16} /> Thanh toán
-        </button>
-      </div>
-    </motion.div>
+        {/* Timer & Info */}
+        <div className="bg-background/50 rounded-3xl p-6 border border-white/5 space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Thời gian còn lại</p>
+            <CountdownTimer 
+              endTime={session.end_time ?? new Date().toISOString()} 
+              sessionId={session.id} 
+              onWarning={onWarning}
+            />
+          </div>
+          
+          <div className="flex items-center justify-between pt-4 border-t border-white/5">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <ShoppingBag size={14} />
+              <span className="text-[11px] font-bold uppercase tracking-wider">Sản phẩm</span>
+            </div>
+            <p className={cn(
+              "text-xl font-black tracking-tight",
+              isWarning ? "text-red-500" : "text-primary"
+            )}>
+              {session.total_amount.toLocaleString()}đ
+            </p>
+          </div>
+        </div>
+
+        {/* Actions Grid */}
+        <div className="grid grid-cols-2 gap-3">
+          <AddProductModal sessionId={session.id} hutNumber={session.hut_number} />
+          <ExtendSessionModal sessionId={session.id} hutNumber={session.hut_number} />
+          <FishBuybackModal sessionId={session.id} hutNumber={session.hut_number} />
+          
+          <button 
+            onClick={handleCheckout}
+            disabled={isPending}
+            className={cn(
+              "h-12 text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 disabled:opacity-50",
+              isWarning ? "bg-red-500 shadow-red-500/20" : "bg-primary shadow-primary/20"
+            )}
+          >
+            <CreditCard size={16} /> Thanh toán
+          </button>
+        </div>
+      </motion.div>
+
+      <PaymentModal 
+        isOpen={isPaymentOpen}
+        onClose={() => setIsPaymentOpen(false)}
+        billData={{
+          sessionId: session.id,
+          hutNumber: session.hut_number,
+          customerName: session.customer_name || "Khách lẻ",
+          sessionFee: session.total_amount,
+          products: (session.session_products || []).map(p => ({
+            id: p.id,
+            name: p.name || "Sản phẩm",
+            quantity: p.quantity,
+            price: p.price || p.price_at_time
+          })),
+          buybackDeduction: (session.fish_buybacks || []).reduce((sum, b) => sum + Number(b.total_price), 0),
+          subtotal: session.total_amount,
+          totalAmount: session.total_amount // total_amount in DB is already adjusted in backend buyback action
+        }}
+      />
+    </>
   );
 }

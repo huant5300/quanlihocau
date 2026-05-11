@@ -1,22 +1,22 @@
 "use client";
 
-import { useAuth } from "@/providers/auth/auth-provider";
+import { useAuthContext } from "@/providers/auth/auth-provider";
 import { useMemo } from "react";
 
 export function useAuthSession() {
-  const { user, status } = useAuth();
+  const { user, status } = useAuthContext();
 
-  const isAdmin = useMemo(() => user?.role === "Admin", [user]);
-  const isManager = useMemo(() => user?.role === "Manager", [user]);
-  const tenantId = user?.tenant_id;
+  const isSuperAdmin = useMemo(() => user?.role === "SUPER_ADMIN", [user]);
+  const isOwner = useMemo(() => user?.role === "OWNER", [user]);
+  const isAuthenticated = status === "authenticated";
+  const isLoading = status === "loading";
 
   return {
     user,
     status,
-    isAuthenticated: status === "authenticated",
-    isLoading: status === "loading",
-    isAdmin,
-    isManager,
-    tenantId,
+    isAuthenticated,
+    isLoading,
+    isSuperAdmin,
+    isOwner,
   };
 }

@@ -6,8 +6,7 @@ import {
   DollarSign, 
   Users, 
   AlertCircle,
-  TrendingUp,
-  TrendingDown
+  TrendingUp
 } from "lucide-react";
 import { motion } from "framer-motion";
 import { DashboardStats } from "@/types/dashboard";
@@ -22,7 +21,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
     {
       title: "Lượt câu",
       subtitle: "Đang hoạt động",
-      value: stats?.active_sessions || 0,
+      value: stats?.activeCount || 0,
       icon: Waves,
       color: "text-blue-500",
       bg: "bg-blue-500/10",
@@ -32,7 +31,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
     {
       title: "Doanh thu",
       subtitle: "Hôm nay",
-      value: `${(stats?.total_revenue || 0).toLocaleString()}đ`,
+      value: `${(stats?.todayRevenue || 0).toLocaleString()}đ`,
       icon: DollarSign,
       color: "text-green-500",
       bg: "bg-green-500/10",
@@ -42,7 +41,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
     {
       title: "Khách hàng",
       subtitle: "Mới hôm nay",
-      value: stats?.new_customers || 0,
+      value: stats?.customerCount || 0,
       icon: Users,
       color: "text-purple-500",
       bg: "bg-purple-500/10",
@@ -52,7 +51,7 @@ export function StatsCards({ stats }: StatsCardsProps) {
     {
       title: "Hệ thống",
       subtitle: "Cảnh báo",
-      value: stats?.active_alerts || 0,
+      value: stats?.lowStockCount || 0,
       icon: AlertCircle,
       color: "text-orange-500",
       bg: "bg-orange-500/10",

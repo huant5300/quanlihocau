@@ -14,16 +14,36 @@ interface CustomerSearchProps {
 export function CustomerSearch({ phone, name, onPhoneChange, onNameChange }: CustomerSearchProps) {
   const [isFound, setIsFound] = useState(false);
 
-  // Mock auto-detect logic
-  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const [customerInfo, setCustomerInfo] = useState<{visitCount: number, spent: number} | null>(null);
+
+  // Real auto-detect logic
+  const handlePhoneChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     onPhoneChange(val);
     
-    if (val === "0987654321") {
-      onNameChange("Khách hàng Thân thiết");
-      setIsFound(true);
+    if (val.length >= 8) {
+      try {
+        const { customerService } = await import("@/services/api/customer-service");
+        const customers = await customerService.getCustomers(val);
+        if (customers && customers.length > 0) {
+          const matched = customers[0];
+          onNameChange(matched.full_name);
+          setIsFound(true);
+          setCustomerInfo({
+            visitCount: matched.visit_count || 0,
+            spent: matched.total_spent || 0
+          });
+        } else {
+          setIsFound(false);
+          setCustomerInfo(null);
+        }
+      } catch (error) {
+        setIsFound(false);
+        setCustomerInfo(null);
+      }
     } else {
       setIsFound(false);
+      setCustomerInfo(null);
     }
   };
 
@@ -65,10 +85,10 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange }: Cus
         </div>
       </div>
 
-      {isFound && (
+      {isFound && customerInfo && (
         <div className="p-4 bg-green-500/10 rounded-2xl border border-green-500/20 animate-in slide-in-from-top-2">
           <p className="text-[10px] font-black text-green-500 uppercase tracking-widest">Khách quen hệ thống</p>
-          <p className="text-xs font-bold mt-1">Khách hàng này đã câu 15 lần tại hồ. Ưu đãi 5%.</p>
+          <p className="text-xs font-bold mt-1">Khách hàng này đã câu {customerInfo.visitCount} lần tại hồ. Tổng chi tiêu: {customerInfo.spent.toLocaleString()}đ.</p>
         </div>
       )}
     </div>

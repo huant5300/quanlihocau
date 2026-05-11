@@ -1,39 +1,26 @@
-import { User } from "@supabase/supabase-js";
+export type UserRole = "SUPER_ADMIN" | "OWNER" | "STAFF" | "CASHIER";
 
-export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
-export type UserRole = "SUPER_ADMIN" | "OWNER" | "STAFF" | "Admin" | "Manager" | "Staff";
+export type UUID = string;
 
 export interface UserProfile {
-  id: string;
+  id: UUID;
+  username: string;
   email: string;
   role: UserRole;
-  tenant_id: string;
-  full_name: string;
-  avatar_url: string;
+  first_name: string;
+  last_name: string;
+  full_name?: string;
+  avatar_url?: string;
+  avatar?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-export interface AppUser extends User {
-  profile?: UserProfile;
+export interface AuthTokens {
+  access: string;
+  refresh: string;
 }
 
-export interface AuthState {
-  user: UserProfile | null;
-  status: AuthStatus;
-  isLoading: boolean;
-  error: string | null;
+export interface AuthResponse extends AuthTokens {
+  user: UserProfile;
 }
-
-/**
- * Maps a Supabase User object to a clean UserProfile object
- */
-export const mapUserToProfile = (user: User): UserProfile => {
-  const metadata = user.user_metadata || {};
-  return {
-    id: user.id,
-    email: user.email || "",
-    role: (metadata.role as UserRole) || "STAFF",
-    tenant_id: metadata.tenant_id || "default",
-    full_name: metadata.full_name || user.email?.split("@")[0] || "Người dùng",
-    avatar_url: metadata.avatar_url || "",
-  };
-};

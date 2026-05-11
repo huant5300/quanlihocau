@@ -25,7 +25,8 @@ export function MainLayout({ children }: MainLayoutProps) {
     isOpenSessionModalOpen,
     setOpenSessionModalOpen,
     isPaymentModalOpen,
-    setPaymentModalOpen
+    setPaymentModalOpen,
+    activeSessionForPayment
   } = useUIStore();
 
   const [isQueueOpen, setIsQueueOpen] = React.useState(false);
@@ -66,18 +67,24 @@ export function MainLayout({ children }: MainLayoutProps) {
         <PaymentModal 
           isOpen={isPaymentModalOpen}
           onClose={() => setPaymentModalOpen(false)}
-          billData={{
-            sessionId: "123",
-            hutNumber: "08",
-            customerName: "Nguyễn Văn A",
-            sessionFee: 250000,
-            products: [
-              { id: "1", name: "Mồi Cám Xanh", quantity: 2, price: 25000 },
-              { id: "2", name: "Nước Suối", quantity: 1, price: 10000 }
-            ],
-            buybackDeduction: 45000,
-            subtotal: 310000,
-            totalAmount: 265000
+          billData={activeSessionForPayment ? {
+            sessionId: activeSessionForPayment.id,
+            hutNumber: activeSessionForPayment.hut_number,
+            customerName: activeSessionForPayment.customer_name || "Khách lẻ",
+            sessionFee: activeSessionForPayment.total_amount,
+            products: [], // We'd need to fetch or include these in the session object
+            buybackDeduction: 0,
+            subtotal: activeSessionForPayment.total_amount,
+            totalAmount: activeSessionForPayment.total_amount
+          } : {
+            sessionId: "",
+            hutNumber: "",
+            customerName: "",
+            sessionFee: 0,
+            products: [],
+            buybackDeduction: 0,
+            subtotal: 0,
+            totalAmount: 0
           }}
         />
       </div>

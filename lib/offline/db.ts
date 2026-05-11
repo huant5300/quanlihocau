@@ -1,9 +1,20 @@
 import Dexie, { type EntityTable } from "dexie";
+import type { PaymentInsert, ProductUpdate, SessionInsert } from "@/types";
+
+type OfflinePayloadByType = {
+  CREATE_SESSION: SessionInsert;
+  UPDATE_SESSION: { id: string } & Partial<SessionInsert>;
+  PAYMENT: PaymentInsert;
+  UPDATE_PRODUCT: { id: string } & ProductUpdate;
+};
+
+export type OfflineActionType = keyof OfflinePayloadByType;
+export type OfflinePayload = OfflinePayloadByType[OfflineActionType];
 
 export interface OfflineAction {
   id?: number;
-  type: "CREATE_SESSION" | "UPDATE_SESSION" | "PAYMENT" | "UPDATE_PRODUCT";
-  payload: any;
+  type: OfflineActionType;
+  payload: OfflinePayload;
   timestamp: number;
   status: "PENDING" | "SYNCING" | "FAILED";
   retryCount: number;
@@ -11,7 +22,7 @@ export interface OfflineAction {
 
 export interface CachedData {
   key: string; // e.g., "sessions", "products"
-  data: any;
+  data: unknown;
   updatedAt: number;
 }
 

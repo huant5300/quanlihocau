@@ -21,7 +21,7 @@ interface OpenSessionModalProps {
 }
 
 export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
-  const { form, onSubmit, isLoading } = useOpenSession();
+  const { form, onSubmit, isLoading, packages } = useOpenSession();
 
   if (!isOpen) return null;
 
@@ -95,7 +95,15 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
           {/* Footer Footer */}
           <div className="p-8 border-t border-border/50 bg-card/80 backdrop-blur-md space-y-4">
             <SessionSummary 
-              total={400000} // Mock total calculation
+              total={(() => {
+                const pkgId = form.watch("package_id");
+                const products = form.watch("products") || [];
+                const productsTotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+                
+                const selectedPkg = (packages as any[]).find(p => p.id === pkgId);
+                const packagePrice = selectedPkg ? parseFloat(selectedPkg.price) : 0;
+                return packagePrice + productsTotal;
+              })()} 
               onPrintTicket={() => console.log("Printing...")}
             />
 

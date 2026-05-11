@@ -6,16 +6,23 @@ import { useOfflineStore } from "@/stores/offline-store";
 import { Wifi, WifiOff, Cloud, CloudOff, RefreshCcw, CheckCircle, AlertTriangle } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { motion } from "framer-motion";
+import { t } from "@/utils/i18n";
 
 export function RealtimeStatusBar() {
   const { connectionStatus } = useUIStore();
   const { isOnline, pendingCount, isSyncing, lastSyncedAt } = useOfflineStore();
 
   const getSyncStatus = () => {
-    if (!isOnline) return { icon: CloudOff, text: "Offline", color: "text-gray-500" };
-    if (isSyncing) return { icon: RefreshCcw, text: "Đang đồng bộ...", color: "text-blue-500" };
-    if (pendingCount > 0) return { icon: AlertTriangle, text: `${pendingCount} chờ đồng bộ`, color: "text-orange-500" };
-    return { icon: CheckCircle, text: "Đã đồng bộ", color: "text-green-500" };
+    if (!isOnline) return { icon: CloudOff, text: t("realtime.offline"), color: "text-gray-500" };
+    if (isSyncing) return { icon: RefreshCcw, text: t("realtime.syncing"), color: "text-blue-500" };
+    if (pendingCount > 0) {
+      return {
+        icon: AlertTriangle,
+        text: `${pendingCount} ${t("realtime.pendingSuffix")}`,
+        color: "text-orange-500",
+      };
+    }
+    return { icon: CheckCircle, text: t("realtime.synced"), color: "text-green-500" };
   };
 
   const syncStatus = getSyncStatus();
@@ -29,7 +36,7 @@ export function RealtimeStatusBar() {
       )}>
         {isOnline ? <Wifi size={18} /> : <WifiOff size={18} />}
         <span className="text-[10px] font-black uppercase tracking-widest">
-          {isOnline ? "Internet Kết nối" : "Mất kết nối Internet"}
+          {isOnline ? t("realtime.internetConnected") : t("realtime.internetDisconnected")}
         </span>
       </div>
 
@@ -40,7 +47,7 @@ export function RealtimeStatusBar() {
       )}>
         {connectionStatus === "stable" ? <Cloud size={18} /> : <RefreshCcw size={18} className="animate-spin" />}
         <span className="text-[10px] font-black uppercase tracking-widest">
-          {connectionStatus === "stable" ? "Realtime Ổn định" : "Đang kết nối lại..."}
+          {connectionStatus === "stable" ? t("realtime.realtimeStable") : t("realtime.reconnecting")}
         </span>
       </div>
 

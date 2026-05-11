@@ -5,6 +5,8 @@ import { cn } from "@/utils/utils";
 import { PaymentMethod } from "../types/payment.types";
 import { Banknote, CreditCard, QrCode } from "lucide-react";
 import { motion } from "framer-motion";
+import type { LucideIcon } from "lucide-react";
+import { t } from "@/utils/i18n";
 
 interface PaymentMethodSelectorProps {
   selected: PaymentMethod;
@@ -12,10 +14,10 @@ interface PaymentMethodSelectorProps {
 }
 
 export function PaymentMethodSelector({ selected, onSelect }: PaymentMethodSelectorProps) {
-  const methods: { id: PaymentMethod, label: string, icon: any }[] = [
-    { id: "Cash", label: "Tiền mặt", icon: Banknote },
-    { id: "Bank Transfer", label: "Chuyển khoản", icon: CreditCard },
-    { id: "QR Payment", label: "Quét mã QR", icon: QrCode },
+  const methods: { id: PaymentMethod; label: string; icon: LucideIcon }[] = [
+    { id: "Cash", label: t("payment.methods.cash"), icon: Banknote },
+    { id: "Bank Transfer", label: t("payment.methods.bankTransfer"), icon: CreditCard },
+    { id: "QR Payment", label: t("payment.methods.qrPayment"), icon: QrCode },
   ];
 
   return (

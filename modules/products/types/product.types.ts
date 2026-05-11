@@ -1,13 +1,9 @@
-export type ProductCategory = "Drinks" | "Bait" | "Food" | "Equipment";
+import { Product as DbProduct, ProductCategory } from "@/types/common";
 
-export interface Product {
-  id: string;
-  name: string;
-  category: ProductCategory;
-  price: number;
-  stock: number;
-  thumbnail?: string;
-  isActive: boolean;
+export type { ProductCategory };
+
+export interface Product extends DbProduct {
+  // Add UI specific properties if needed
 }
 
 export interface ProductCardProps {

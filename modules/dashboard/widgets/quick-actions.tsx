@@ -2,17 +2,17 @@
 
 import React from "react";
 import { DashboardWidget } from "./dashboard-widget";
-import { Plus, ShoppingBag, Fish, UserPlus, Zap } from "lucide-react";
+import { Plus, ShoppingBag, Fish, UserPlus, Zap, BarChart3 } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 
 export function QuickActions() {
-  const { setOpenSessionModalOpen } = useUIStore();
+  const { setOpenSessionModalOpen, setCustomerModalOpen } = useUIStore();
 
   const actions = [
     { label: "Mở lượt mới", icon: Plus, color: "bg-primary shadow-primary/20", onClick: () => setOpenSessionModalOpen(true) },
-    { label: "Bán hàng", icon: ShoppingBag, color: "bg-blue-500 shadow-blue-500/20", onClick: () => {} },
-    { label: "Thu mua cá", icon: Fish, color: "bg-orange-500 shadow-orange-500/20", onClick: () => {} },
-    { label: "Thêm khách", icon: UserPlus, color: "bg-purple-500 shadow-purple-500/20", onClick: () => {} },
+    { label: "Bán hàng", icon: ShoppingBag, color: "bg-blue-500 shadow-blue-500/20", onClick: () => { window.location.href = "/dashboard/products" } },
+    { label: "Thống kê", icon: BarChart3, color: "bg-orange-500 shadow-orange-500/20", onClick: () => { window.location.href = "/dashboard/reports" } },
+    { label: "Thêm khách", icon: UserPlus, color: "bg-purple-500 shadow-purple-500/20", onClick: () => setCustomerModalOpen(true) },
   ];
 
   return (

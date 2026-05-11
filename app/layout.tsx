@@ -7,10 +7,11 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Fishing Lake SaaS | Quản lý Hồ câu Cá chuyên nghiệp",
-  description: "Giải pháp quản lý hồ câu toàn diện cho chủ hồ và ngư dân.",
+  description: "Giải pháp quản lý hồ câu toàn diện cho chủ hồ ",
 };
 
 import { PWARegistration } from "@/components/shared/pwa-registration";
+import { ClientOnly } from "@/components/shared/client-only";
 
 export default function RootLayout({
   children,
@@ -19,10 +20,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={inter.className} suppressHydrationWarning>
         <Providers>
           {children}
-          <PWARegistration />
+          <ClientOnly>
+            <PWARegistration />
+          </ClientOnly>
         </Providers>
       </body>
     </html>

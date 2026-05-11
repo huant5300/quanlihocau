@@ -2,22 +2,16 @@
 
 import React from "react";
 import { cn } from "@/utils/utils";
-import { Clock, Zap } from "lucide-react";
+import { Clock } from "lucide-react";
+import { sessionService } from "@/services/api/session-service";
 
 interface Package {
   id: string;
   name: string;
-  duration: number; // in minutes
+  duration_hours: number;
   price: number;
   isPopular?: boolean;
 }
-
-const MOCK_PACKAGES: Package[] = [
-  { id: "p1", name: "Gói 2 Giờ", duration: 120, price: 150000 },
-  { id: "p2", name: "Gói 4 Giờ", duration: 240, price: 250000, isPopular: true },
-  { id: "p3", name: "Gói 6 Giờ", duration: 360, price: 350000 },
-  { id: "p4", name: "Gói Cả Ngày", duration: 720, price: 500000 },
-];
 
 interface PackageSelectorProps {
   selectedId?: string;
@@ -25,11 +19,34 @@ interface PackageSelectorProps {
 }
 
 export function PackageSelector({ selectedId, onSelect }: PackageSelectorProps) {
+  const [packages, setPackages] = React.useState<Package[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function loadPackages() {
+      try {
+        const data = await sessionService.getPackages();
+        setPackages(data || []);
+      } catch (error) {
+        console.error("Failed to load packages", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadPackages();
+  }, []);
+
+  if (isLoading) return (
+    <div className="h-14 flex items-center justify-center bg-accent/30 rounded-xl">
+      <span className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+    </div>
+  );
+
   return (
     <div className="space-y-4">
       <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Chọn Gói Câu</h3>
       <div className="grid grid-cols-1 gap-3">
-        {MOCK_PACKAGES.map((pkg) => (
+        {packages.map((pkg) => (
           <button
             key={pkg.id}
             onClick={() => onSelect(pkg.id)}
@@ -49,7 +66,7 @@ export function PackageSelector({ selectedId, onSelect }: PackageSelectorProps) 
               </div>
               <div className="text-left">
                 <p className="font-black text-sm tracking-tight">{pkg.name}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">{pkg.duration / 60} Giờ thi đấu</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">{pkg.duration_hours} Giờ thi đấu</p>
               </div>
             </div>
             

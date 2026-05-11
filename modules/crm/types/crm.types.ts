@@ -1,3 +1,5 @@
+import { Customer as DbCustomer } from "@/types/common";
+
 export type MembershipLevel = "Regular" | "Silver" | "Gold" | "VIP";
 
 export interface CustomerActivity {
@@ -8,16 +10,11 @@ export interface CustomerActivity {
   amount?: number;
 }
 
-export interface Customer {
-  id: string;
-  fullName: string;
-  phoneNumber: string;
-  membershipLevel: MembershipLevel;
-  totalSpending: number;
-  totalSessions: number;
-  favoriteFish?: string;
-  lastVisit: string;
-  avatarUrl?: string;
+export interface Customer extends DbCustomer {
+  // Map DbCustomer fields if they differ significantly or add UI extras
+  totalSpending?: number;
+  totalSessions?: number;
+  lastVisit?: string;
   activities?: CustomerActivity[];
 }
 

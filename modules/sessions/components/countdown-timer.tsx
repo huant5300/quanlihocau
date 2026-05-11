@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/utils/utils";
-import { useRealtimeSession } from "@/hooks/realtime/use-realtime-sessions";
+
 
 interface CountdownTimerProps {
   endTime: string;
@@ -17,8 +17,7 @@ export function CountdownTimer({ endTime, sessionId, onExpire, onWarning }: Coun
   const [isWarning, setIsWarning] = useState(false);
   const [currentEndTime, setCurrentEndTime] = useState(endTime);
 
-  // Listen for realtime updates to session end time
-  useRealtimeSession(sessionId);
+
 
   const calculateTime = useCallback(() => {
     const now = new Date().getTime();

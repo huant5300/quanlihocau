@@ -7,10 +7,10 @@ import { motion } from "framer-motion";
 
 const CATEGORIES: { id: ProductCategory | "All", label: string }[] = [
   { id: "All", label: "Tất cả" },
-  { id: "Drinks", label: "Đồ uống" },
-  { id: "Bait", label: "Mồi câu" },
-  { id: "Food", label: "Đồ ăn" },
-  { id: "Equipment", label: "Dụng cụ" },
+  { id: "DRINK", label: "Đồ uống" },
+  { id: "BAIT", label: "Mồi câu" },
+  { id: "FOOD", label: "Đồ ăn" },
+  { id: "EQUIPMENT", label: "Dụng cụ" },
 ];
 
 interface ProductCategoryTabsProps {

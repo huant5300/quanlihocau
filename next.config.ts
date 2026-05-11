@@ -5,17 +5,28 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
+        protocol: "http",
+        hostname: "localhost",
+      },
+      {
+        protocol: "http",
+        hostname: "192.168.1.89",
+      },
+      {
         protocol: "https",
-        hostname: "*.supabase.co",
+        hostname: "**",
       },
     ],
   },
-  // Next.js 16 tối ưu hóa bundling, chúng ta bật các tính năng production-ready
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
+  // Cho phép HMR hoạt động ổn định trên mạng LAN
+  allowedDevOrigins: ["*", "localhost", "localhost:3000"],
   experimental: {
-    // Các tính năng tối ưu cho Next.js 16 nếu cần
+    serverActions: {
+      allowedOrigins: ["*.vercel.app", "localhost:3000"],
+    },
   },
   // Đảm bảo không bỏ qua lỗi để code luôn sạch
   typescript: {

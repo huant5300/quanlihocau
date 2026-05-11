@@ -5,7 +5,7 @@ export interface DashboardWidget {
   title: string;
   type: string;
   size: WidgetSize;
-  data: any;
+  data: Record<string, unknown>;
 }
 
 export interface DashboardState {

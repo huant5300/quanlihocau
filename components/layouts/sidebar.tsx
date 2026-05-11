@@ -16,18 +16,21 @@ import {
 import { motion } from "framer-motion";
 import { useUIStore } from "@/stores/ui-store";
 import { NavLink } from "@/components/shared/nav-link";
+import { useAuth } from "@/hooks/use-auth";
+import { t } from "@/utils/i18n";
 
 const sidebarItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Waves, label: "Sessions", href: "/dashboard/sessions" },
-  { icon: Users, label: "CRM", href: "/dashboard/crm" },
-  { icon: Package, label: "Products", href: "/dashboard/products" },
-  { icon: BarChart3, label: "Reports", href: "/dashboard/reports" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+  { icon: LayoutDashboard, label: t("sidebar.dashboard"), href: "/dashboard" },
+  { icon: Waves, label: t("sidebar.sessions"), href: "/dashboard/sessions" },
+  { icon: Users, label: t("sidebar.customers"), href: "/dashboard/crm" },
+  { icon: Package, label: t("sidebar.products"), href: "/dashboard/products" },
+  { icon: BarChart3, label: t("sidebar.reports"), href: "/dashboard/reports" },
+  { icon: Settings, label: t("sidebar.settings"), href: "/dashboard/settings" },
 ];
 
 export function Sidebar() {
   const { sidebarCollapsed: isCollapsed, toggleSidebar } = useUIStore();
+  const { logout } = useAuth();
 
   return (
     <aside
@@ -49,7 +52,9 @@ export function Sidebar() {
               className="flex flex-col"
             >
               <span className="font-black text-xl tracking-tight leading-none uppercase">Fish POS</span>
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">Management</span>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mt-1">
+                {t("sidebar.management")}
+              </span>
             </motion.div>
           )}
         </div>
@@ -69,9 +74,12 @@ export function Sidebar() {
 
         {/* Bottom Actions */}
         <div className="p-4 space-y-2 border-t border-white/5">
-          <button className="flex w-full items-center gap-4 px-4 py-4 rounded-[1.5rem] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all min-h-[48px]">
+          <button 
+            onClick={logout}
+            className="flex w-full items-center gap-4 px-4 py-4 rounded-[1.5rem] text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all min-h-[48px]"
+          >
             <LogOut size={22} />
-            {!isCollapsed && <span className="font-bold text-sm">Đăng xuất</span>}
+            {!isCollapsed && <span className="font-bold text-sm">{t("sidebar.logout")}</span>}
           </button>
           
           <button

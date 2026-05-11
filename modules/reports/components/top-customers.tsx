@@ -3,13 +3,15 @@
 import React from "react";
 import { Users, Trophy } from "lucide-react";
 
-const customers = [
-  { name: "Nguyễn Hoàng Nam", visits: 42, total: "12.5Mđ" },
-  { name: "Trần Minh Tâm", visits: 28, total: "8.4Mđ" },
-  { name: "Lê Thị Hồng", visits: 12, total: "3.2Mđ" },
-];
+import type { TopCustomer } from "@/types";
 
-export function TopCustomers() {
+interface TopCustomersProps {
+  initialCustomers?: TopCustomer[];
+}
+
+export function TopCustomers({ initialCustomers = [] }: TopCustomersProps) {
+  const displayCustomers = initialCustomers.length > 0 ? initialCustomers : [];
+
   return (
     <div className="glass-card p-8 rounded-[2.5rem] space-y-6">
       <div className="flex items-center justify-between">
@@ -20,22 +22,25 @@ export function TopCustomers() {
       </div>
 
       <div className="space-y-4">
-        {customers.map((c, i) => (
-          <div key={c.name} className="flex items-center justify-between group">
+        {displayCustomers.map((c, i) => (
+          <div key={c.id || i} className="flex items-center justify-between group">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 bg-accent rounded-xl flex items-center justify-center font-black text-xs group-hover:bg-primary group-hover:text-white transition-all">
-                {c.name.charAt(0)}
+                {c.full_name?.charAt(0)}
               </div>
               <div>
-                <p className="text-sm font-bold group-hover:text-primary transition-colors">{c.name}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">{c.visits} Phiên câu</p>
+                <p className="text-sm font-bold group-hover:text-primary transition-colors">{c.full_name}</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">{c.visit_count} Phiên câu</p>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-sm font-black text-primary">{c.total}</p>
+              <p className="text-sm font-black text-primary">{c.total_spent.toLocaleString()}đ</p>
             </div>
           </div>
         ))}
+        {displayCustomers.length === 0 && (
+          <p className="text-[10px] font-black uppercase text-muted-foreground text-center py-4 opacity-50">Không có dữ liệu</p>
+        )}
       </div>
 
       <button className="w-full h-12 bg-accent/50 hover:bg-accent rounded-xl text-[10px] font-black uppercase tracking-widest transition-all">

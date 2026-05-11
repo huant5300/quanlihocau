@@ -25,6 +25,9 @@ interface UIState {
   isPaymentModalOpen: boolean;
   setPaymentModalOpen: (open: boolean) => void;
   
+  isCustomerModalOpen: boolean;
+  setCustomerModalOpen: (open: boolean) => void;
+  
   activeSessionForPayment: FishingSession | null;
   setActiveSessionForPayment: (session: FishingSession | null) => void;
   
@@ -51,6 +54,9 @@ export const useUIStore = create<UIState>((set) => ({
   
   isPaymentModalOpen: false,
   setPaymentModalOpen: (open) => set({ isPaymentModalOpen: open }),
+  
+  isCustomerModalOpen: false,
+  setCustomerModalOpen: (open) => set({ isCustomerModalOpen: open }),
   
   activeSessionForPayment: null,
   setActiveSessionForPayment: (session) => set({ activeSessionForPayment: session }),

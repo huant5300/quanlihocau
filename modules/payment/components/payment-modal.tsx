@@ -17,7 +17,7 @@ interface PaymentModalProps {
 }
 
 export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
-  const { form, onSubmit, isLoading, isSuccess, setIsSuccess } = usePayment(billData.totalAmount);
+  const { form, onSubmit, isLoading, isSuccess, setIsSuccess } = usePayment(billData.totalAmount, billData.sessionId);
 
   if (!isOpen) return null;
 

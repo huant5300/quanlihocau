@@ -1,45 +1,47 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { DashboardWidget } from "./dashboard-widget";
-import { Waves, ArrowRight, Loader2, RefreshCcw } from "lucide-react";
-import { useSessions } from "@/modules/sessions/hooks/use-sessions";
-import { useRealtimeSessions } from "@/hooks/realtime/use-realtime-sessions";
-import { differenceInMinutes, format } from "date-fns";
+import { Waves, ArrowRight, RefreshCcw } from "lucide-react";
+import { FishingSession } from "@/modules/sessions/types/session.types";
+import { differenceInMinutes } from "date-fns";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
-export function ActiveSessionsOverview() {
-  const { sessions, isLoading } = useSessions();
-  useRealtimeSessions(); // Enable realtime updates
+interface ActiveSessionsOverviewProps {
+  initialSessions: FishingSession[];
+}
+
+export function ActiveSessionsOverview({ initialSessions }: ActiveSessionsOverviewProps) {
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const formatElapsedTime = (startTime: string) => {
-    const minutes = differenceInMinutes(new Date(), new Date(startTime));
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    if (!mounted) return "...";
+    try {
+      const minutes = differenceInMinutes(new Date(), new Date(startTime));
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    } catch (e) {
+      return "0m";
+    }
   };
+
+  const sessions = initialSessions;
 
   return (
     <DashboardWidget
       title="Lượt câu đang hoạt động"
-      subtitle={isLoading ? "Đang tải dữ liệu..." : `Tổng số ${sessions.length} chòi đang có khách`}
+      subtitle={`Tổng số ${sessions.length} chòi đang có khách`}
       icon={Waves}
-      headerAction={
-        <motion.div
-          animate={{ rotate: isLoading ? 360 : 0 }}
-          transition={{ duration: 1, repeat: isLoading ? Infinity : 0, ease: "linear" }}
-        >
-          <RefreshCcw size={16} className="text-muted-foreground" />
-        </motion.div>
-      }
+      headerAction={<RefreshCcw size={16} className="text-muted-foreground cursor-pointer hover:rotate-180 transition-all duration-500" />}
     >
       <div className="space-y-4">
-        {isLoading ? (
-          <div className="py-10 flex flex-col items-center justify-center gap-3">
-            <Loader2 className="animate-spin text-primary/40" size={32} />
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Đang cập nhật...</p>
-          </div>
-        ) : sessions.length === 0 ? (
+        {sessions.length === 0 ? (
           <div className="py-10 text-center space-y-2 border-2 border-dashed border-border/50 rounded-3xl">
             <p className="text-xs font-bold text-muted-foreground">Hiện chưa có lượt câu nào</p>
             <p className="text-[10px] uppercase font-black text-primary">Mở lượt mới ngay</p>
@@ -73,10 +75,13 @@ export function ActiveSessionsOverview() {
           </AnimatePresence>
         )}
 
-        {!isLoading && sessions.length > 0 && (
-          <button className="w-full h-12 bg-primary/5 hover:bg-primary/10 text-primary rounded-xl text-[10px] font-black uppercase tracking-widest transition-all mt-2">
+        {sessions.length > 0 && (
+          <Link 
+            href="/dashboard/sessions"
+            className="w-full h-12 bg-primary/5 hover:bg-primary/10 text-primary rounded-xl flex items-center justify-center text-[10px] font-black uppercase tracking-widest transition-all mt-2"
+          >
             Xem tất cả {sessions.length} lượt câu
-          </button>
+          </Link>
         )}
       </div>
     </DashboardWidget>

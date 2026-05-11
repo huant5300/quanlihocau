@@ -10,13 +10,14 @@ import {
 } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { NavLink } from "@/components/shared/nav-link";
+import { t } from "@/utils/i18n";
 
 const navItems = [
-  { icon: LayoutDashboard, label: "Home", href: "/dashboard" },
-  { icon: Waves, label: "Sessions", href: "/dashboard/sessions" },
-  { icon: null, label: "Add", href: "#", isFab: true },
-  { icon: Package, label: "Products", href: "/dashboard/products" },
-  { icon: Users, label: "CRM", href: "/dashboard/crm" },
+  { icon: LayoutDashboard, label: t("mobileNav.home"), href: "/dashboard" },
+  { icon: Waves, label: t("mobileNav.sessions"), href: "/dashboard/sessions" },
+  { icon: null, label: t("mobileNav.add"), href: "#", isFab: true },
+  { icon: Package, label: t("mobileNav.products"), href: "/dashboard/products" },
+  { icon: Users, label: t("mobileNav.customers"), href: "/dashboard/crm" },
 ];
 
 export function MobileNav() {

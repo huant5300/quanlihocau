@@ -11,34 +11,20 @@ import {
   ResponsiveContainer 
 } from "recharts";
 import { useTheme } from "next-themes";
-import { useQuery } from "@tanstack/react-query";
-import { reportService } from "@/services/supabase/report-service";
-import { motion } from "framer-motion";
+import type { RevenuePoint } from "@/types";
 
-export function RevenueChart() {
+interface RevenueChartProps {
+  data: RevenuePoint[];
+}
+
+export function RevenueChart({ data: chartData }: RevenueChartProps) {
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const { data: rawData, isLoading } = useQuery({
-    queryKey: ["monthly-revenue"],
-    queryFn: () => reportService.getMonthlyRevenue(),
-  });
-
-  // Format data for Recharts
-  const chartData = (rawData || []).map(item => ({
-    name: item.month, // YYYY-MM
-    revenue: Number(item.revenue),
-    count: item.payment_count
-  }));
-
-  if (isLoading) {
+  if (!chartData || chartData.length === 0) {
     return (
-      <div className="h-[350px] w-full flex items-center justify-center">
-        <motion.div
-          animate={{ rotate: 360 }}
-          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-          className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
-        />
+      <div className="h-[350px] w-full flex items-center justify-center text-muted-foreground font-black uppercase text-[10px] tracking-widest opacity-50">
+        Không có dữ liệu doanh thu
       </div>
     );
   }
@@ -64,10 +50,7 @@ export function RevenueChart() {
             tickLine={false}
             tick={{ fontSize: 10, fontWeight: 900, fill: "currentColor", opacity: 0.5 }}
             dy={10}
-            tickFormatter={(value) => {
-              const [year, month] = value.split("-");
-              return `Tháng ${month}/${year.slice(2)}`;
-            }}
+            tickFormatter={(value) => value}
           />
           <YAxis 
             axisLine={false}

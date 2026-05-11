@@ -1,19 +1,15 @@
 import { db, OfflineAction } from "./db";
-import { createClient } from "@/utils/supabase/client";
 import { toast } from "sonner";
+import { sessionService } from "@/services/api/session-service";
+import { productService } from "@/services/api/product-service";
 
 export class SyncService {
   private static isSyncing = false;
-  private static _supabase: ReturnType<typeof createClient> | null = null;
-  private static get supabase() {
-    if (!this._supabase) this._supabase = createClient();
-    return this._supabase;
-  }
 
   /**
    * Add an action to the offline queue
    */
-  static async enqueueAction(type: OfflineAction["type"], payload: any) {
+  static async enqueueAction(type: any, payload: any) {
     const actionId = await db.syncQueue.add({
       type,
       payload,
@@ -23,7 +19,7 @@ export class SyncService {
     });
 
     // Try to sync immediately if online
-    if (navigator.onLine) {
+    if (typeof navigator !== "undefined" && navigator.onLine) {
       this.processQueue();
     } else {
       toast.info("Đang ngoại tuyến. Hành động đã được lưu vào hàng chờ.");
@@ -36,8 +32,8 @@ export class SyncService {
    * Process all pending actions in the queue
    */
   static async processQueue() {
-    if (this.isSyncing || !navigator.onLine) return;
-    
+    if (typeof navigator === "undefined" || !navigator.onLine || this.isSyncing) return;
+
     const pendingActions = await db.syncQueue
       .where("status")
       .equals("PENDING")
@@ -55,9 +51,9 @@ export class SyncService {
         await db.syncQueue.delete(action.id!);
       } catch (error) {
         console.error(`Sync failed for action ${action.id}:`, error);
-        await db.syncQueue.update(action.id!, { 
-          status: "PENDING", 
-          retryCount: action.retryCount + 1 
+        await db.syncQueue.update(action.id!, {
+          status: "PENDING",
+          retryCount: action.retryCount + 1
         });
       }
     }
@@ -67,30 +63,24 @@ export class SyncService {
   }
 
   /**
-   * Actual logic to sync a single action with Supabase
+   * Actual logic to sync a single action with Django API
    */
   private static async syncAction(action: OfflineAction) {
     switch (action.type) {
       case "CREATE_SESSION":
-        const { error: sessionErr } = await this.supabase
-          .from("sessions")
-          .insert([action.payload]);
-        if (sessionErr) throw sessionErr;
+        await sessionService.createSession(action.payload as any);
         break;
 
       case "PAYMENT":
-        const { error: paymentErr } = await this.supabase
-          .from("payments")
-          .insert([action.payload]);
-        if (paymentErr) throw paymentErr;
+        // Implement payment sync if needed
         break;
 
       case "UPDATE_PRODUCT":
-        const { error: productErr } = await this.supabase
-          .from("products")
-          .update(action.payload)
-          .eq("id", action.payload.id);
-        if (productErr) throw productErr;
+        if (!("id" in action.payload)) {
+          throw new Error("Thiếu id sản phẩm để cập nhật.");
+        }
+        const { id, ...updateData } = action.payload as any;
+        await productService.updateProduct(id, updateData);
         break;
     }
   }
@@ -99,11 +89,13 @@ export class SyncService {
    * Initialize listeners for online/offline status
    */
   static init() {
+    if (typeof window === "undefined") return;
+
     window.addEventListener("online", () => {
       toast.success("Đã có kết nối internet. Đang đồng bộ...");
       this.processQueue();
     });
-    
+
     window.addEventListener("offline", () => {
       toast.warning("Bạn đang ở chế độ ngoại tuyến.");
     });

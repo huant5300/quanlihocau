@@ -80,7 +80,7 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
       setIsOpen(false);
       setSelectedProducts([]);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Không thể thêm sản phẩm");
+      toast.error(error.message || "Không thể thêm sản phẩm");
     } finally {
       setIsSaving(false);
     }

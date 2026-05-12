@@ -38,7 +38,7 @@ export function ExtendSessionModal({ sessionId, hutNumber }: ExtendSessionModalP
       queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
       setIsOpen(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Không thể gia hạn phiên");
+      toast.error(error.message || "Không thể gia hạn phiên");
     } finally {
       setIsSaving(false);
     }

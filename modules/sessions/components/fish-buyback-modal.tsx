@@ -44,7 +44,7 @@ export function FishBuybackModal({ sessionId, hutNumber }: FishBuybackModalProps
       queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
       setIsOpen(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Không thể ghi nhận thu mua cá");
+      toast.error(error.message || "Không thể ghi nhận thu mua cá");
     } finally {
       setIsSaving(false);
     }

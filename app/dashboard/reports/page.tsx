@@ -3,10 +3,23 @@
 import React from "react";
 import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
 import { StatsGrid } from "@/modules/reports/components/stats-grid";
-import { RevenueChart } from "@/modules/reports/components/revenue-chart";
-import { PopularProducts } from "@/modules/reports/components/popular-products";
-import { TopCustomers } from "@/modules/reports/components/top-customers";
+import dynamic from "next/dynamic";
 import { FileDown, Calendar, TrendingUp, Loader2 } from "lucide-react";
+
+const RevenueChart = dynamic(() => import("@/modules/reports/components/revenue-chart").then(mod => mod.RevenueChart), {
+  ssr: false,
+  loading: () => <div className="h-80 w-full bg-accent/20 animate-pulse rounded-3xl" />
+});
+
+const PopularProducts = dynamic(() => import("@/modules/reports/components/popular-products").then(mod => mod.PopularProducts), {
+  ssr: false,
+  loading: () => <div className="h-80 w-full bg-accent/20 animate-pulse rounded-3xl" />
+});
+
+const TopCustomers = dynamic(() => import("@/modules/reports/components/top-customers").then(mod => mod.TopCustomers), {
+  ssr: false,
+  loading: () => <div className="h-80 w-full bg-accent/20 animate-pulse rounded-3xl" />
+});
 import { cn } from "@/utils/utils";
 import { useQuery } from "@tanstack/react-query";
 import { reportService } from "@/services/api/report-service";

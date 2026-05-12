@@ -17,6 +17,8 @@ export function RevenueSummary({ initialRevenue, sessionRevenue = 0, productReve
     setMounted(true);
   }, []);
 
+  if (!mounted) return <div className="h-40 bg-accent/10 animate-pulse rounded-[2.5rem]" />;
+
   const formattedRevenue = new Intl.NumberFormat("vi-VN", {
     style: "currency",
     currency: "VND",

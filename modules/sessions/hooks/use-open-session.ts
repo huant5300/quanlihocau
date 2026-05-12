@@ -72,7 +72,7 @@ export function useOpenSession() {
       }
       return false;
     } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Đã có lỗi xảy ra");
+      toast.error(error.message || "Đã có lỗi xảy ra");
       return false;
     } finally {
       setIsLoading(false);

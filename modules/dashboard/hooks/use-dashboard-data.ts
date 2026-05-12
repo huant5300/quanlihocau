@@ -15,8 +15,11 @@ export function useDashboardData() {
         todayRevenue: data.todayRevenue || 0,
         customerCount: data.customerCount || 0,
         lowStockCount: data.lowStockCount || 0,
+        sessionRevenue: data.sessionRevenue || 0,
+        productRevenue: data.productRevenue || 0,
       };
     },
+    refetchInterval: 10000, // Poll every 10s for stats
   });
 
   // Fetch Active Sessions
@@ -25,10 +28,8 @@ export function useDashboardData() {
     queryFn: async () => {
       return await sessionService.getSessions("ACTIVE");
     },
+    refetchInterval: 5000, // Poll every 5s for active sessions
   });
-
-  // Realtime is disabled for now as we migrated to Django.
-  // Future: Use WebSockets with Django Channels.
 
   return {
     stats,

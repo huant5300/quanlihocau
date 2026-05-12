@@ -11,6 +11,13 @@ import { t } from "@/utils/i18n";
 export function RealtimeStatusBar() {
   const { connectionStatus } = useUIStore();
   const { isOnline, pendingCount, isSyncing, lastSyncedAt } = useOfflineStore();
+  const [isMounted, setIsMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (!isMounted) return <div className="h-12 mb-8 animate-pulse bg-accent/10 rounded-2xl" />;
 
   const getSyncStatus = () => {
     if (!isOnline) return { icon: CloudOff, text: t("realtime.offline"), color: "text-gray-500" };

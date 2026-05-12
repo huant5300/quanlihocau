@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action, api_view
 from rest_framework.response import Response
+from django.db import transaction
 from .models import Session, SessionProduct, FishingPackage, Hut
 from .serializers import SessionSerializer, SessionProductSerializer, FishingPackageSerializer, HutSerializer
 from customer.models import Customer
@@ -8,6 +9,7 @@ from product.models import Product
 from fish.models import FishBuyback, FishType
 from tenants.models import Tenant
 from payment.models import Payment
+from django.db import models
 
 class FishingPackageViewSet(viewsets.ModelViewSet):
     queryset = FishingPackage.objects.all()
@@ -28,6 +30,7 @@ class SessionViewSet(viewsets.ModelViewSet):
             qs = qs.filter(status=status_param)
         return qs
 
+    @transaction.atomic
     def create(self, request, *args, **kwargs):
         tenant = Tenant.objects.first()
         data = request.data
@@ -83,6 +86,7 @@ class SessionViewSet(viewsets.ModelViewSet):
         return Response(SessionSerializer(session).data)
 
     @action(detail=True, methods=['post'])
+    @transaction.atomic
     def checkout(self, request, pk=None):
         session = self.get_object()
         session.status = 'COMPLETED'
@@ -134,6 +138,7 @@ class SessionViewSet(viewsets.ModelViewSet):
         return Response(SessionSerializer(session).data)
 
     @action(detail=True, methods=['post'])
+    @transaction.atomic
     def add_products(self, request, pk=None):
         from decimal import Decimal
         session = self.get_object()
@@ -172,7 +177,9 @@ class SessionViewSet(viewsets.ModelViewSet):
         # Calculate product revenue for today
         product_revenue = SessionProduct.objects.filter(
             session__in=today_sessions
-        ).aggregate(total=Sum(models.F('quantity') * models.F('price_at_time')))['total'] or 0
+        ).aggregate(
+            total=Sum(models.F('quantity') * models.F('price_at_time'), output_field=models.DecimalField())
+        )['total'] or 0
         
         session_revenue = today_revenue - product_revenue
         

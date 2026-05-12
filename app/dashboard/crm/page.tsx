@@ -5,6 +5,7 @@ import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/das
 import { CRMClient } from "./crm-client";
 import { Users, Trophy, Wallet } from "lucide-react";
 import { CustomerModal } from "@/modules/crm/components/customer-modal";
+import { CRMSkeleton } from "@/modules/crm/components/crm-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { customerService } from "@/services/api/customer-service";
 
@@ -63,9 +64,7 @@ export default function CRMPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
-          </div>
+          <CRMSkeleton />
         ) : (
           <CRMClient 
             customers={customers} 

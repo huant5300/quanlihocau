@@ -3,7 +3,8 @@
 import React from "react";
 import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
 import { ProductList } from "@/modules/products/components/product-list";
-import { Package, Loader2 } from "lucide-react";
+import { Package } from "lucide-react";
+import { ProductSkeleton } from "@/modules/products/components/product-skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { productService } from "@/services/api/product-service";
 import { ProductModal } from "@/modules/products/components/product-modal";
@@ -29,9 +30,7 @@ export default function ProductsPage() {
       }
     >
       {isLoading ? (
-        <div className="flex items-center justify-center h-64">
-          <Loader2 className="animate-spin text-primary" size={48} />
-        </div>
+        <ProductSkeleton />
       ) : (
         <div className="space-y-10">
           {/* Quick Inventory Summary */}

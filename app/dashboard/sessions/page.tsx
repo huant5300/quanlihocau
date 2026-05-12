@@ -5,7 +5,7 @@ import { SessionsClient } from "./sessions-client";
 import { useQuery } from "@tanstack/react-query";
 import { sessionService } from "@/services/api/session-service";
 import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
-import { SessionSkeleton } from "@/modules/sessions/skeletons/session-skeleton";
+import { SessionCardSkeleton } from "@/modules/sessions/skeletons/session-skeleton";
 import { DashboardHeaderActions } from "@/modules/dashboard/widgets/dashboard-header-actions";
 
 export default function SessionsPage() {
@@ -28,7 +28,7 @@ export default function SessionsPage() {
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
           {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <SessionSkeleton key={i} />
+            <SessionCardSkeleton key={i} />
           ))}
         </div>
       ) : (

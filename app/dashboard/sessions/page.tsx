@@ -1,39 +1,34 @@
-"use client";
-
-import React from "react";
+import prisma from "@/lib/prisma";
 import { SessionsClient } from "./sessions-client";
-import { useQuery } from "@tanstack/react-query";
-import { sessionService } from "@/services/api/session-service";
-import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
-import { SessionCardSkeleton } from "@/modules/sessions/skeletons/session-skeleton";
-import { DashboardHeaderActions } from "@/modules/dashboard/widgets/dashboard-header-actions";
+import { DashboardHeader } from "@/components/shared/dashboard-header";
 
-export default function SessionsPage() {
-  const { data: sessions = [], isLoading } = useQuery({
-    queryKey: ["sessions"],
-    queryFn: () => sessionService.getSessions(),
-    refetchInterval: 5000,
-  });
+export default async function SessionsPage() {
+  const [sessions, areas, customers] = await Promise.all([
+    prisma.fishingSession.findMany({
+      where: { status: "ACTIVE" },
+      include: {
+        area: true,
+        customer: true,
+        fishCatches: { include: { fishType: true } }
+      },
+      orderBy: { startTime: "desc" }
+    }),
+    prisma.fishingArea.findMany({ where: { status: "AVAILABLE" } }),
+    prisma.customer.findMany()
+  ]);
 
   return (
-    <DashboardLayout
-      header={
-        <DashboardHeader 
-          title="Quản lý Lượt câu" 
-          subtitle="Theo dõi và quản lý các chòi đang hoạt động tại hồ."
-          actions={<DashboardHeaderActions />}
-        />
-      }
-    >
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
-          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-            <SessionCardSkeleton key={i} />
-          ))}
-        </div>
-      ) : (
-        <SessionsClient initialSessions={sessions} />
-      )}
-    </DashboardLayout>
+    <div className="space-y-8">
+      <DashboardHeader 
+        title="Quản lý Lượt câu" 
+        subtitle="Theo dõi và quản lý các chòi đang hoạt động tại hồ."
+      />
+      
+      <SessionsClient 
+        initialSessions={JSON.parse(JSON.stringify(sessions))} 
+        availableAreas={JSON.parse(JSON.stringify(areas))}
+        customers={JSON.parse(JSON.stringify(customers))}
+      />
+    </div>
   );
 }

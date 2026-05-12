@@ -32,3 +32,4 @@ backend/.env
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/lib/generated/prisma

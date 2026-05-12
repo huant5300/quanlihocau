@@ -9,32 +9,41 @@ import { motion } from "framer-motion";
 import { useGoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
 
+import { signIn } from "next-auth/react";
+
 export default function LoginPage() {
-  const { login, loginWithGoogle, isLoading, user } = useAuth();
   const router = useRouter();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-
-  const googleLogin = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      loginWithGoogle(tokenResponse.access_token);
-    },
-    onError: () => {
-      toast.error("Đăng nhập Google thất bại");
-    },
-  });
-
-  useEffect(() => {
-    if (user) {
-      router.push("/dashboard");
-    }
-  }, [user, router]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (username && password) {
-      await login(username, password);
+    setIsLoading(true);
+    
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        toast.error("Sai email hoặc mật khẩu");
+      } else {
+        toast.success("Đăng nhập thành công");
+        router.push("/dashboard");
+        router.refresh();
+      }
+    } catch (error) {
+      toast.error("Đã có lỗi xảy ra");
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  const handleGoogleLogin = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -65,10 +74,10 @@ export default function LoginPage() {
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
               <input
-                type="text"
-                placeholder="Tên đăng nhập"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
+                type="email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 className="w-full h-12 bg-white/5 border border-white/10 rounded-2xl pl-12 pr-4 text-white focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
                 required
               />
@@ -105,7 +114,7 @@ export default function LoginPage() {
         </div>
 
         <button
-          onClick={() => googleLogin()}
+          onClick={handleGoogleLogin}
           disabled={isLoading}
           type="button"
           className="w-full h-12 bg-white/5 border border-white/10 text-white font-semibold rounded-2xl flex items-center justify-center gap-3 mt-6 hover:bg-white/10 transition-all disabled:opacity-50"

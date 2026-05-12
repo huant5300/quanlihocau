@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Providers } from "./providers";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -10,8 +9,7 @@ export const metadata: Metadata = {
   description: "Giải pháp quản lý hồ câu toàn diện cho chủ hồ ",
 };
 
-import { PWARegistration } from "@/components/shared/pwa-registration";
-import { ClientOnly } from "@/components/shared/client-only";
+import AppProviders from "./providers";
 
 export default function RootLayout({
   children,
@@ -19,14 +17,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
-      <body className={inter.className} suppressHydrationWarning>
-        <Providers>
+    <html lang="vi" suppressHydrationWarning className="dark">
+      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+        <AppProviders>
           {children}
-          <ClientOnly>
-            <PWARegistration />
-          </ClientOnly>
-        </Providers>
+        </AppProviders>
       </body>
     </html>
   );

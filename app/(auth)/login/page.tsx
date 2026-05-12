@@ -28,8 +28,14 @@ export default function LoginPage() {
         redirect: false,
       });
 
+      console.log("Login Result:", result);
+
       if (result?.error) {
-        toast.error("Sai email hoặc mật khẩu");
+        if (result.error === "CredentialsSignin") {
+          toast.error("Sai email hoặc mật khẩu");
+        } else {
+          toast.error("Lỗi hệ thống: " + result.error);
+        }
       } else {
         toast.success("Đăng nhập thành công");
         router.push("/dashboard");

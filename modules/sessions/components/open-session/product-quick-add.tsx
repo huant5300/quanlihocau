@@ -1,9 +1,10 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Plus, Minus, ShoppingBag } from "lucide-react";
+import { Plus, Minus, ShoppingBag, Search, PlusCircle, Loader2 } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { productService } from "@/services/api/product-service";
+import { toast } from "sonner";
 
 interface Product {
   id: string;
@@ -19,28 +20,32 @@ interface ProductQuickAddProps {
 export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddProps) {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+
+  const loadProducts = async () => {
+    try {
+      const data = await productService.getProducts();
+      setProducts(data);
+    } catch (error) {
+      console.error("Failed to load products", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function loadProducts() {
-      try {
-        const data = await productService.getProducts();
-        // Take first 4 or common products as "Quick Add"
-        setProducts(data.slice(0, 4));
-      } catch (error) {
-        console.error("Failed to load products", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
     loadProducts();
   }, []);
 
   const handleToggle = (product: Product) => {
     const existing = selectedProducts.find(p => p.id === product.id);
+    const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+    
     if (existing) {
       onUpdate(selectedProducts.filter(p => p.id !== product.id));
     } else {
-      onUpdate([...selectedProducts, { id: product.id, quantity: 1, price: product.price }]);
+      onUpdate([...selectedProducts, { id: product.id, quantity: 1, price }]);
     }
   };
 
@@ -53,22 +58,67 @@ export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddP
     }));
   };
 
+  const handleQuickCreate = async () => {
+    if (!search.trim()) return;
+    
+    setIsCreating(true);
+    try {
+      // Prompt for price or use a default
+      const priceStr = prompt(`Nhập giá cho "${search}":`, "20000");
+      if (priceStr === null) return;
+      const price = parseFloat(priceStr);
+      
+      const newProduct = await productService.createProduct({
+        name: search,
+        price,
+        categoryId: "cmp5ikhn00000w9ts0i0n76fh", // Default category created earlier
+        stock: 100,
+      } as any);
+
+      toast.success(`Đã tạo và thêm sản phẩm: ${search}`);
+      await loadProducts();
+      onUpdate([...selectedProducts, { id: newProduct.id, quantity: 1, price }]);
+      setSearch("");
+    } catch (error: any) {
+      toast.error(error.message || "Không thể tạo sản phẩm");
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(search.toLowerCase())
+  ).slice(0, 8);
+
+  const exactMatch = products.find(p => p.name.toLowerCase() === search.toLowerCase());
+
   if (isLoading) return (
     <div className="h-12 flex items-center justify-center bg-accent/30 rounded-xl">
       <span className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
     </div>
   );
 
-  if (products.length === 0) return null;
-
   return (
     <div className="space-y-4">
-      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-        <ShoppingBag size={14} /> Thêm Sản phẩm (Tùy chọn)
-      </h3>
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+          <ShoppingBag size={14} /> Thêm Sản phẩm
+        </h3>
+        
+        <div className="relative flex-1 max-w-[200px] ml-4">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={12} />
+          <input 
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Tìm hoặc thêm mới..."
+            className="w-full h-9 pl-9 pr-4 bg-accent/50 rounded-lg text-[10px] font-bold outline-none focus:ring-1 ring-primary/20 transition-all"
+          />
+        </div>
+      </div>
       
       <div className="flex flex-wrap gap-2">
-        {products.map((product) => {
+        {filteredProducts.map((product) => {
           const selected = selectedProducts.find(p => p.id === product.id);
           const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
           
@@ -98,6 +148,22 @@ export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddP
             </div>
           );
         })}
+
+        {search && !exactMatch && (
+          <button
+            type="button"
+            onClick={handleQuickCreate}
+            disabled={isCreating}
+            className="px-4 h-12 rounded-xl font-black text-[10px] uppercase tracking-widest border-2 border-dashed border-primary/30 text-primary flex items-center gap-2 hover:bg-primary/5 transition-all"
+          >
+            {isCreating ? <Loader2 size={14} className="animate-spin" /> : <PlusCircle size={14} />}
+            Thêm mới "{search}"
+          </button>
+        )}
+
+        {products.length === 0 && !search && (
+          <p className="text-[10px] italic text-muted-foreground">Chưa có sản phẩm nào. Hãy tìm kiếm để thêm mới.</p>
+        )}
       </div>
     </div>
   );

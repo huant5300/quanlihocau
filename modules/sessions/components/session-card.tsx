@@ -141,6 +141,16 @@ export function SessionCard({ session }: SessionCardProps) {
             <CreditCard size={16} /> Thanh toán
           </button>
         </div>
+
+        {/* Guidance Line */}
+        <div className="mt-2 pt-4 border-t border-white/5 flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
+            {isWarning 
+              ? "Gợi ý: Khách sắp hết giờ, hãy hỏi gia hạn hoặc chuẩn bị thanh toán" 
+              : "Gợi ý: Nhấn 'Thu cá' để ghi nhận cá khách câu được và trừ vào bill"}
+          </p>
+        </div>
       </motion.div>
 
       <PaymentModal 

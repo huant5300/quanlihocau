@@ -16,11 +16,12 @@ import {
 
 export function PackageSettings() {
   const [packages, setPackages] = useState<
-    Array<{ id: string; name: string; duration_hours: number; price: number; is_active: boolean }>
+    Array<{ id: string; name: string; durationHours: number; price: number; isActive: boolean }>
   >([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<any>(null);
 
   useEffect(() => {
     loadPackages();
@@ -38,12 +39,22 @@ export function PackageSettings() {
     }
   };
 
-  const handleAddPackage = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleOpenAdd = () => {
+    setEditingPackage(null);
+    setIsOpen(true);
+  };
+
+  const handleOpenEdit = (pkg: any) => {
+    setEditingPackage(pkg);
+    setIsOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSaving(true);
     try {
       const formData = new FormData(e.currentTarget);
-      const name = formData.get("name");
+      const name = formData.get("name") as string;
       const duration_hours = Number(formData.get("duration")) / 60;
       const price = Number(formData.get("price"));
       
@@ -52,18 +63,28 @@ export function PackageSettings() {
         return;
       }
 
-      await settingsService.createPackage({
-        name,
-        duration_hours,
-        price,
-        is_active: true
-      });
+      if (editingPackage) {
+        await settingsService.updatePackage(editingPackage.id, {
+          name,
+          durationHours: duration_hours,
+          price,
+          isActive: true
+        });
+        toast.success("Đã cập nhật gói câu");
+      } else {
+        await settingsService.createPackage({
+          name,
+          durationHours: duration_hours,
+          price,
+          isActive: true
+        });
+        toast.success("Đã thêm gói câu mới");
+      }
       
-      toast.success("Đã thêm gói câu mới");
       setIsOpen(false);
       loadPackages();
     } catch (error: any) {
-      toast.error(error.message || "Lỗi khi thêm gói câu");
+      toast.error(error.message || "Lỗi khi lưu gói câu");
     } finally {
       setIsSaving(false);
     }
@@ -96,7 +117,7 @@ export function PackageSettings() {
             <div key={pkg.id} className="p-5 bg-accent/30 rounded-[2rem] border border-white/5 flex items-center justify-between group hover:bg-accent/50 transition-all">
               <div className="flex items-center gap-6">
                 <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center font-black text-xs">
-                  {pkg.duration_hours || (pkg as any).duration / 60}h
+                  {pkg.durationHours}h
                 </div>
                 <div>
                   <p className="font-black text-sm uppercase tracking-tight">{pkg.name}</p>
@@ -105,7 +126,10 @@ export function PackageSettings() {
               </div>
               
               <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                <button className="p-3 bg-background hover:bg-primary/10 hover:text-primary rounded-xl transition-all">
+                <button 
+                  onClick={() => handleOpenEdit(pkg)}
+                  className="p-3 bg-background hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
+                >
                   <Edit2 size={16} />
                 </button>
                 <button 
@@ -120,7 +144,7 @@ export function PackageSettings() {
         )}
 
         <button 
-          onClick={() => setIsOpen(true)}
+          onClick={handleOpenAdd}
           className="w-full h-16 border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 rounded-[2rem] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[10px] transition-all"
         >
           <Plus size={18} />
@@ -128,16 +152,19 @@ export function PackageSettings() {
         </button>
 
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-          <DialogContent>
+          <DialogContent className="max-w-md rounded-[2.5rem]">
             <DialogHeader>
-              <DialogTitle>Thêm gói câu mới</DialogTitle>
+              <DialogTitle className="text-xl font-black uppercase tracking-tight">
+                {editingPackage ? "Chỉnh sửa gói câu" : "Thêm gói câu mới"}
+              </DialogTitle>
             </DialogHeader>
-            <form onSubmit={handleAddPackage} className="space-y-4 pt-4">
+            <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên gói</label>
                 <input 
                   name="name"
                   required
+                  defaultValue={editingPackage?.name || ""}
                   className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                   placeholder="Gói 5 giờ"
                 />
@@ -149,6 +176,7 @@ export function PackageSettings() {
                     name="duration"
                     type="number"
                     required
+                    defaultValue={editingPackage ? (editingPackage.duration_hours * 60) : ""}
                     className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                     placeholder="300"
                   />
@@ -159,6 +187,7 @@ export function PackageSettings() {
                     name="price"
                     type="number"
                     required
+                    defaultValue={editingPackage?.price || ""}
                     className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                     placeholder="250000"
                   />
@@ -168,10 +197,10 @@ export function PackageSettings() {
                 <button 
                   type="submit"
                   disabled={isSaving}
-                  className="h-14 px-8 bg-primary text-white rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
+                  className="w-full h-14 bg-primary text-white rounded-2xl font-black flex items-center justify-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                 >
-                  {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
-                  Thêm gói
+                  {isSaving ? <Loader2 className="animate-spin" size={18} /> : (editingPackage ? <Edit2 size={18} /> : <Plus size={18} />)}
+                  {editingPackage ? "Cập nhật gói" : "Thêm gói"}
                 </button>
               </DialogFooter>
             </form>

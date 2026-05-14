@@ -8,7 +8,7 @@ import { sessionService } from "@/services/api/session-service";
 interface Package {
   id: string;
   name: string;
-  duration_hours: number;
+  durationHours: number;
   price: number;
   isPopular?: boolean;
 }
@@ -26,7 +26,13 @@ export function PackageSelector({ selectedId, onSelect }: PackageSelectorProps) 
     async function loadPackages() {
       try {
         const data = await sessionService.getPackages();
-        setPackages(data || []);
+        // Support both duration_hours and durationHours for backward compatibility if needed, but prefer durationHours
+        const normalized = (data || []).map((p: any) => ({
+          ...p,
+          durationHours: p.durationHours || p.duration_hours || 0,
+          price: typeof p.price === 'string' ? parseFloat(p.price) : p.price
+        }));
+        setPackages(normalized);
       } catch (error) {
         console.error("Failed to load packages", error);
       } finally {
@@ -66,7 +72,7 @@ export function PackageSelector({ selectedId, onSelect }: PackageSelectorProps) 
               </div>
               <div className="text-left">
                 <p className="font-black text-sm tracking-tight">{pkg.name}</p>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase">{pkg.duration_hours} Giờ thi đấu</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase">{pkg.durationHours} Giờ thi đấu</p>
               </div>
             </div>
             

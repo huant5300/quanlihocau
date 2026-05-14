@@ -12,7 +12,16 @@ export default function AppProviders({ children }: { children: React.ReactNode }
     <SessionProvider>
       <QueryClientProvider client={queryClient}>
         {children}
-        <Toaster richColors position="top-right" />
+        <Toaster 
+          richColors 
+          position="top-center" 
+          toastOptions={{
+            className: "notification-contrast scale-90 sm:scale-100",
+            style: {
+              borderRadius: "99px",
+            }
+          }} 
+        />
       </QueryClientProvider>
     </SessionProvider>
   );

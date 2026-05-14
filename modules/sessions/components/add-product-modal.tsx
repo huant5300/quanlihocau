@@ -101,14 +101,24 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[90vh]">
-        <DialogHeader>
+        <DialogHeader className="p-8 pb-0">
           <DialogTitle className="text-2xl font-black uppercase flex items-center gap-3">
             <ShoppingBag className="text-primary" />
             Thêm sản phẩm - Chòi {hutNumber}
           </DialogTitle>
         </DialogHeader>
+
+        {/* Guidance Bar */}
+        <div className="px-8 py-3 bg-primary/5 border-b border-primary/10 flex items-center gap-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-primary">
+            {selectedProducts.length === 0 
+              ? "Gợi ý: Tìm kiếm và nhấn vào sản phẩm để thêm vào giỏ hàng" 
+              : "Gợi ý: Điều chỉnh số lượng và nhấn 'Xác nhận thêm' để hoàn tất"}
+          </p>
+        </div>
  
-        <div className="flex-1 overflow-hidden flex flex-col gap-6 py-4">
+        <div className="flex-1 overflow-hidden flex flex-col gap-6 p-8 py-4">
           {/* Search */}
           <div className="relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />

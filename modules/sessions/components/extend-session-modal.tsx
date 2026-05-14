@@ -52,13 +52,22 @@ export function ExtendSessionModal({ sessionId, hutNumber }: ExtendSessionModalP
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
+        <DialogHeader className="p-8 pb-0">
           <DialogTitle className="text-2xl font-black uppercase flex items-center gap-3">
             <Clock className="text-primary" />
             Gia hạn - Chòi {hutNumber}
           </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+
+        {/* Guidance Bar */}
+        <div className="px-8 py-3 bg-primary/5 border-b border-primary/10 flex items-center gap-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <p className="text-[10px] font-black uppercase tracking-[0.1em] text-primary">
+            Gợi ý: Chọn nhanh số giờ hoặc nhập tay số giờ khách muốn thêm
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-6 pt-4">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số giờ gia hạn</label>
             <div className="grid grid-cols-4 gap-2">

@@ -1,8 +1,15 @@
 import { cookies } from "next/headers";
+import prisma from "@/lib/prisma";
 
 export async function getActiveLakeId() {
   const cookieStore = await cookies();
-  return cookieStore.get("lakeId")?.value || "lake_01"; // Default to lake_01 if none set
+  const cookieLakeId = cookieStore.get("lakeId")?.value;
+  
+  if (cookieLakeId) return cookieLakeId;
+
+  // Fallback: Get the first lake from the database
+  const firstLake = await prisma.fishingLake.findFirst();
+  return firstLake?.id || "lake_01";
 }
 
 export async function setActiveLakeId(lakeId: string) {

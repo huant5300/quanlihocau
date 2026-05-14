@@ -5,8 +5,10 @@ import prisma from "@/lib/prisma";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
+    const session_auth = await auth();
+    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+    
+    if (!session_auth && !isOwner) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -38,8 +40,10 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
+    const session_auth = await auth();
+    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+
+    if (!session_auth && !isOwner) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -62,7 +66,17 @@ export async function POST(req: NextRequest) {
       // 1. Find or Create Customer if phone exists
       let customerId = body.customerId;
       if (!customerId && phone) {
-        const existingCustomer = await tx.customer.findFirst({ where: { phone, lakeId } });
+        // Try to find customer by phone in this lake
+        const existingCustomer = await tx.customer.findFirst({ 
+          where: { 
+            phone,
+            OR: [
+              { lakeId },
+              { lakeId: null }
+            ]
+          } 
+        });
+        
         if (existingCustomer) {
           customerId = existingCustomer.id;
         } else {
@@ -105,12 +119,13 @@ export async function POST(req: NextRequest) {
       // 4. Create initial invoice
       const invoice = await tx.invoice.create({
         data: {
-          invoiceNumber: `INV-${Date.now()}`,
+          invoiceNumber: `INV-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
           sessionId: newSession.id,
           customerId: customerId,
           subtotal: 0,
           totalAmount: 0,
           status: "UNPAID",
+          lakeId
         }
       });
 

@@ -5,8 +5,10 @@ import { getActiveLakeId } from "@/lib/lake-context";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
+    const session_auth = await auth();
+    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+    
+    if (!session_auth && !isOwner) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -32,8 +34,10 @@ export async function GET(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session) {
+    const session_auth = await auth();
+    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+
+    if (!session_auth && !isOwner) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -62,24 +66,29 @@ export async function PATCH(req: NextRequest) {
         // Add missing areas
         if (existingAreas.length < total) {
           const toAdd = total - existingAreas.length;
-          const lastNum = existingAreas.length > 0 
-            ? parseInt(existingAreas[existingAreas.length - 1].name.replace("Ô số ", "")) || existingAreas.length
-            : 0;
-
+          
+          const areasToCreate = [];
           for (let i = 1; i <= toAdd; i++) {
-            await tx.fishingArea.create({
-              data: {
-                lakeId,
-                name: `Ô số ${existingAreas.length + i}`,
-                hourlyRate: 50000, // Default rate
-              }
+            areasToCreate.push({
+              lakeId,
+              name: `Ô số ${existingAreas.length + i}`,
+              hourlyRate: 50000, // Default rate
+              status: "AVAILABLE" as any,
+              capacity: 1,
+            });
+          }
+
+          if (areasToCreate.length > 0) {
+            await tx.fishingArea.createMany({
+              data: areasToCreate
             });
           }
         }
-        // Optional: Remove extra areas? User didn't specify, but usually we shouldn't delete if they have history.
       }
 
       return updatedLake;
+    }, {
+      timeout: 30000 // Increase timeout to 30 seconds for bulk operations
     });
 
     return NextResponse.json({
@@ -89,6 +98,7 @@ export async function PATCH(req: NextRequest) {
       receipt_footer: result.description || ""
     });
   } catch (error: any) {
+    console.error("Update Lake Settings Error:", error);
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
 }

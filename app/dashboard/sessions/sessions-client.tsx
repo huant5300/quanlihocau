@@ -5,7 +5,7 @@ import { Plus, Search, Filter } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { sessionService } from "@/services/api/session-service";
-import { SessionCard } from "@/modules/sessions/components/session-card";
+import { SessionRow } from "@/modules/sessions/components/session-row";
 import { SessionCardSkeleton } from "@/modules/sessions/skeletons/session-skeleton";
 import { SessionEmptyState } from "@/modules/sessions/components/session-empty-state";
 import { useUIStore } from "@/stores/ui-store";
@@ -62,18 +62,18 @@ export function SessionsClient({ initialSessions }: SessionsClientProps) {
         </div>
       </div>
 
-      {/* Sessions Grid */}
+      {/* Sessions List (Single Row Layout) */}
       {isLoading && sessions.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <SessionCardSkeleton key={i} />
+        <div className="space-y-4">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-24 bg-card/20 animate-pulse rounded-[2rem]" />
           ))}
         </div>
       ) : filteredSessions.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+        <div className="flex flex-col gap-4">
           <AnimatePresence mode="popLayout">
             {filteredSessions.map((session: any) => (
-              <SessionCard 
+              <SessionRow 
                 key={session.id} 
                 session={{
                   ...session,

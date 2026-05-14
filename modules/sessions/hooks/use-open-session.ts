@@ -69,10 +69,11 @@ export function useOpenSession() {
       if (result) {
         toast.success("Đã mở lượt câu mới thành công");
         
-        // Refresh data
-        queryClient.invalidateQueries({ queryKey: ["sessions"] });
-        queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
-
+        // Refresh data and redirect
+        await queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        await queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
+        
+        router.push("/dashboard/sessions");
         return true;
       }
       return false;

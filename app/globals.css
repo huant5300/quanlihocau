@@ -10,7 +10,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 215 100% 50%; /* Vibrant Blue */
+    --primary: 215 100% 50%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -68,6 +68,47 @@
     @apply bg-card/40 backdrop-blur-md border border-white/10 shadow-2xl;
   }
 
+  .luxury-gradient {
+    @apply bg-gradient-to-br from-primary via-primary/80 to-blue-600;
+  }
+
+  .premium-shadow {
+    @apply shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)];
+  }
+
+  /* Mobile Optimizations */
+  @media (max-width: 640px) {
+    html {
+      font-size: 16px;
+    }
+    .glass-card {
+      @apply rounded-[1.5rem] p-4;
+    }
+    button, a {
+      min-height: 48px;
+    }
+  }
+
+  /* Touch Feedback & Responsiveness */
+  * {
+    -webkit-tap-highlight-color: transparent;
+    @apply transition-all duration-200 ease-in-out;
+  }
+
+  button:active {
+    @apply scale-[0.97] opacity-80 duration-75;
+  }
+
+  /* Contrast Notifications */
+  .notification-contrast {
+    @apply bg-black text-white dark:bg-white dark:text-black font-black uppercase text-[10px] py-2 px-4 rounded-full shadow-2xl border border-white/20;
+  }
+
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+  }
+
   .no-scrollbar::-webkit-scrollbar {
     display: none;
   }
@@ -76,11 +117,9 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
-
-  .pos-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-    gap: 1rem;
+  
+  .text-luxury {
+    @apply tracking-tighter font-black uppercase;
   }
 
   @keyframes pulse-fast {

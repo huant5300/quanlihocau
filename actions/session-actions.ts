@@ -3,6 +3,7 @@
 import prisma from "@/lib/prisma";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { revalidatePath } from "next/cache";
+import { auth } from "@/auth";
 
 export async function getSessionsAction() {
   try {
@@ -33,35 +34,47 @@ export async function getSessionsAction() {
 
 export async function startFishingAction(areaId: string, customerId?: string, packageId?: string) {
   try {
+    const session_auth = await auth();
+    const userEmail = session_auth?.user?.email;
+    const isOwner = userEmail === "huant5300@gmail.com";
+
     const lakeId = await getActiveLakeId();
     
-    // Check if area is available
+    // Check if area exists
     const area = await prisma.fishingArea.findUnique({ where: { id: areaId } });
-    if (!area || area.status !== "AVAILABLE") {
-      throw new Error("Khu vực này hiện không sẵn sàng");
+    if (!area) {
+      throw new Error("Không tìm thấy hồ câu này");
     }
 
+    // Only check availability if not the owner (bypass for Huân)
+    if (area.status !== "AVAILABLE" && !isOwner) {
+      throw new Error("Hồ câu này hiện không sẵn sàng (đang có người câu hoặc bảo trì)");
+    }
+
+    // Create session
     const session = await prisma.fishingSession.create({
       data: {
         lakeId,
         areaId,
-        customerId,
-        packageId,
+        customerId: customerId || undefined,
+        packageId: packageId || undefined,
         startTime: new Date(),
         status: "ACTIVE",
         hourlyRate: area.hourlyRate,
       }
     });
 
-    // Update area status
+    // Update area status to OCCUPIED
     await prisma.fishingArea.update({
       where: { id: areaId },
       data: { status: "OCCUPIED" }
     });
 
     revalidatePath("/dashboard/sessions");
+    revalidatePath("/dashboard");
     return { success: true, data: session };
   } catch (error: any) {
+    console.error("Error in startFishingAction:", error);
     return { success: false, error: error.message };
   }
 }

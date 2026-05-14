@@ -55,8 +55,8 @@ export function Topbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full p-4 lg:p-6 pointer-events-none">
-      <div className="bg-card/80 backdrop-blur-xl border border-border/50 h-20 rounded-[2rem] px-6 flex items-center justify-between shadow-xl pointer-events-auto">
+    <header className="sticky top-0 z-30 w-full p-2 sm:p-4 lg:p-6 pointer-events-none">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 h-16 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-6 flex items-center justify-between shadow-xl pointer-events-auto">
         
         {/* Left Side: Tenant Info & Lake Switcher */}
         <div className="flex items-center gap-6">

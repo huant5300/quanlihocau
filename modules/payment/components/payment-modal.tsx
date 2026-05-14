@@ -90,6 +90,16 @@ export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
                 </button>
               </div>
 
+              {/* Guidance Bar */}
+              <div className="px-8 py-3 bg-primary/5 border-b border-primary/10 flex items-center gap-3">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                <p className="text-[10px] font-black uppercase tracking-[0.1em] text-primary">
+                  {!form.getValues("paymentMethod") 
+                    ? "Bước 1: Kiểm tra lại các khoản phí và chọn phương thức thanh toán" 
+                    : "Bước cuối: Nhấn 'Hoàn tất thanh toán' để giải phóng chòi và in hóa đơn"}
+                </p>
+              </div>
+
               {/* Body */}
               <div className="flex-1 overflow-y-auto p-8 no-scrollbar space-y-10">
                 <BillSummary bill={billData} />

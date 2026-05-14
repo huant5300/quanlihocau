@@ -34,6 +34,7 @@ export async function getStaffMembers(lakeId: string) {
 export async function createStaffMember(data: {
   name: string;
   email: string;
+  phone?: string;
   password?: string;
   role: UserRole;
 }) {
@@ -49,16 +50,18 @@ export async function createStaffMember(data: {
       data: {
         name: data.name,
         email: data.email,
+        phone: data.phone,
         password: hashedPassword,
         role: data.role,
       },
     });
     
     revalidatePath("/dashboard/staff");
+    revalidatePath("/dashboard/settings");
     return { success: true, data: user };
   } catch (error: any) {
     if (error.code === "P2002") {
-      return { success: false, error: "Email already exists" };
+      return { success: false, error: "Email or Phone already exists" };
     }
     return { success: false, error: "Failed to create staff" };
   }

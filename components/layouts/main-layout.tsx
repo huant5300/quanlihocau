@@ -72,8 +72,14 @@ export function MainLayout({ children }: MainLayoutProps) {
             hutNumber: activeSessionForPayment.hut_number,
             customerName: activeSessionForPayment.customer_name || "Khách lẻ",
             sessionFee: activeSessionForPayment.total_amount,
-            products: [], // We'd need to fetch or include these in the session object
-            buybackDeduction: 0,
+            products: activeSessionForPayment.session_products?.map(p => ({
+              id: p.id,
+              name: p.name,
+              quantity: p.quantity,
+              price: p.price
+            })) || [],
+            buybackDeduction: activeSessionForPayment.fish_buybacks?.reduce((sum, b) => sum + b.total_price, 0) || 0,
+            prepaidAmount: activeSessionForPayment.prepaidAmount || 0,
             subtotal: activeSessionForPayment.total_amount,
             totalAmount: activeSessionForPayment.total_amount
           } : {
@@ -83,6 +89,7 @@ export function MainLayout({ children }: MainLayoutProps) {
             sessionFee: 0,
             products: [],
             buybackDeduction: 0,
+            prepaidAmount: 0,
             subtotal: 0,
             totalAmount: 0
           }}

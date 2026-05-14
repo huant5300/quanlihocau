@@ -1,134 +1,153 @@
-import { UserProfile } from "./auth/auth.types";
-
 export type UUID = string;
 
-export type { UserProfile };
+export type UserRole = "SUPER_ADMIN" | "OWNER" | "STAFF" | "CASHIER";
 
 export interface Tenant {
   id: UUID;
   name: string;
   phone: string;
   address?: string;
-  is_active: boolean;
-  owner: UUID;
+  isActive: boolean;
+  ownerId: UUID;
 }
 
 export interface Customer {
   id: UUID;
-  tenant: UUID;
-  full_name: string;
-  phone?: string;
+  lakeId?: UUID;
+  fullName: string;
+  phone: string;
   address?: string;
-  total_spent: number;
-  visit_count: number;
-  created_at: string;
-  updated_at: string;
+  debtBalance: number;
+  totalSpent: number;
+  visitCount: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export type CustomerInsert = Omit<Customer, "id" | "total_spent" | "visit_count" | "created_at" | "updated_at" | "tenant">;
+export type CustomerInsert = Omit<Customer, "id" | "debtBalance" | "totalSpent" | "visitCount" | "createdAt" | "updatedAt">;
 export type CustomerUpdate = Partial<CustomerInsert>;
 
 export type ProductCategory = "BAIT" | "DRINK" | "FOOD" | "EQUIPMENT" | "OTHER";
 
 export interface Product {
   id: UUID;
-  tenant: UUID;
+  lakeId?: UUID;
+  categoryId: UUID;
   name: string;
-  category: ProductCategory;
   price: number;
   stock: number;
-  is_active: boolean;
+  isActive: boolean;
+  category?: string; // For UI display
 }
 
-export type ProductInsert = Omit<Product, "id" | "tenant">;
+export type ProductInsert = Omit<Product, "id" | "lakeId" | "isActive" | "category">;
 export type ProductUpdate = Partial<ProductInsert>;
 
-export type SessionStatus = "ACTIVE" | "WARNING" | "EXPIRED" | "COMPLETED";
+export type SessionStatus = "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED" | "OVERDUE";
 
 export interface Session {
   id: UUID;
-  tenant: UUID;
-  customer?: UUID;
-  customer_name?: string;
-  phone?: string;
-  hut_number: string;
-  start_time: string;
-  end_time: string;
+  lakeId: UUID;
+  areaId: UUID;
+  customerId?: UUID;
+  startTime: string;
+  endTime?: string;
   status: SessionStatus;
-  total_amount: number;
-  temporary_payment: number;
-  final_amount: number;
-  discount_amount: number;
-  session_products?: SessionProduct[];
-  fish_buybacks?: FishBuyback[];
-  created_at: string;
-  updated_at: string;
+  hourlyRate: number;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export type SessionInsert = {
-  hut_number: string;
-  customer_id?: string;
+export interface SessionInsert {
+  areaId?: string;
+  hut_number?: string;
+  startTime?: string;
+  start_time?: string;
+  endTime?: string;
+  end_time?: string;
+  customerId?: string;
   customer_name?: string;
   phone?: string;
-  start_time: string;
-  end_time: string;
+  hourlyRate?: number;
+  packageId?: string;
+  prepaidAmount?: number;
   total_amount?: number;
-  products?: SessionProductInput[];
-};
+  products?: any[];
+}
 
-export type SessionUpdate = Partial<Session>;
+export type SessionUpdate = Partial<SessionInsert> & { status?: SessionStatus };
 
 export interface SessionProduct {
   id: UUID;
-  session: UUID;
-  product: UUID;
+  sessionId: UUID;
+  productId: UUID;
   quantity: number;
-  price_at_time: number;
-  name?: string;
-  price?: number;
+  unitPrice: number;
+  totalPrice: number;
+  createdAt: string;
 }
 
-export interface SessionProductInput {
-  product_id: string;
-  name: string;
-  price: number;
-  quantity: number;
-}
+export type SessionProductInput = Omit<SessionProduct, "id" | "sessionId" | "totalPrice" | "createdAt">;
 
 export interface FishType {
   id: UUID;
-  tenant: UUID;
   name: string;
-  buyback_price_per_kg: number;
+  buybackPrice: number;
+  image?: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface FishBuyback {
   id: UUID;
-  tenant: UUID;
-  session: UUID;
-  fish_type: UUID;
+  sessionId: UUID;
+  fishTypeId: UUID;
   weight: number;
-  price_per_kg: number;
-  total_price: number;
+  buybackPrice: number;
+  totalAmount: number;
+  isSoldBack: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface Payment {
   id: UUID;
-  tenant: UUID;
-  session: UUID;
+  lakeId: UUID;
+  sessionId?: UUID;
+  customerId?: UUID;
   amount: number;
-  method: "CASH" | "TRANSFER" | "MOMO" | "OTHER";
-  created_at: string;
+  method: "CASH" | "TRANSFER" | "DEBT";
+  status: "PENDING" | "COMPLETED" | "CANCELLED";
+  notes?: string;
+  createdAt: string;
 }
 
-export type PaymentInsert = Omit<Payment, "id" | "tenant" | "created_at">;
+export interface ActiveSession extends Session {
+  hut_number: string;
+  customer_name?: string;
+  phone?: string;
+  total_amount: number;
+  prepaidAmount?: number;
+  session_products?: Array<{
+    id: string;
+    name: string;
+    quantity: number;
+    price: number;
+    price_at_time?: number;
+  }>;
+  fish_buybacks?: Array<{
+    id: string;
+    total_price: number;
+  }>;
+}
 
 export interface DashboardStats {
   activeCount: number;
   todayRevenue: number;
   customerCount: number;
   lowStockCount: number;
+  sessionRevenue?: number;
+  productRevenue?: number;
 }
-
-// Keep ActiveSession as an alias for backward compatibility
-export type ActiveSession = Session;

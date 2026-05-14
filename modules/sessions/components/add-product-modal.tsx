@@ -26,7 +26,7 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
-  const [selectedProducts, setSelectedProducts] = useState<Array<SessionProductInput & { name: string }>>([]);
+  const [selectedProducts, setSelectedProducts] = useState<Array<SessionProductInput & { name: string, price: number }>>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const queryClient = useQueryClient();
 
@@ -46,26 +46,27 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
   };
 
   const toggleProduct = (product: Product) => {
-    const existing = selectedProducts.find(p => p.product_id === product.id);
+    const existing = selectedProducts.find(p => p.productId === product.id);
     if (existing) {
-      setSelectedProducts(selectedProducts.filter(p => p.product_id !== product.id));
+      setSelectedProducts(selectedProducts.filter(p => p.productId !== product.id));
     } else {
       setSelectedProducts([...selectedProducts, { 
-        product_id: product.id, 
+        productId: product.id, 
         name: product.name, 
-        price: product.price, 
+        unitPrice: product.price,
+        price: product.price, // Keep price for UI
         quantity: 1 
       }]);
     }
   };
 
   const removeSelectedProduct = (productId: string) => {
-    setSelectedProducts(selectedProducts.filter((p) => p.product_id !== productId));
+    setSelectedProducts(selectedProducts.filter((p) => p.productId !== productId));
   };
 
   const updateQuantity = (productId: string, delta: number) => {
     setSelectedProducts(selectedProducts.map(p => 
-      p.product_id === productId ? { ...p, quantity: Math.max(1, p.quantity + delta) } : p
+      p.productId === productId ? { ...p, quantity: Math.max(1, p.quantity + delta) } : p
     ));
   };
 
@@ -73,7 +74,9 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
     if (selectedProducts.length === 0) return;
     setIsSaving(true);
     try {
-      await sessionService.addProducts(sessionId, selectedProducts);
+      // Remove name and price from the input before sending to API
+      const input = selectedProducts.map(({ name, price, ...rest }) => rest);
+      await sessionService.addProducts(sessionId, input);
       toast.success("Đã thêm sản phẩm thành công");
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
@@ -104,7 +107,7 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
             Thêm sản phẩm - Chòi {hutNumber}
           </DialogTitle>
         </DialogHeader>
-
+ 
         <div className="flex-1 overflow-hidden flex flex-col gap-6 py-4">
           {/* Search */}
           <div className="relative">
@@ -122,7 +125,7 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
             <div className="overflow-y-auto pr-2 space-y-2 no-scrollbar">
               <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest mb-3">Danh sách hàng</h4>
               {filteredProducts.map((p) => {
-                const isSelected = selectedProducts.some(sp => sp.product_id === p.id);
+                const isSelected = selectedProducts.some(sp => sp.productId === p.id);
                 return (
                   <button
                     key={p.id}
@@ -144,11 +147,11 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
               <h4 className="text-[10px] font-black uppercase text-muted-foreground tracking-widest">Đã chọn ({selectedProducts.length})</h4>
               <div className="space-y-3 flex-1">
                 {selectedProducts.map((p) => (
-                  <div key={p.product_id} className="bg-background p-3 rounded-xl flex flex-col gap-2 shadow-sm border border-border/50">
+                  <div key={p.productId} className="bg-background p-3 rounded-xl flex flex-col gap-2 shadow-sm border border-border/50">
                     <div className="flex justify-between items-start">
                       <p className="text-[10px] font-black uppercase truncate max-w-[120px]">{p.name}</p>
                       <button
-                        onClick={() => removeSelectedProduct(p.product_id)}
+                        onClick={() => removeSelectedProduct(p.productId)}
                         className="text-[10px] font-black text-destructive uppercase"
                       >
                         Xóa
@@ -156,9 +159,9 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <button onClick={() => updateQuantity(p.product_id, -1)} className="w-6 h-6 rounded-lg bg-accent flex items-center justify-center font-bold">-</button>
+                        <button onClick={() => updateQuantity(p.productId, -1)} className="w-6 h-6 rounded-lg bg-accent flex items-center justify-center font-bold">-</button>
                         <span className="text-xs font-black w-4 text-center">{p.quantity}</span>
-                        <button onClick={() => updateQuantity(p.product_id, 1)} className="w-6 h-6 rounded-lg bg-accent flex items-center justify-center font-bold">+</button>
+                        <button onClick={() => updateQuantity(p.productId, 1)} className="w-6 h-6 rounded-lg bg-accent flex items-center justify-center font-bold">+</button>
                       </div>
                       <p className="text-xs font-black text-primary">{(p.price * p.quantity).toLocaleString()}đ</p>
                     </div>

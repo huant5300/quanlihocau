@@ -1,13 +1,14 @@
 import axios, { type AxiosError, type AxiosInstance, type AxiosRequestConfig } from "axios";
 import type { APIResponse } from "@/types";
-import { useAuthStore } from "@/stores/auth-store";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
+const rawBaseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "/";
+// Clean up if the key was accidentally duplicated in .env
+const baseURL = rawBaseURL.includes("NEXT_PUBLIC_API_BASE_URL=") 
+  ? rawBaseURL.split("NEXT_PUBLIC_API_BASE_URL=").pop() || "/" 
+  : rawBaseURL;
 
 class AxiosApiClient {
   private readonly client: AxiosInstance;
-  private isRefreshing = false;
-  private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
     this.client = axios.create({
@@ -15,6 +16,7 @@ class AxiosApiClient {
       timeout: 15000,
       headers: {
         "Content-Type": "application/json",
+        "Accept": "application/json",
       },
     });
 
@@ -22,75 +24,32 @@ class AxiosApiClient {
   }
 
   private setupInterceptors() {
-    // Request Interceptor: Attach Token
-    this.client.interceptors.request.use(
-      (config) => {
-        const tokens = useAuthStore.getState().tokens;
-        if (tokens?.access) {
-          config.headers.Authorization = `Bearer ${tokens.access}`;
-        }
-        return config;
-      },
-      (error) => Promise.reject(error)
-    );
-
-    // Response Interceptor: Handle Token Expiration
     this.client.interceptors.response.use(
-      (response) => response,
-      async (error: AxiosError) => {
-        const originalRequest = error.config as AxiosRequestConfig & { _retry?: boolean };
-        
-        if (error.response?.status === 401 && !originalRequest._retry) {
-          if (this.isRefreshing) {
-            return new Promise((resolve) => {
-              this.refreshSubscribers.push((token: string) => {
-                if (originalRequest.headers) {
-                  originalRequest.headers.Authorization = `Bearer ${token}`;
-                }
-                resolve(this.client(originalRequest));
-              });
-            });
-          }
-
-          originalRequest._retry = true;
-          this.isRefreshing = true;
-
-          try {
-            const tokens = useAuthStore.getState().tokens;
-            if (!tokens?.refresh) throw new Error("No refresh token");
-
-            const response = await axios.post(`${baseURL}/api/token/refresh/`, {
-              refresh: tokens.refresh,
-            });
-
-            const newAccessToken = response.data.access;
-            useAuthStore.getState().setTokens({
-              ...tokens,
-              access: newAccessToken,
-            });
-
-            this.isRefreshing = false;
-            this.onRefreshed(newAccessToken);
-            this.refreshSubscribers = [];
-
-            if (originalRequest.headers) {
-              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
-            }
-            return this.client(originalRequest);
-          } catch (refreshError) {
-            this.isRefreshing = false;
-            useAuthStore.getState().logout();
-            return Promise.reject(refreshError);
-          }
+      (response) => {
+        // Check if response is HTML (happens on 404 or redirects)
+        const contentType = response.headers["content-type"];
+        if (typeof contentType === "string" && contentType.includes("text/html")) {
+          return Promise.reject({
+            message: "API returned HTML instead of JSON. Check the endpoint URL.",
+            response: response,
+            isHtmlError: true
+          });
         }
-
+        return response;
+      },
+      (error: AxiosError) => {
+        // Handle unauthorized or other errors that might return HTML
+        const contentType = error.response?.headers?.["content-type"];
+        if (typeof contentType === "string" && contentType.includes("text/html")) {
+          return Promise.reject({
+            ...error,
+            message: `API Error ${error.response?.status}: Expected JSON but received HTML.`,
+            isHtmlError: true
+          });
+        }
         return Promise.reject(error);
       }
     );
-  }
-
-  private onRefreshed(token: string) {
-    this.refreshSubscribers.map((cb) => cb(token));
   }
 
   async get<T>(url: string, config?: AxiosRequestConfig): Promise<APIResponse<T>> {
@@ -129,7 +88,17 @@ class AxiosApiClient {
     try {
       const response = await this.client.request<T>(config);
       return { success: true, data: response.data };
-    } catch (error) {
+    } catch (error: any) {
+      if (error.isHtmlError) {
+        return {
+          success: false,
+          error: {
+            message: error.message,
+            code: "ERR_HTML_RESPONSE",
+          },
+        };
+      }
+
       const axiosError = error as AxiosError<{ detail?: string; message?: string }>;
       return {
         success: false,

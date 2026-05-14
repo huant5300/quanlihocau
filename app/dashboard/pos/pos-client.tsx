@@ -7,11 +7,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
+import { posService } from "@/services/api/pos-service";
+import { useRouter } from "next/navigation";
 
 export function POSClient({ products, categories }: any) {
   const [cart, setCart] = useState<any[]>([]);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("CASH");
+  const router = useRouter();
 
   const filteredProducts = useMemo(() => {
     return products.filter((p: any) => {
@@ -46,6 +51,31 @@ export function POSClient({ products, categories }: any) {
   };
 
   const totalAmount = cart.reduce((sum, item) => sum + (Number(item.price) * item.quantity), 0);
+
+  const handleCheckout = async () => {
+    if (cart.length === 0) return;
+    
+    setIsSubmitting(true);
+    try {
+      const result = await posService.checkout({
+        items: cart.map(item => ({
+          id: item.id,
+          name: item.name,
+          quantity: item.quantity,
+          price: Number(item.price)
+        })),
+        paymentMethod: paymentMethod === "CASH" ? "CASH" : "TRANSFER",
+      });
+
+      toast.success("Thanh toán thành công!");
+      setCart([]);
+      router.refresh(); // Refresh to update stock levels in UI
+    } catch (error: any) {
+      toast.error(error.message || "Có lỗi xảy ra khi thanh toán");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="flex-1 flex gap-8 overflow-hidden">
@@ -176,21 +206,30 @@ export function POSClient({ products, categories }: any) {
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-14 rounded-2xl border-white/10 flex items-center gap-2 font-bold">
+            <Button 
+              variant={paymentMethod === "TRANSFER" ? "default" : "outline"} 
+              onClick={() => setPaymentMethod("TRANSFER")}
+              className="h-14 rounded-2xl border-white/10 flex items-center gap-2 font-bold"
+            >
               <CreditCard size={18} />
               Chuyển khoản
             </Button>
-            <Button className="h-14 rounded-2xl bg-white text-black hover:bg-white/90 flex items-center gap-2 font-black uppercase text-xs">
+            <Button 
+              variant={paymentMethod === "CASH" ? "default" : "outline"}
+              onClick={() => setPaymentMethod("CASH")}
+              className="h-14 rounded-2xl border-white/10 flex items-center gap-2 font-black uppercase text-xs"
+            >
               <Banknote size={18} />
               Tiền mặt
             </Button>
           </div>
           
           <Button 
-            disabled={cart.length === 0}
+            disabled={cart.length === 0 || isSubmitting}
+            onClick={handleCheckout}
             className="w-full h-16 bg-primary text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-primary/20"
           >
-            Thanh toán & In hóa đơn
+            {isSubmitting ? "Đang xử lý..." : "Thanh toán & In hóa đơn"}
           </Button>
         </div>
       </div>

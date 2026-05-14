@@ -64,6 +64,8 @@ model Customer {
   notes       String?
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  lakeId      String?
+  lake        FishingLake?     @relation(fields: [lakeId], references: [id])
   sessions    FishingSession[]
   invoices    Invoice[]
 }
@@ -74,11 +76,17 @@ model FishingLake {
   description String?
   address     String?
   managerId   String?
+  totalSpots  Int              @default(10)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
+  customers   Customer[]
   areas       FishingArea[]
   manager     User?            @relation("LakeManager", fields: [managerId], references: [id])
   sessions    FishingSession[]
+  products    Product[]
+  invoices    Invoice[]
+  expenses    Expense[]
+  transactions Transaction[]
 }
 
 model FishingArea {
@@ -96,24 +104,27 @@ model FishingArea {
 }
 
 model FishingSession {
-  id            String        @id @default(cuid())
-  lakeId        String
-  areaId        String
-  customerId    String?
-  startTime     DateTime      @default(now())
-  endTime       DateTime?
-  status        SessionStatus @default(ACTIVE)
-  hourlyRate    Decimal       @db.Decimal(12, 2)
-  totalHours    Float?
-  sessionAmount Decimal       @default(0) @db.Decimal(12, 2)
-  notes         String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  fishCatches   FishCatch[]
-  area          FishingArea   @relation(fields: [areaId], references: [id])
-  customer      Customer?     @relation(fields: [customerId], references: [id])
-  lake          FishingLake   @relation(fields: [lakeId], references: [id])
-  invoices      Invoice[]
+  id             String          @id @default(cuid())
+  lakeId         String
+  areaId         String
+  customerId     String?
+  startTime      DateTime        @default(now())
+  endTime        DateTime?
+  status         SessionStatus   @default(ACTIVE)
+  hourlyRate     Decimal         @db.Decimal(12, 2)
+  totalHours     Float?
+  sessionAmount  Decimal         @default(0) @db.Decimal(12, 2)
+  notes          String?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  packageId      String?
+  prepaidAmount  Decimal         @default(0) @db.Decimal(12, 2)
+  fishCatches    FishCatch[]
+  area           FishingArea     @relation(fields: [areaId], references: [id])
+  customer       Customer?       @relation(fields: [customerId], references: [id])
+  lake           FishingLake     @relation(fields: [lakeId], references: [id])
+  FishingPackage FishingPackage? @relation(fields: [packageId], references: [id])
+  invoices       Invoice[]
 }
 
 model FishType {
@@ -164,9 +175,11 @@ model Product {
   isActive     Boolean                @default(true)
   createdAt    DateTime               @default(now())
   updatedAt    DateTime               @updatedAt
+  lakeId       String?
   transactions InventoryTransaction[]
   invoiceItems InvoiceItem[]
   category     ProductCategory        @relation(fields: [categoryId], references: [id])
+  lake         FishingLake?           @relation(fields: [lakeId], references: [id])
 }
 
 model InventoryTransaction {
@@ -190,8 +203,10 @@ model Invoice {
   tax           Decimal         @default(0) @db.Decimal(12, 2)
   totalAmount   Decimal         @db.Decimal(12, 2)
   status        InvoiceStatus   @default(UNPAID)
+  lakeId        String?
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  lake          FishingLake?    @relation(fields: [lakeId], references: [id])
   customer      Customer?       @relation(fields: [customerId], references: [id])
   session       FishingSession? @relation(fields: [sessionId], references: [id])
   items         InvoiceItem[]
@@ -227,8 +242,10 @@ model Expense {
   description String
   amount      Decimal  @db.Decimal(12, 2)
   date        DateTime @default(now())
+  lakeId      String?
   performedBy String?
   createdAt   DateTime @default(now())
+  lake        FishingLake? @relation(fields: [lakeId], references: [id])
 }
 
 model Attendance {
@@ -278,9 +295,32 @@ model Settings {
   updatedAt   DateTime @updatedAt
 }
 
+model FishingPackage {
+  id             String           @id
+  name           String
+  durationHours  Float
+  price          Decimal          @db.Decimal(12, 2)
+  isActive       Boolean          @default(true)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  FishingSession FishingSession[]
+}
+
+model Transaction {
+  id          String   @id @default(cuid())
+  lakeId      String
+  type        String   // INCOME, EXPENSE
+  amount      Decimal  @db.Decimal(12, 2)
+  description String?
+  category    String?  // SESSION, PRODUCT, BUYBACK, OTHER
+  referenceId String?  // ID of session, invoice, etc.
+  createdAt   DateTime @default(now())
+  lake        FishingLake @relation(fields: [lakeId], references: [id])
+}
+
 enum UserRole {
   SUPER_ADMIN
-  ADMIN
+  OWNER
   STAFF
   CASHIER
 }
@@ -297,6 +337,7 @@ enum SessionStatus {
   PAUSED
   COMPLETED
   CANCELLED
+  OVERDUE
 }
 
 enum StockType {

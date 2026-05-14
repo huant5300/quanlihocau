@@ -1,14 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Fish, Loader2, User, Lock } from "lucide-react";
 import { motion } from "framer-motion";
-
-import { useGoogleLogin } from "@react-oauth/google";
 import { toast } from "sonner";
-
 import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
@@ -27,8 +23,6 @@ export default function LoginPage() {
         password,
         redirect: false,
       });
-
-      console.log("Login Result:", result);
 
       if (result?.error) {
         if (result.error === "CredentialsSignin") {

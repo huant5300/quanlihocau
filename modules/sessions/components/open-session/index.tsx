@@ -4,6 +4,7 @@ import React from "react";
 import { 
   X,
   Play,
+  Printer,
 } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { useOpenSession } from "../../hooks/use-open-session";
@@ -94,17 +95,46 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
 
           {/* Footer Footer */}
           <div className="p-8 border-t border-border/50 bg-card/80 backdrop-blur-md space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tiền tạm thu (vnđ)</label>
+                <input 
+                  type="number"
+                  placeholder="0"
+                  value={form.watch("prepaid_amount") || ""}
+                  onChange={(e) => form.setValue("prepaid_amount", Number(e.target.value))}
+                  className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold transition-all"
+                />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">In hóa đơn</label>
+                <button
+                  type="button"
+                  onClick={() => form.setValue("should_print", !form.watch("should_print"))}
+                  className={cn(
+                    "w-full h-14 px-4 rounded-2xl border-2 transition-all flex items-center justify-center gap-3 font-bold",
+                    form.watch("should_print") 
+                      ? "border-primary/20 bg-primary/10 text-primary" 
+                      : "border-transparent bg-accent/50 text-muted-foreground"
+                  )}
+                >
+                  <Printer size={18} />
+                  {form.watch("should_print") ? "Có in bill" : "Không in"}
+                </button>
+              </div>
+            </div>
+
             <SessionSummary 
               total={(() => {
                 const pkgId = form.watch("package_id");
                 const products = form.watch("products") || [];
                 const productsTotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
                 
-                const selectedPkg = (packages as any[]).find(p => p.id === pkgId);
-                const packagePrice = selectedPkg ? parseFloat(selectedPkg.price) : 0;
+                const selectedPkg = packages.find(p => p.id === pkgId);
+                const packagePrice = selectedPkg ? Number(selectedPkg.price) : 0;
                 return packagePrice + productsTotal;
               })()} 
-              onPrintTicket={() => console.log("Printing...")}
+              prepaid={form.watch("prepaid_amount") || 0}
             />
 
             <div className="flex items-center gap-4">

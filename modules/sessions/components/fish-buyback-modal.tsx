@@ -36,9 +36,10 @@ export function FishBuybackModal({ sessionId, hutNumber }: FishBuybackModalProps
     try {
       const formData = new FormData(e.currentTarget);
       const weight = parseFloat(formData.get("weight") as string);
-      const pricePerKg = parseInt(formData.get("pricePerKg") as string);
+      const fishTypeId = formData.get("fishTypeId") as string;
+      const buybackPrice = parseInt(formData.get("buybackPrice") as string);
 
-      await sessionService.buybackFish(sessionId, weight, pricePerKg);
+      await sessionService.buybackFish(sessionId, fishTypeId, weight, buybackPrice);
       toast.success("Đã ghi nhận thu mua cá");
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
@@ -68,14 +69,21 @@ export function FishBuybackModal({ sessionId, hutNumber }: FishBuybackModalProps
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Loại cá</label>
             <select 
-              name="fishType"
+              name="fishTypeId"
               required
+              onChange={(e) => {
+                const selectedType = fishTypes.find((t: any) => t.id === e.target.value);
+                if (selectedType) {
+                  const priceInput = document.getElementById("buyback-price-input") as HTMLInputElement;
+                  if (priceInput) priceInput.value = Number(selectedType.buybackPrice).toString();
+                }
+              }}
               className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold appearance-none"
             >
               <option value="">Chọn loại cá</option>
               {fishTypes.map((type: any) => (
                 <option key={type.id} value={type.id}>
-                  {type.name} ({type.buyback_price_per_kg.toLocaleString()}đ/kg)
+                  {type.name} ({Number(type.buybackPrice).toLocaleString()}đ/kg)
                 </option>
               ))}
               {fishTypes.length === 0 && (
@@ -102,7 +110,8 @@ export function FishBuybackModal({ sessionId, hutNumber }: FishBuybackModalProps
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Giá thu (đ/Kg)</label>
               <input 
-                name="pricePerKg"
+                id="buyback-price-input"
+                name="buybackPrice"
                 type="number"
                 required
                 className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold transition-all"

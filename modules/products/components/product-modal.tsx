@@ -12,8 +12,8 @@ import {
 import { Plus, Loader2 } from "lucide-react";
 import { productService } from "@/services/api/product-service";
 import { toast } from "sonner";
-import type { ProductCategory, ProductInsert } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
+import type { ProductInsert } from "@/types";
 
 export function ProductModal({ children }: { children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,12 +25,12 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
     setIsSaving(true);
     try {
       const formData = new FormData(e.currentTarget);
-      const name = formData.get("name");
-      const category = formData.get("category");
+      const name = formData.get("name") as string;
+      const categoryId = formData.get("categoryId") as string;
       const price = Number(formData.get("price"));
       const stock = Number(formData.get("stock"));
 
-      if (typeof name !== "string" || typeof category !== "string" || Number.isNaN(price) || Number.isNaN(stock)) {
+      if (!name || !categoryId || Number.isNaN(price) || Number.isNaN(stock)) {
         toast.error("Dữ liệu sản phẩm không hợp lệ");
         setIsSaving(false);
         return;
@@ -38,10 +38,9 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
 
       const product: ProductInsert = {
         name,
-        category: category as ProductCategory,
+        categoryId,
         price,
         stock,
-        is_active: true,
       };
 
       await productService.createProduct(product);
@@ -84,15 +83,15 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
             <div className="space-y-2">
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Danh mục</label>
               <select 
-                name="category"
+                name="categoryId"
                 required
                 className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold appearance-none"
               >
-                <option value="BAIT">Mồi câu</option>
-                <option value="DRINK">Đồ uống</option>
-                <option value="FOOD">Đồ ăn</option>
-                <option value="EQUIPMENT">Dụng cụ</option>
-                <option value="OTHER">Khác</option>
+                <option value="cat_bait">Mồi câu</option>
+                <option value="cat_drink">Đồ uống</option>
+                <option value="cat_food">Đồ ăn</option>
+                <option value="cat_equipment">Dụng cụ</option>
+                <option value="cat_other">Khác</option>
               </select>
             </div>
             <div className="space-y-2">

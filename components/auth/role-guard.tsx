@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useAuth } from "@/hooks/use-auth";
-import { UserRole } from "@/types/auth/auth.types";
+import { useAuthSession } from "@/hooks/auth/use-auth-session";
+import { UserRole } from "@prisma/client";
 import { redirect } from "next/navigation";
 import { Loader2 } from "lucide-react";
 
@@ -15,9 +15,9 @@ interface RoleGuardProps {
 export function RoleGuard({ 
   children, 
   allowedRoles, 
-  fallbackPath = "/unauthorized" 
+  fallbackPath = "/dashboard" 
 }: RoleGuardProps) {
-  const { user, isLoading, hasRole } = useAuth();
+  const { user, isLoading, isAuthenticated } = useAuthSession();
 
   if (isLoading) {
     return (
@@ -27,11 +27,11 @@ export function RoleGuard({
     );
   }
 
-  if (!user) {
+  if (!isAuthenticated || !user) {
     redirect("/login");
   }
 
-  if (!hasRole(allowedRoles)) {
+  if (!allowedRoles.includes(user.role)) {
     redirect(fallbackPath);
   }
 

@@ -1,21 +1,25 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CustomerCard } from "@/modules/crm/components/customer-card";
 import { CustomerDetailDrawer } from "@/modules/crm/components/customer-detail-drawer";
 import { Search } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-
-import { Customer } from "@/types";
+import { AnimatePresence } from "framer-motion";
+import { Customer } from "@prisma/client";
 
 interface CRMClientProps {
-  customers: Customer[];
-  search: string;
-  onSearchChange: (value: string) => void;
+  initialCustomers: Customer[];
 }
 
-export function CRMClient({ customers, search, onSearchChange }: CRMClientProps) {
+export function CRMClient({ initialCustomers }: CRMClientProps) {
+  const [customers, setCustomers] = useState<Customer[]>(initialCustomers);
+  const [search, setSearch] = useState("");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+
+  const filteredCustomers = customers.filter(c => 
+    c.fullName.toLowerCase().includes(search.toLowerCase()) || 
+    c.phone.includes(search)
+  );
 
   return (
     <div className="space-y-10">
@@ -26,7 +30,7 @@ export function CRMClient({ customers, search, onSearchChange }: CRMClientProps)
           type="text"
           placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
           value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
+          onChange={(e) => setSearch(e.target.value)}
           className="w-full h-16 pl-12 pr-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 focus:bg-background outline-none transition-all font-bold"
         />
       </div>
@@ -34,15 +38,15 @@ export function CRMClient({ customers, search, onSearchChange }: CRMClientProps)
       {/* Customer Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8">
         <AnimatePresence mode="popLayout">
-          {customers.map((customer) => (
+          {filteredCustomers.map((customer) => (
             <CustomerCard 
               key={customer.id} 
-              customer={customer as any} 
+              customer={customer} 
               onClick={() => setSelectedCustomer(customer)}
             />
           ))}
         </AnimatePresence>
-        {customers.length === 0 && (
+        {filteredCustomers.length === 0 && (
           <div className="col-span-full py-20 text-center glass-card rounded-[2rem]">
             <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">Không tìm thấy khách hàng nào</p>
           </div>
@@ -51,7 +55,7 @@ export function CRMClient({ customers, search, onSearchChange }: CRMClientProps)
 
       {/* Customer Detail Drawer */}
       <CustomerDetailDrawer 
-        customer={selectedCustomer as any}
+        customer={selectedCustomer}
         isOpen={!!selectedCustomer}
         onClose={() => setSelectedCustomer(null)}
       />

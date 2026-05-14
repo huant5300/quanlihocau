@@ -8,10 +8,11 @@ import { sessionService } from "@/services/api/session-service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { FishingPackage } from "@prisma/client";
 
 export function useOpenSession() {
   const [isLoading, setIsLoading] = useState(false);
-  const [packages, setPackages] = useState<any[]>([]);
+  const [packages, setPackages] = useState<FishingPackage[]>([]);
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -27,36 +28,42 @@ export function useOpenSession() {
       hut_id: "",
       package_id: "",
       products: [],
+      prepaid_amount: 0,
+      should_print: true,
     },
   });
 
   const onSubmit = async (data: OpenSessionInput) => {
     setIsLoading(true);
     try {
-      // Fetch real packages
-      const packages = await sessionService.getPackages();
-      const selectedPkg = packages.find((p: any) => p.id === data.package_id);
+      const selectedPkg = packages.find((p: FishingPackage) => p.id === data.package_id);
       if (!selectedPkg) {
         toast.error("Vui lòng chọn gói câu");
         return false;
       }
 
       const productsPrice = data.products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-      const totalAmount = parseFloat(selectedPkg.price) + productsPrice;
+      const sessionPrice = Number(selectedPkg.price);
+      const totalAmount = sessionPrice + productsPrice;
 
       // Calculate end time
-      // Assuming duration_hours is decimal (e.g. 2.5)
-      const durationHours = parseFloat(selectedPkg.duration_hours) || 2;
+      const durationHours = Number(selectedPkg.durationHours) || 2;
       const endTime = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString();
 
       const result = await sessionService.createSession({
-        hut_number: data.hut_id,
-        start_time: new Date().toISOString(),
+        areaId: data.hut_id,
+        startTime: new Date().toISOString(),
+        customerId: undefined, // Will handle customer creation/selection in API if needed
         customer_name: data.customer_name,
         phone: data.phone_number,
-        total_amount: totalAmount,
-        end_time: endTime,
-        products: data.products as any,
+        hourlyRate: Number(selectedPkg.price) / durationHours, // Approximate hourly rate for overtime
+        packageId: data.package_id,
+        prepaidAmount: data.prepaid_amount,
+        products: data.products.map(p => ({
+          productId: p.id,
+          quantity: p.quantity,
+          unitPrice: p.price
+        })),
       });
 
       if (result) {
@@ -66,8 +73,6 @@ export function useOpenSession() {
         queryClient.invalidateQueries({ queryKey: ["sessions"] });
         queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
 
-        // Redirect immediately
-        router.push("/dashboard/sessions");
         return true;
       }
       return false;

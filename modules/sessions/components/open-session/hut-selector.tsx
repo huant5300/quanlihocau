@@ -42,27 +42,51 @@ export function HutSelector({ selectedId, onSelect }: HutSelectorProps) {
 
   return (
     <div className="space-y-4">
-      <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Chọn Chòi / Vị trí</h3>
-      <div className="grid grid-cols-4 gap-2">
+      <div className="flex items-center justify-between">
+        <h3 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Chọn Ô số</h3>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-green-500" />
+            <span className="text-[10px] font-bold uppercase text-muted-foreground">Trống</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-3 rounded-full bg-red-500" />
+            <span className="text-[10px] font-bold uppercase text-muted-foreground">Đang câu</span>
+          </div>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-10 gap-2">
         {huts.map((hut) => {
-          const isAvailable = hut.status === "Available";
-          const displayValue = hut.number || hut.name;
+          const isOccupied = hut.status === "OCCUPIED" || hut.status === "Occupied";
+          const isSelected = selectedId === hut.id;
+          const displayValue = (hut.name || hut.number || "---").replace("Ô số ", "");
           
           return (
             <motion.button
               key={hut.id}
-              whileTap={isAvailable ? { scale: 0.9 } : {}}
-              onClick={() => isAvailable && onSelect(displayValue)}
-              disabled={!isAvailable}
+              type="button"
+              whileTap={!isOccupied ? { scale: 0.9 } : {}}
+              onClick={() => !isOccupied && onSelect(hut.id)}
+              disabled={isOccupied}
+              title={isOccupied ? "Đang có khách" : `Chọn ô số ${displayValue}`}
               className={cn(
-                "h-14 rounded-xl font-black text-sm flex items-center justify-center border-2 transition-all",
-                !isAvailable && "opacity-30 grayscale cursor-not-allowed border-transparent bg-muted",
-                selectedId === displayValue
-                  ? "border-primary bg-primary/10 text-primary shadow-lg shadow-primary/20" 
-                  : "border-transparent bg-accent/50 hover:bg-accent text-muted-foreground hover:text-foreground"
+                "h-12 rounded-xl font-black text-xs flex items-center justify-center border-2 transition-all relative overflow-hidden",
+                isOccupied 
+                  ? "border-red-500/50 bg-red-500/10 text-red-500 cursor-not-allowed" 
+                  : isSelected
+                    ? "border-primary bg-primary text-white shadow-lg shadow-primary/20"
+                    : "border-green-500/20 bg-green-500/5 text-green-500 hover:border-green-500/50"
               )}
             >
               {displayValue}
+              {isOccupied && (
+                <motion.div 
+                  initial={{ width: 0 }}
+                  animate={{ width: "100%" }}
+                  className="absolute bottom-0 left-0 h-0.5 bg-red-500"
+                />
+              )}
             </motion.button>
           );
         })}

@@ -13,25 +13,31 @@ import {
   Settings, 
   LogOut,
   ChevronLeft,
-  Bell
+  Bell,
+  Home
 } from "lucide-react";
+import { LakeSettingsModal } from "../shared/lake-settings-modal";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
+import { UserRole } from "@prisma/client";
 
 const menuItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: ["SUPER_ADMIN", "ADMIN", "STAFF", "CASHIER"] },
-  { label: "Hồ Câu", href: "/dashboard/sessions", icon: Fish, roles: ["SUPER_ADMIN", "ADMIN", "STAFF"] },
-  { label: "Khách Hàng", href: "/dashboard/customers", icon: Users, roles: ["SUPER_ADMIN", "ADMIN", "STAFF"] },
-  { label: "Bán Hàng (POS)", href: "/dashboard/pos", icon: ShoppingBag, roles: ["SUPER_ADMIN", "ADMIN", "CASHIER"] },
-  { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: ["SUPER_ADMIN", "ADMIN"] },
-  { label: "Báo Cáo", href: "/dashboard/reports", icon: History, roles: ["SUPER_ADMIN", "ADMIN"] },
-  { label: "Cài Đặt", href: "/dashboard/settings", icon: Settings, roles: ["SUPER_ADMIN", "ADMIN"] },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF, UserRole.CASHIER] },
+  { label: "Hồ Câu", href: "/dashboard/sessions", icon: Fish, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF] },
+  { label: "Khách Hàng", href: "/dashboard/customers", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF] },
+  { label: "Bán Hàng (POS)", href: "/dashboard/pos", icon: ShoppingBag, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.CASHIER] },
+  { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
+  { label: "Báo Cáo", href: "/dashboard/reports", icon: History, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
+  { label: "Nhân Viên", href: "/dashboard/staff", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
+  { label: "Cài Đặt", href: "/dashboard/settings", icon: Settings, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const userRole = (session?.user as any)?.role || "STAFF";
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const userRole = session?.user?.role || UserRole.STAFF;
 
   const filteredItems = menuItems.filter(item => item.roles.includes(userRole));
 
@@ -74,6 +80,14 @@ export function Sidebar() {
       </nav>
 
       <div className="p-4 mt-auto space-y-4">
+        <button 
+          onClick={() => setIsSettingsOpen(true)}
+          className="w-full h-12 bg-white/5 hover:bg-white/10 rounded-2xl flex items-center justify-center gap-3 text-xs font-bold transition-all border border-white/5"
+        >
+          <Settings size={16} />
+          Cài đặt hồ câu
+        </button>
+
         <div className="bg-white/5 rounded-3xl p-4 flex items-center gap-3 border border-white/5">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-blue-500 flex items-center justify-center text-white font-black text-xs">
             {session?.user?.name?.[0] || "U"}
@@ -90,6 +104,8 @@ export function Sidebar() {
           </button>
         </div>
       </div>
+
+      <LakeSettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
     </div>
   );
 }

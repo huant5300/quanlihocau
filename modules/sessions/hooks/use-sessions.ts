@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { sessionService } from "@/services/api/session-service";
-import type { Session, SessionStatus } from "@/types";
+import { SessionStatus, FishingSession } from "@prisma/client";
 import { toast } from "sonner";
 import { useOfflineStore } from "@/stores/offline-store";
 
@@ -10,7 +10,7 @@ export function useSessions() {
   const queryClient = useQueryClient();
   const { isOnline, addToQueue } = useOfflineStore();
 
-  const { data: sessions = [], isLoading, error, refetch } = useQuery<Session[]>({
+  const { data: sessions = [], isLoading, error, refetch } = useQuery<FishingSession[]>({
     queryKey: ["sessions"],
     queryFn: () => sessionService.getSessions(),
     refetchOnWindowFocus: true,
@@ -30,7 +30,7 @@ export function useSessions() {
 
   const updateSessionStatus = useMutation({
     mutationFn: ({ id, status }: { id: string; status: SessionStatus }) =>
-      sessionService.updateSession(id, { status } as any),
+      sessionService.updateSession(id, { status }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       toast.success("Cập nhật trạng thái thành công");

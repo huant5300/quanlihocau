@@ -2,12 +2,11 @@
 
 import React from "react";
 import { 
-  User, 
   Phone, 
   ChevronRight,
   Star
 } from "lucide-react";
-import type { Customer } from "@/types";
+import { Customer } from "@prisma/client";
 
 interface CustomerTableProps {
   customers: Customer[];
@@ -36,12 +35,12 @@ export function CustomerTable({ customers, onSelect }: CustomerTableProps) {
             {/* Info */}
             <div className="col-span-2 flex items-center gap-4">
               <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                {customer.full_name?.charAt(0).toUpperCase()}
+                {customer.fullName?.charAt(0).toUpperCase()}
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h4 className="font-bold text-base">{customer.full_name}</h4>
-                  {customer.total_spent > 5000000 && (
+                  <h4 className="font-bold text-base">{customer.fullName}</h4>
+                  {Number(customer.totalSpent) > 5000000 && (
                     <span className="bg-yellow-500/10 text-yellow-600 p-1 rounded-lg">
                       <Star size={12} fill="currentColor" />
                     </span>
@@ -56,20 +55,20 @@ export function CustomerTable({ customers, onSelect }: CustomerTableProps) {
 
             {/* Visits (Desktop) */}
             <div className="hidden md:flex flex-col">
-              <span className="text-sm font-black">{customer.visit_count} lượt</span>
-              <span className="text-[10px] text-muted-foreground uppercase font-bold">Tham gia: {new Date(customer.created_at).toLocaleDateString("vi-VN")}</span>
+              <span className="text-sm font-black">{customer.visitCount} lượt</span>
+              <span className="text-[10px] text-muted-foreground uppercase font-bold">Tham gia: {new Date(customer.createdAt).toLocaleDateString("vi-VN")}</span>
             </div>
 
             {/* Spent (Desktop) */}
             <div className="hidden md:block">
-              <span className="text-sm font-black text-primary">{customer.total_spent.toLocaleString()}đ</span>
+              <span className="text-sm font-black text-primary">{Number(customer.totalSpent).toLocaleString()}đ</span>
             </div>
 
             {/* Mobile Footer / Desktop Action */}
             <div className="flex md:block items-center justify-between md:text-right mt-2 md:mt-0">
               <div className="md:hidden flex flex-col">
                 <span className="text-xs text-muted-foreground">Tổng chi tiêu</span>
-                <span className="text-sm font-black text-primary">{customer.total_spent.toLocaleString()}đ</span>
+                <span className="text-sm font-black text-primary">{Number(customer.totalSpent).toLocaleString()}đ</span>
               </div>
               <button className="p-2 rounded-xl bg-accent group-hover:bg-primary group-hover:text-white transition-all">
                 <ChevronRight size={20} />

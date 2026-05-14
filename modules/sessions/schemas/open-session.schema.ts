@@ -8,8 +8,11 @@ export const openSessionSchema = z.object({
   products: z.array(z.object({
     id: z.string(),
     quantity: z.number().min(1),
-    price: z.number()
+    price: z.number(),
+    name: z.string().optional()
   })),
+  prepaid_amount: z.number(),
+  should_print: z.boolean(),
 });
 
 export type OpenSessionInput = z.infer<typeof openSessionSchema>;

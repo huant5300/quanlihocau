@@ -1,9 +1,10 @@
 import prisma from "@/lib/prisma";
-import { Customer, Prisma } from "@prisma/client";
+import { Prisma } from "@prisma/client";
 
 export class CustomerRepository {
-  static async getAll() {
+  static async getAll(lakeId: string) {
     return prisma.customer.findMany({
+      where: { lakeId },
       orderBy: { createdAt: "desc" }
     });
   }
@@ -21,7 +22,7 @@ export class CustomerRepository {
     });
   }
 
-  static async create(data: Prisma.CustomerCreateInput) {
+  static async create(data: Prisma.CustomerUncheckedCreateInput) {
     return prisma.customer.create({ data });
   }
 
@@ -29,6 +30,12 @@ export class CustomerRepository {
     return prisma.customer.update({
       where: { id },
       data
+    });
+  }
+
+  static async delete(id: string) {
+    return prisma.customer.delete({
+      where: { id }
     });
   }
 }

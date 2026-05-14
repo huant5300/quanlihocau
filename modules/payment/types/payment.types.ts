@@ -15,6 +15,7 @@ export interface BillData {
   sessionFee: number;
   products: BillItem[];
   buybackDeduction: number;
+  prepaidAmount: number;
   subtotal: number;
   totalAmount: number;
 }

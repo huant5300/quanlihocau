@@ -65,7 +65,7 @@ export function ActiveSessionsOverview({ initialSessions }: ActiveSessionsOvervi
                     <p className="text-xs font-black uppercase tracking-tight">{session.customer_name || "Khách lẻ"}</p>
                     <div className="flex items-center gap-2 mt-0.5">
                       <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      <p className="text-[10px] font-bold text-muted-foreground uppercase">{formatElapsedTime(session.start_time)}</p>
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase">{formatElapsedTime(session.startTime)}</p>
                     </div>
                   </div>
                 </div>

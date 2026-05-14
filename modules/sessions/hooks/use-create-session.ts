@@ -16,7 +16,7 @@ export function useCreateSession() {
         end_time: new Date(Date.now() + 4 * 60 * 60 * 1000).toISOString(), // Default 4h
         customer_name: input.customer_name,
         phone: input.phone_number,
-        products: input.products as any,
+        products: input.products,
       });
       return result;
     },

@@ -1,11 +1,10 @@
 import Dexie, { type EntityTable } from "dexie";
-import type { PaymentInsert, ProductUpdate, SessionInsert } from "@/types";
 
 type OfflinePayloadByType = {
-  CREATE_SESSION: SessionInsert;
-  UPDATE_SESSION: { id: string } & Partial<SessionInsert>;
-  PAYMENT: PaymentInsert;
-  UPDATE_PRODUCT: { id: string } & ProductUpdate;
+  CREATE_SESSION: any;
+  UPDATE_SESSION: { id: string } & any;
+  PAYMENT: any;
+  UPDATE_PRODUCT: { id: string } & any;
 };
 
 export type OfflineActionType = keyof OfflinePayloadByType;

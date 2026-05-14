@@ -1,10 +1,13 @@
 import { ProductRepository } from "@/repositories/product-repository";
 import { POSClient } from "./pos-client";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
+import { getActiveLakeId } from "@/lib/lake-context";
 
 export default async function POSPage() {
+  const lakeId = await getActiveLakeId();
+  
   const [products, categories] = await Promise.all([
-    ProductRepository.getAll(),
+    ProductRepository.getAll(lakeId),
     ProductRepository.getCategories()
   ]);
 

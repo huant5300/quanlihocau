@@ -9,6 +9,7 @@ import { PaymentMethodSelector } from "./payment-method-selector";
 import { FinalCalculationCard } from "./final-calculation-card";
 import { BillData } from "../types/payment.types";
 import { cn } from "@/utils/utils";
+import { printerService } from "@/services/printer/printer-service";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -18,6 +19,13 @@ interface PaymentModalProps {
 
 export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
   const { form, onSubmit, isLoading, isSuccess, setIsSuccess } = usePayment(billData.totalAmount, billData.sessionId);
+
+  // Auto-print on success
+  React.useEffect(() => {
+    if (isSuccess) {
+      printerService.printBill(billData);
+    }
+  }, [isSuccess, billData]);
 
   if (!isOpen) return null;
 
@@ -48,7 +56,10 @@ export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
                 <p className="text-muted-foreground font-bold mt-2">Giao dịch đã được ghi nhận vào hệ thống.</p>
               </div>
               <div className="grid grid-cols-1 w-full gap-4">
-                <button className="h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3">
+                <button 
+                  onClick={() => printerService.printBill(billData)}
+                  className="h-16 bg-primary text-white rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-3 active:scale-95"
+                >
                   <Printer size={20} /> In hóa đơn
                 </button>
                 <button 
@@ -90,6 +101,8 @@ export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
 
                 <FinalCalculationCard 
                   subtotal={billData.subtotal}
+                  buybackDeduction={billData.buybackDeduction}
+                  prepaidAmount={billData.prepaidAmount}
                   total={billData.totalAmount}
                 />
               </div>

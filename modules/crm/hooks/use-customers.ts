@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { customerService } from "@/services/api/customer-service";
-import type { Customer } from "@/types";
+import { Customer } from "@prisma/client";
 
 export function useCustomers() {
   const [search, setSearch] = useState("");
@@ -16,7 +16,7 @@ export function useCustomers() {
 
   const filteredCustomers = useMemo(() => {
     return customers.filter((c) =>
-      c.full_name.toLowerCase().includes(search.toLowerCase()) || (c.phone && c.phone.includes(search))
+      c.fullName.toLowerCase().includes(search.toLowerCase()) || (c.phone && c.phone.includes(search))
     );
   }, [customers, search]);
 

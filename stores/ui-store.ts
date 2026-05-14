@@ -34,6 +34,10 @@ interface UIState {
   // Tenant Info
   tenantName: string;
   setTenantName: (name: string) => void;
+  
+  currentLakeId: string | null;
+  currentLakeName: string | null;
+  setCurrentLake: (id: string, name: string) => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -61,6 +65,10 @@ export const useUIStore = create<UIState>((set) => ({
   activeSessionForPayment: null,
   setActiveSessionForPayment: (session) => set({ activeSessionForPayment: session }),
   
-  tenantName: "Hồ Câu Thiên Đường",
+  tenantName: "Hồ Câu Đại Nam",
   setTenantName: (name) => set({ tenantName: name }),
+  
+  currentLakeId: "lake_01",
+  currentLakeName: "Hồ Câu Đại Nam",
+  setCurrentLake: (id, name) => set({ currentLakeId: id, currentLakeName: name, tenantName: name }),
 }));

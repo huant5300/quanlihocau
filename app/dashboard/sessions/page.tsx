@@ -1,21 +1,27 @@
 import prisma from "@/lib/prisma";
 import { SessionsClient } from "./sessions-client";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
+import { getActiveLakeId } from "@/lib/lake-context";
 
 export default async function SessionsPage() {
-  const [sessions, areas, customers] = await Promise.all([
-    prisma.fishingSession.findMany({
-      where: { status: "ACTIVE" },
-      include: {
-        area: true,
-        customer: true,
-        fishCatches: { include: { fishType: true } }
-      },
-      orderBy: { startTime: "desc" }
-    }),
-    prisma.fishingArea.findMany({ where: { status: "AVAILABLE" } }),
-    prisma.customer.findMany()
-  ]);
+  const lakeId = await getActiveLakeId();
+
+  const sessions = await prisma.fishingSession.findMany({
+    where: { 
+      lakeId,
+      status: "ACTIVE" 
+    },
+    include: {
+      area: true,
+      customer: true,
+      fishCatches: { include: { fishType: true } },
+      invoices: {
+        where: { status: "UNPAID" },
+        include: { items: true }
+      }
+    },
+    orderBy: { startTime: "desc" }
+  });
 
   return (
     <div className="space-y-8">
@@ -26,8 +32,6 @@ export default async function SessionsPage() {
       
       <SessionsClient 
         initialSessions={JSON.parse(JSON.stringify(sessions))} 
-        availableAreas={JSON.parse(JSON.stringify(areas))}
-        customers={JSON.parse(JSON.stringify(customers))}
       />
     </div>
   );

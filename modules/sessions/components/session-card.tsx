@@ -42,7 +42,7 @@ export function SessionCard({ session }: SessionCardProps) {
       const audio = new Audio("/sounds/alert.mp3");
       audio.volume = 0.5;
       audio.play().catch(() => console.log("Audio play blocked - user interaction required"));
-      toast.error(`CẢNH BÁO: Chòi ${session.hut_number} sắp hết thời gian!`, {
+      toast.error(`CẢNH BÁO: Ô số ${session.hut_number} sắp hết thời gian!`, {
         duration: 10000,
         position: "top-center",
       });
@@ -59,7 +59,7 @@ export function SessionCard({ session }: SessionCardProps) {
         className={cn(
           "glass-card p-6 rounded-[2.5rem] flex flex-col gap-6 group transition-all relative border-2",
           isWarning 
-            ? "border-red-500 bg-red-500/5 shadow-[0_0_40px_rgba(239,68,68,0.2)]" 
+            ? "border-red-500 bg-red-500/10 shadow-[0_0_40px_rgba(239,68,68,0.3)] animate-pulse-fast" 
             : "border-transparent hover:border-primary/20",
           isPending && "opacity-75"
         )}
@@ -75,23 +75,24 @@ export function SessionCard({ session }: SessionCardProps) {
           </div>
         )}
 
-        {/* Header: Hut & Status */}
+        {/* Header: Spot & Status */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className={cn(
               "w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-colors relative overflow-hidden",
               isWarning ? "bg-red-500 shadow-red-500/20 animate-pulse" : "bg-primary shadow-primary/20"
             )}>
+              <div className="absolute top-1 left-1 text-[8px] font-black opacity-50 uppercase tracking-tighter">Ô</div>
               <span className="font-black text-2xl tracking-tighter text-white">{session.hut_number}</span>
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <User size={14} className="text-muted-foreground" />
-                <p className="font-black text-sm tracking-tight uppercase">{session.customer_name}</p>
+                <p className="font-black text-sm tracking-tight uppercase">{session.customer_name || "Khách lẻ"}</p>
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <Phone size={12} className="text-muted-foreground" />
-                <p className="text-[11px] font-bold text-muted-foreground">{session.phone}</p>
+                <p className="text-[11px] font-bold text-muted-foreground">{session.phone || "N/A"}</p>
               </div>
             </div>
           </div>
@@ -103,7 +104,7 @@ export function SessionCard({ session }: SessionCardProps) {
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Thời gian còn lại</p>
             <CountdownTimer 
-              endTime={session.end_time ?? new Date().toISOString()} 
+              endTime={session.endTime ?? new Date().toISOString()} 
               sessionId={session.id} 
               onWarning={onWarning}
             />
@@ -118,7 +119,7 @@ export function SessionCard({ session }: SessionCardProps) {
               "text-xl font-black tracking-tight",
               isWarning ? "text-red-500" : "text-primary"
             )}>
-              {session.total_amount.toLocaleString()}đ
+              {(session.total_amount || 0).toLocaleString()}đ
             </p>
           </div>
         </div>
@@ -150,15 +151,16 @@ export function SessionCard({ session }: SessionCardProps) {
           hutNumber: session.hut_number,
           customerName: session.customer_name || "Khách lẻ",
           sessionFee: session.total_amount,
-          products: (session.session_products || []).map(p => ({
+          products: (session.session_products || []).map((p: any) => ({
             id: p.id,
             name: p.name || "Sản phẩm",
             quantity: p.quantity,
             price: p.price || p.price_at_time
           })),
           buybackDeduction: (session.fish_buybacks || []).reduce((sum, b) => sum + Number(b.total_price), 0),
+          prepaidAmount: Number(session.prepaidAmount || 0),
           subtotal: session.total_amount,
-          totalAmount: session.total_amount // total_amount in DB is already adjusted in backend buyback action
+          totalAmount: session.total_amount
         }}
       />
     </>

@@ -91,13 +91,23 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Create the session
+      // 2. Calculate endTime if package exists
+      let endTime = null;
+      if (packageId) {
+        const pkg = await tx.fishingPackage.findUnique({ where: { id: packageId } });
+        if (pkg) {
+          endTime = new Date(new Date(startTime).getTime() + Number(pkg.durationHours) * 60 * 60 * 1000);
+        }
+      }
+
+      // 3. Create the session
       const newSession = await tx.fishingSession.create({
         data: {
           lakeId,
           areaId,
           customerId,
           startTime: new Date(startTime),
+          endTime,
           hourlyRate: Number(hourlyRate),
           packageId,
           status: "ACTIVE",

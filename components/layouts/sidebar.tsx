@@ -35,10 +35,21 @@ const menuItems = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const userRole = session?.user?.role || UserRole.STAFF;
 
+  if (status === "loading") {
+    return (
+      <div className="w-72 h-screen bg-card/30 backdrop-blur-3xl border-r border-white/5 flex flex-col sticky top-0 animate-pulse">
+        <div className="p-8 flex items-center gap-3">
+          <div className="w-10 h-10 bg-accent rounded-xl" />
+          <div className="h-6 w-32 bg-accent rounded-lg" />
+        </div>
+      </div>
+    );
+  }
+
+  const userRole = session?.user?.role || UserRole.STAFF;
   const filteredItems = menuItems.filter(item => item.roles.includes(userRole));
 
   return (

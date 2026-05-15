@@ -23,6 +23,7 @@ export async function POST(
         where: { id },
         include: {
           area: true,
+          customer: true,
           invoices: {
             where: { status: "UNPAID" },
             include: { items: true }

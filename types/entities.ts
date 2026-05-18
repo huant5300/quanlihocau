@@ -58,6 +58,8 @@ export interface Session {
   notes?: string;
   createdAt: string;
   updatedAt: string;
+  area?: any;
+  customer?: any;
 }
 
 export interface SessionInsert {

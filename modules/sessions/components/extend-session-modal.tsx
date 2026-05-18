@@ -13,13 +13,15 @@ import { Clock, Loader2, Zap } from "lucide-react";
 import { sessionService } from "@/services/api/session-service";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { cn } from "@/utils/utils";
 
 interface ExtendSessionModalProps {
   sessionId: string;
   hutNumber: string;
+  className?: string;
 }
 
-export function ExtendSessionModal({ sessionId, hutNumber }: ExtendSessionModalProps) {
+export function ExtendSessionModal({ sessionId, hutNumber, className }: ExtendSessionModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
@@ -47,15 +49,16 @@ export function ExtendSessionModal({ sessionId, hutNumber }: ExtendSessionModalP
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95">
-          <Clock size={16} /> Gia hạn
+        <button className={cn("h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95", className)}>
+          <Clock size={16} />
+          <span className="hidden lg:inline">Gia hạn</span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader className="p-8 pb-0">
           <DialogTitle className="text-2xl font-black uppercase flex items-center gap-3">
             <Clock className="text-primary" />
-            Gia hạn - Chòi {hutNumber}
+            Gia hạn - Ô {hutNumber}
           </DialogTitle>
         </DialogHeader>
 

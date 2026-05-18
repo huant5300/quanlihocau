@@ -29,6 +29,26 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange }: Cus
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // Automatic high-contrast instant lookup when typing 10 digits
+  useEffect(() => {
+    if (phone.length === 10 && !isFound) {
+      const autoLookup = async () => {
+        try {
+          const results = await customerService.getCustomers(phone);
+          if (results && results.length > 0) {
+            const exactMatch = results.find((c: any) => c.phone === phone);
+            if (exactMatch) {
+              handleSelectCustomer(exactMatch);
+            }
+          }
+        } catch (error) {
+          console.error("Auto lookup failed", error);
+        }
+      };
+      autoLookup();
+    }
+  }, [phone, isFound]);
+
   const searchCustomers = async (query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
@@ -43,16 +63,29 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange }: Cus
     }
   };
 
-  const handleSelectCustomer = (customer: any) => {
+  function handleSelectCustomer(customer: any) {
     onPhoneChange(customer.phone || "");
-    onNameChange(customer.full_name || "");
+    const targetName = customer.full_name || customer.name || "Khách quen";
+    onNameChange(targetName);
     setIsFound(true);
     setCustomerInfo({
       visitCount: customer.visit_count || 0,
       spent: customer.total_spent || 0
     });
     setShowSuggestions(false);
-  };
+
+    // Jump focus down to the first available Ô số button to optimize staff flow!
+    setTimeout(() => {
+      const firstAvailableSpot = document.querySelector('button[title*="Chọn ô số"]') as HTMLButtonElement;
+      if (firstAvailableSpot) {
+        firstAvailableSpot.focus();
+        firstAvailableSpot.scrollIntoView({ behavior: "smooth", block: "center" });
+      } else {
+        const activeElement = document.activeElement as HTMLElement;
+        if (activeElement) activeElement.blur();
+      }
+    }, 150);
+  }
 
   return (
     <div className="space-y-6" ref={containerRef}>

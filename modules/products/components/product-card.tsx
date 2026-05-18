@@ -32,7 +32,7 @@ export function ProductCard({ product, quantity = 0, onAdd, onRemove, onQuickAdd
         
         {/* Category Badge */}
         <div className="absolute top-4 left-4 bg-black/40 backdrop-blur-md text-white text-[9px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl border border-white/10">
-          {product.category}
+          {typeof product.category === 'object' && product.category ? (product.category as any).name : String(product.category || "")}
         </div>
       </div>
 

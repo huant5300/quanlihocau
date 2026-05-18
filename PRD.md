@@ -73,12 +73,12 @@ Giá
 👉 Có thể thêm nhiều dòng sản phẩm
 
 Thanh toán ban đầu
-Nhập số tiền khách trả trước
+tự động tính tổng số tiền đã nhập cho khách trả trước
 🔘 Action Buttons
 Bắt đầu phiên
 Checkbox:
- In bill
- Không in
+In bill
+Không in
 🔄 Sau khi bấm "Bắt đầu"
 
 Hệ thống:
@@ -101,6 +101,7 @@ Thời gian bắt đầu
 Khi còn 15 phút
 → phát âm thanh + highlight đỏ
 🔘 Actions trong phiên
+
 1. Thêm sản phẩm
 Popup:
 chọn sản phẩm
@@ -228,3 +229,4 @@ PRD này đã:
 ✔ Có super admin
 ✔ Có thêm sản phẩm ngay từ bước đầu (theo yêu cầu bạn)
 ✔ Flow vận hành cực sát thực tế hồ câu
+

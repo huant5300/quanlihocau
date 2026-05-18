@@ -3,38 +3,51 @@
 import React from "react";
 import { 
   LayoutDashboard, 
-  Waves, 
-  Package, 
+  Fish, 
+  PlusCircle, 
   Users,
-  Plus
+  Menu
 } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { NavLink } from "@/components/shared/nav-link";
-import { t } from "@/utils/i18n";
 
 const navItems = [
-  { icon: LayoutDashboard, label: t("mobileNav.home"), href: "/dashboard" },
-  { icon: Waves, label: t("mobileNav.sessions"), href: "/dashboard/sessions" },
-  { icon: null, label: t("mobileNav.add"), href: "#", isFab: true },
-  { icon: Package, label: t("mobileNav.products"), href: "/dashboard/products" },
-  { icon: Users, label: t("mobileNav.customers"), href: "/dashboard/crm" },
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+  { icon: Fish, label: "Hồ Câu", href: "/dashboard/sessions" },
+  { icon: PlusCircle, label: "Tạo Vé", href: "#", isCreateTicket: true },
+  { icon: Users, label: "Khách Hàng", href: "/dashboard/customers" },
+  { icon: Menu, label: "Menu", href: "#", isMenuTrigger: true },
 ];
 
 export function MobileNav() {
-  const { setOpenSessionModalOpen } = useUIStore();
+  const { setIsMobileNavOpen, setOpenSessionModalOpen } = useUIStore();
 
   return (
-    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-6 pb-6 pt-2 pointer-events-none">
-      <div className="glass rounded-[2.5rem] h-20 shadow-2xl flex items-center justify-around px-2 pointer-events-auto relative">
+    <div className="lg:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-4 pt-2 pointer-events-none">
+      <div className="glass rounded-[2rem] h-20 shadow-2xl flex items-center justify-around px-2 pointer-events-auto relative border border-white/5">
         {navItems.map((item) => {
-          if (item.isFab) {
+          if (item.isMenuTrigger) {
             return (
               <button
-                key="fab"
-                onClick={() => setOpenSessionModalOpen(true)}
-                className="relative -top-10 w-16 h-16 bg-primary text-white rounded-3xl shadow-2xl shadow-primary/40 flex items-center justify-center active:scale-90 transition-transform pointer-events-auto min-h-[48px]"
+                key="menu-trigger"
+                onClick={() => setIsMobileNavOpen(true)}
+                className="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-2xl text-muted-foreground hover:text-primary transition-colors pointer-events-auto active:scale-95"
               >
-                <Plus size={32} />
+                <Menu size={22} />
+                <span className="text-[9px] font-bold uppercase tracking-wider">Menu</span>
+              </button>
+            );
+          }
+
+          if (item.isCreateTicket) {
+            return (
+              <button
+                key="create-ticket"
+                onClick={() => setOpenSessionModalOpen(true)}
+                className="flex flex-col items-center justify-center gap-1 w-14 h-14 rounded-2xl text-muted-foreground hover:text-primary transition-colors pointer-events-auto active:scale-95"
+              >
+                <PlusCircle size={22} className="text-primary animate-pulse" />
+                <span className="text-[9px] font-bold uppercase tracking-wider text-primary">Tạo Vé</span>
               </button>
             );
           }

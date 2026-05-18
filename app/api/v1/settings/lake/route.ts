@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
       name: lake.name,
       address: lake.address || "",
       totalSpots: lake.totalSpots,
-      receipt_footer: lake.description || ""
+      receipt_footer: lake.description || "",
+      phone: lake.phone || ""
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
@@ -50,6 +51,7 @@ export async function PATCH(req: NextRequest) {
         data: {
           name: body.name,
           address: body.address,
+          phone: body.phone,
           description: body.receipt_footer,
           totalSpots: body.totalSpots ? Number(body.totalSpots) : undefined
         }
@@ -95,7 +97,8 @@ export async function PATCH(req: NextRequest) {
       name: result.name,
       address: result.address || "",
       totalSpots: result.totalSpots,
-      receipt_footer: result.description || ""
+      receipt_footer: result.description || "",
+      phone: result.phone || ""
     });
   } catch (error: any) {
     console.error("Update Lake Settings Error:", error);

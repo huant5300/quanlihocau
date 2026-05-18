@@ -58,6 +58,9 @@ export async function POST(
             : `Gia hạn +${hours}h (${cost}đ)`
         }
       });
+    }, {
+      maxWait: 15000,
+      timeout: 30000
     });
 
     return NextResponse.json(result);

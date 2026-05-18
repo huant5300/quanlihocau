@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   // Cho phép HMR hoạt động ổn định trên mạng LAN
-  allowedDevOrigins: ["*", "localhost", "localhost:3000"],
+  allowedDevOrigins: ["*", "localhost", "localhost:3000", "local-origin.dev", "*.local-origin.dev"],
   experimental: {
     serverActions: {
       allowedOrigins: ["*.vercel.app", "localhost:3000"],

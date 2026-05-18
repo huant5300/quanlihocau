@@ -54,8 +54,8 @@ export function EmployeeSettings() {
       const result = await createStaffMember({
         name,
         email,
+        phone,
         role: role || "STAFF",
-        // Pass phone if your action supports it, otherwise we'll update it separately or modify the action
       });
 
       if (result.success) {

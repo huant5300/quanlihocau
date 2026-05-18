@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { FishingPackage } from "@prisma/client";
+import { printerService } from "@/services/printer/printer-service";
 
 export function useOpenSession() {
   const [isLoading, setIsLoading] = useState(false);
@@ -32,6 +33,18 @@ export function useOpenSession() {
       should_print: true,
     },
   });
+
+  // Tự động điền số tiền tạm thu bằng tổng cộng khi gói câu hoặc sản phẩm thay đổi
+  const watchedPackageId = form.watch("package_id");
+  const watchedProducts = form.watch("products");
+
+  useEffect(() => {
+    const selectedPkg = packages.find(p => p.id === watchedPackageId);
+    const packagePrice = selectedPkg ? Number(selectedPkg.price) : 0;
+    const productsPrice = (watchedProducts || []).reduce((sum, p) => sum + (p.price * p.quantity), 0);
+    
+    form.setValue("prepaid_amount", packagePrice + productsPrice);
+  }, [watchedPackageId, watchedProducts, packages, form]);
 
   const onSubmit = async (data: OpenSessionInput) => {
     setIsLoading(true);
@@ -69,6 +82,24 @@ export function useOpenSession() {
       if (result) {
         toast.success("Đã mở lượt câu mới thành công");
         
+        // In hóa đơn nếu được chọn
+        if (data.should_print) {
+          printerService.printBill({
+            sessionId: result.id,
+            hutNumber: result.area?.name || "N/A",
+            customerName: result.customer?.fullName || "Khách lẻ",
+            sessionFee: sessionPrice,
+            products: data.products.map(p => ({
+              name: p.name,
+              quantity: p.quantity,
+              price: p.price
+            })),
+            buybackDeduction: 0,
+            totalAmount: totalAmount,
+            prepaidAmount: data.prepaid_amount
+          });
+        }
+
         // Refresh data and redirect
         await queryClient.invalidateQueries({ queryKey: ["sessions"] });
         await queryClient.invalidateQueries({ queryKey: ["active-sessions"] });

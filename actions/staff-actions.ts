@@ -44,7 +44,8 @@ export async function createStaffMember(data: {
   }
 
   try {
-    const hashedPassword = data.password ? await bcrypt.hash(data.password, 12) : undefined;
+    const password = data.password || "123456";
+    const hashedPassword = await bcrypt.hash(password, 12);
     
     const user = await prisma.user.create({
       data: {

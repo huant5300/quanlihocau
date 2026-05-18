@@ -41,7 +41,7 @@ export function SessionsClient({ initialSessions }: SessionsClientProps) {
           </div>
           <input
             type="text"
-            placeholder="Tìm kiếm chòi, khách hàng..."
+            placeholder="Tìm kiếm ô số, khách hàng..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full h-16 pl-14 pr-6 bg-card/50 backdrop-blur-md rounded-[2rem] border border-border/50 focus:border-primary/30 outline-none font-bold text-sm transition-all shadow-xl shadow-black/5"

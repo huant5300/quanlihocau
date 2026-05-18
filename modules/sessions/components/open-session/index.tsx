@@ -19,6 +19,7 @@ import { ProductQuickAdd } from "./product-quick-add";
 import { SessionSummary } from "./session-summary";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/utils/utils";
+import { toast } from "sonner";
 
 interface OpenSessionModalProps {
   isOpen: boolean;
@@ -35,6 +36,12 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
     if (isValid) {
       const success = await onSubmit(form.getValues());
       if (success) onClose();
+    } else {
+      const errors = form.formState.errors;
+      const firstError = Object.values(errors)[0];
+      if (firstError?.message) {
+        toast.error(firstError.message as string);
+      }
     }
   };
 
@@ -86,7 +93,7 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
               <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               <p className="text-[10px] font-bold tracking-[0.05em] text-white">
                 {!currentPhone || !currentName ? "bước 1: nhập sđt hoặc tên khách hàng" : 
-                 !currentHutId ? "bước 2: chọn ô số (chòi) đang trống" :
+                 !currentHutId ? "bước 2: chọn ô số đang trống" :
                  !currentPackageId ? "bước 3: chọn gói thời gian khách muốn câu" :
                  "bước cuối: thêm dịch vụ (nếu có) và nhấn 'bắt đầu phiên'"}
               </p>
@@ -96,8 +103,8 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
               {/* Customer Section */}
               <div className="space-y-4">
                 <CustomerSearch 
-                  phone={form.watch("phone_number")}
-                  name={form.watch("customer_name")}
+                  phone={form.watch("phone_number") || ""}
+                  name={form.watch("customer_name") || ""}
                   onPhoneChange={(val) => form.setValue("phone_number", val)}
                   onNameChange={(val) => form.setValue("customer_name", val)}
                 />

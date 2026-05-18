@@ -29,7 +29,8 @@ export class PrinterService {
       .line(`Goi cau           1    ${bill.sessionFee.toLocaleString()}`)
       
     bill.products.forEach((p: any) => {
-      builder.line(`${p.name.padEnd(16)} ${p.quantity}    ${(p.price * p.quantity).toLocaleString()}`);
+      const pName = p.name || "Sản phẩm";
+      builder.line(`${pName.padEnd(16)} ${p.quantity}    ${(p.price * p.quantity).toLocaleString()}`);
     });
 
     if (bill.buybackDeduction > 0) {

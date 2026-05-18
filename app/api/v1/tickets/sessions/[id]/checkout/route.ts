@@ -28,7 +28,8 @@ export async function POST(
             include: { items: true }
           },
           fishCatches: true,
-          FishingPackage: true
+          FishingPackage: true,
+          customer: true
         }
       });
 
@@ -139,12 +140,15 @@ export async function POST(
             amount: totalAmount,
             category: "SESSION",
             referenceId: updatedSession.id,
-            description: `Thanh toán lượt câu - Chòi ${fishingSession.area.name} - ${fishingSession.customer?.fullName || "Khách lẻ"}`
+            description: `Thanh toán lượt câu - Ô số ${fishingSession.area.name} - ${fishingSession.customer?.fullName || "Khách lẻ"}`
           }
         });
       }
 
       return updatedSession;
+    }, {
+      maxWait: 15000, // 15 seconds
+      timeout: 30000  // 30 seconds
     });
 
     return NextResponse.json(result);

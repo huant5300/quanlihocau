@@ -13,8 +13,8 @@ interface Product {
 }
 
 interface ProductQuickAddProps {
-  selectedProducts: { id: string, quantity: number, price: number }[];
-  onUpdate: (products: { id: string, quantity: number, price: number }[]) => void;
+  selectedProducts: { id: string, quantity: number, price: number, name?: string }[];
+  onUpdate: (products: { id: string, quantity: number, price: number, name?: string }[]) => void;
 }
 
 export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddProps) {
@@ -45,7 +45,7 @@ export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddP
     if (existing) {
       onUpdate(selectedProducts.filter(p => p.id !== product.id));
     } else {
-      onUpdate([...selectedProducts, { id: product.id, quantity: 1, price }]);
+      onUpdate([...selectedProducts, { id: product.id, quantity: 1, price, name: product.name }]);
     }
   };
 
@@ -75,9 +75,11 @@ export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddP
         stock: 100,
       } as any);
 
+      if (!newProduct) throw new Error("Không nhận được thông tin sản phẩm mới");
+
       toast.success(`Đã tạo và thêm sản phẩm: ${search}`);
       await loadProducts();
-      onUpdate([...selectedProducts, { id: newProduct.id, quantity: 1, price }]);
+      onUpdate([...selectedProducts, { id: newProduct.id, quantity: 1, price, name: search }]);
       setSearch("");
     } catch (error: any) {
       toast.error(error.message || "Không thể tạo sản phẩm");

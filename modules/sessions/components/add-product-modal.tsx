@@ -20,9 +20,10 @@ import { useQueryClient } from "@tanstack/react-query";
 interface AddProductModalProps {
   sessionId: string;
   hutNumber: string;
+  className?: string;
 }
 
-export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) {
+export function AddProductModal({ sessionId, hutNumber, className }: AddProductModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
@@ -96,15 +97,16 @@ export function AddProductModal({ sessionId, hutNumber }: AddProductModalProps) 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95">
-          <Plus size={16} /> Thêm đồ
+        <button className={cn("h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95", className)}>
+          <Plus size={16} />
+          <span className="hidden lg:inline">Thêm đồ</span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[600px] flex flex-col max-h-[90vh]">
         <DialogHeader className="p-8 pb-0">
           <DialogTitle className="text-2xl font-black uppercase flex items-center gap-3">
             <ShoppingBag className="text-primary" />
-            Thêm sản phẩm - Chòi {hutNumber}
+            Thêm sản phẩm - Ô {hutNumber}
           </DialogTitle>
         </DialogHeader>
 

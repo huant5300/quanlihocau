@@ -31,6 +31,12 @@ export function SessionCard({ session }: SessionCardProps) {
   const [isWarning, setIsWarning] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
+  const formattedHutNumber = (session.hut_number || "")
+    .replace("Chòi ", "")
+    .replace("Chòi", "")
+    .replace("Ô số ", "")
+    .replace("Ô ", "");
+
   const handleCheckout = () => {
     setIsPaymentOpen(true);
   };
@@ -42,7 +48,7 @@ export function SessionCard({ session }: SessionCardProps) {
       const audio = new Audio("/sounds/alert.mp3");
       audio.volume = 0.5;
       audio.play().catch(() => console.log("Audio play blocked - user interaction required"));
-      toast.error(`CẢNH BÁO: Ô số ${session.hut_number} sắp hết thời gian!`, {
+      toast.error(`CẢNH BÁO: Ô số ${formattedHutNumber} sắp hết thời gian!`, {
         duration: 10000,
         position: "top-center",
       });
@@ -83,7 +89,7 @@ export function SessionCard({ session }: SessionCardProps) {
               isWarning ? "bg-red-500 shadow-red-500/20 animate-pulse" : "bg-primary shadow-primary/20"
             )}>
               <div className="absolute top-1 left-1 text-[8px] font-black opacity-50 uppercase tracking-tighter">Ô</div>
-              <span className="font-black text-2xl tracking-tighter text-white">{session.hut_number}</span>
+              <span className="font-black text-2xl tracking-tighter text-white">{formattedHutNumber}</span>
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -125,16 +131,32 @@ export function SessionCard({ session }: SessionCardProps) {
         </div>
 
         {/* Actions Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <AddProductModal sessionId={session.id} hutNumber={session.hut_number} />
-          <ExtendSessionModal sessionId={session.id} hutNumber={session.hut_number} />
-          <FishBuybackModal sessionId={session.id} hutNumber={session.hut_number} />
+        <div className="flex flex-col gap-2">
+          {/* Row 1: Quick Actions */}
+          <div className="grid grid-cols-3 gap-2">
+            <AddProductModal 
+              sessionId={session.id} 
+              hutNumber={formattedHutNumber} 
+              className="h-11 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1"
+            />
+            <ExtendSessionModal 
+              sessionId={session.id} 
+              hutNumber={formattedHutNumber} 
+              className="h-11 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1"
+            />
+            <FishBuybackModal 
+              sessionId={session.id} 
+              hutNumber={formattedHutNumber} 
+              className="h-11 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1"
+            />
+          </div>
           
+          {/* Row 2: Main Call to Action */}
           <button 
             onClick={handleCheckout}
             disabled={isPending}
             className={cn(
-              "h-12 text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 disabled:opacity-50",
+              "h-12 w-full text-white rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest shadow-lg transition-all active:scale-95 disabled:opacity-50",
               isWarning ? "bg-red-500 shadow-red-500/20" : "bg-primary shadow-primary/20"
             )}
           >
@@ -158,7 +180,7 @@ export function SessionCard({ session }: SessionCardProps) {
         onClose={() => setIsPaymentOpen(false)}
         billData={{
           sessionId: session.id,
-          hutNumber: session.hut_number,
+          hutNumber: formattedHutNumber,
           customerName: session.customer_name || "Khách lẻ",
           sessionFee: session.total_amount,
           products: (session.session_products || []).map((p: any) => ({

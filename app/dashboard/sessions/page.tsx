@@ -27,7 +27,7 @@ export default async function SessionsPage() {
     <div className="space-y-8">
       <DashboardHeader 
         title="Quản lý Lượt câu" 
-        subtitle="Theo dõi và quản lý các chòi đang hoạt động tại hồ."
+        subtitle="Theo dõi và quản lý các ô đang hoạt động tại hồ."
       />
       
       <SessionsClient 

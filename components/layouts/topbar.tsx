@@ -9,7 +9,8 @@ import {
   Search,
   Moon,
   Sun,
-  ChevronDown
+  ChevronDown,
+  Menu
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
@@ -31,7 +32,7 @@ export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
-  const { currentLakeId, currentLakeName, setCurrentLake } = useUIStore();
+  const { currentLakeId, currentLakeName, setCurrentLake, setIsMobileNavOpen } = useUIStore();
   const [lakes, setLakes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -60,9 +61,12 @@ export function Topbar() {
         
         {/* Left Side: Tenant Info & Lake Switcher */}
         <div className="flex items-center gap-6">
-          <div className="lg:hidden w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white font-black text-xs">
-            POS
-          </div>
+          <button 
+            onClick={() => setIsMobileNavOpen(true)}
+            className="lg:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-lg shadow-primary/5"
+          >
+            <Menu size={22} />
+          </button>
           
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex flex-col">

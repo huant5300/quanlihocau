@@ -14,19 +14,21 @@ import {
   LogOut,
   ChevronLeft,
   Bell,
-  Home
+  Home,
+  PlusCircle
 } from "lucide-react";
 import { LakeSettingsModal } from "../shared/lake-settings-modal";
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { signOut, useSession } from "next-auth/react";
 import { UserRole } from "@prisma/client";
+import { useUIStore } from "@/stores/ui-store";
 
 const menuItems = [
   { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Hồ Câu", href: "/dashboard/sessions", icon: Fish, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF] },
   { label: "Khách Hàng", href: "/dashboard/customers", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF] },
-  { label: "Bán Hàng (POS)", href: "/dashboard/pos", icon: ShoppingBag, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.CASHIER] },
+  { label: "Tạo Vé Câu", href: "#", action: "create-ticket", icon: PlusCircle, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
   { label: "Báo Cáo", href: "/dashboard/reports", icon: History, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
   { label: "Nhân Viên", href: "/dashboard/staff", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
@@ -37,6 +39,7 @@ export function Sidebar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const { setOpenSessionModalOpen } = useUIStore();
 
   if (status === "loading") {
     return (
@@ -63,6 +66,19 @@ export function Sidebar() {
 
       <nav className="flex-1 px-4 space-y-2 overflow-y-auto custom-scrollbar">
         {filteredItems.map((item) => {
+          if (item.action === "create-ticket") {
+            return (
+              <button
+                key="create-ticket"
+                onClick={() => setOpenSessionModalOpen(true)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group text-muted-foreground hover:bg-white/5 hover:text-white"
+              >
+                <item.icon size={20} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                <span className="text-sm font-medium">{item.label}</span>
+              </button>
+            );
+          }
+
           const isActive = pathname === item.href;
           return (
             <Link key={item.href} href={item.href}>

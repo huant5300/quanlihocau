@@ -14,13 +14,15 @@ import { sessionService } from "@/services/api/session-service";
 import { toast } from "sonner";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { fishService } from "@/services/api/fish-service";
+import { cn } from "@/utils/utils";
 
 interface FishBuybackModalProps {
   sessionId: string;
   hutNumber: string;
+  className?: string;
 }
 
-export function FishBuybackModal({ sessionId, hutNumber }: FishBuybackModalProps) {
+export function FishBuybackModal({ sessionId, hutNumber, className }: FishBuybackModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
@@ -54,15 +56,16 @@ export function FishBuybackModal({ sessionId, hutNumber }: FishBuybackModalProps
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <button className="h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95">
-          <RotateCcw size={16} /> Thu cá
+        <button className={cn("h-12 bg-accent/50 hover:bg-accent rounded-xl flex items-center justify-center gap-2 font-black text-[10px] uppercase tracking-widest transition-all active:scale-95", className)}>
+          <RotateCcw size={16} />
+          <span className="hidden lg:inline">Thu cá</span>
         </button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[400px]">
         <DialogHeader className="p-8 pb-0">
           <DialogTitle className="text-2xl font-black uppercase flex items-center gap-3">
             <Fish className="text-primary" />
-            Thu mua cá - Chòi {hutNumber}
+            Thu mua cá - Ô {hutNumber}
           </DialogTitle>
         </DialogHeader>
 

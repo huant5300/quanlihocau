@@ -60,7 +60,10 @@ export function HutSelector({ selectedId, onSelect }: HutSelectorProps) {
         {huts.map((hut) => {
           const isOccupied = hut.status === "OCCUPIED" || hut.status === "Occupied";
           const isSelected = selectedId === hut.id;
-          const displayValue = (hut.name || hut.number || "---").replace("Ô số ", "");
+          const displayValue = (hut.name || hut.number || "---")
+            .replace("Chòi ", "Ô ")
+            .replace("Chòi", "Ô")
+            .replace("Ô số ", "Ô ");
           
           return (
             <motion.button

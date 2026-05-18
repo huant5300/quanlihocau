@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 export const openSessionSchema = z.object({
-  phone_number: z.string().min(10, "Số điện thoại không hợp lệ"),
-  customer_name: z.string().min(2, "Tên khách hàng quá ngắn"),
+  phone_number: z.string().optional().refine((val) => !val || val.length >= 10, {
+    message: "Số điện thoại không hợp lệ (ít nhất 10 số)",
+  }),
+  customer_name: z.string().optional(),
   hut_id: z.string().min(1, "Vui lòng chọn chòi"),
   package_id: z.string().min(1, "Vui lòng chọn gói câu"),
   products: z.array(z.object({

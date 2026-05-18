@@ -5,6 +5,7 @@ export interface LakeInfo {
   address: string;
   totalSpots: number;
   receipt_footer: string;
+  phone?: string;
 }
 
 export const settingsService = {

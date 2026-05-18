@@ -20,7 +20,9 @@ export function ProductGrid({ products, onProductSelect }: ProductGridProps) {
   const categories = ["Tất cả", "Thức ăn", "Đồ uống", "Mồi câu", "Dụng cụ"];
 
   const filteredProducts = products.filter(p => {
-    const matchesCategory = activeCategory === "Tất cả" || p.category === activeCategory;
+    const matchesCategory = activeCategory === "Tất cả" || 
+      p.category === activeCategory || 
+      (typeof p.category === 'object' && p.category && (p.category as any).name?.toLowerCase() === activeCategory.toLowerCase());
     const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesCategory && matchesSearch;
   });

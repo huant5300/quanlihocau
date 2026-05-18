@@ -91,6 +91,9 @@ export async function POST(
       });
 
       return updatedInvoice;
+    }, {
+      maxWait: 15000,
+      timeout: 30000
     });
 
     return NextResponse.json(result);

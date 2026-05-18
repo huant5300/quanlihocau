@@ -76,6 +76,7 @@ model FishingLake {
   name        String
   description String?
   address     String?
+  phone       String?
   managerId   String?
   totalSpots  Int              @default(10)
   createdAt   DateTime         @default(now())

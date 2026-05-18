@@ -22,6 +22,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   const { 
     sidebarCollapsed, 
     isMobileNavOpen,
+    setIsMobileNavOpen,
     isOpenSessionModalOpen,
     setOpenSessionModalOpen,
     isPaymentModalOpen,
@@ -40,6 +41,38 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="hidden lg:block">
         <Sidebar />
       </div>
+
+      {/* Mobile Drawer Sidebar */}
+      <AnimatePresence>
+        {isMobileNavOpen && (
+          <div className="fixed inset-0 z-50 lg:hidden flex">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileNavOpen(false)}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm"
+            />
+            {/* Sidebar Container */}
+            <motion.div 
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-80 h-full bg-background z-10 flex flex-col shadow-2xl"
+            >
+              {/* Close Button or click inside menu closes drawer */}
+              <div 
+                onClick={() => setIsMobileNavOpen(false)}
+                className="h-full"
+              >
+                <Sidebar />
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       <div className="flex-1 flex flex-col min-w-0 relative h-screen overflow-hidden">
         <Topbar />

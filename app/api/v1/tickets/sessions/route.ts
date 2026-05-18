@@ -25,14 +25,53 @@ export async function GET(req: NextRequest) {
       include: {
         area: true,
         customer: true,
+        FishingPackage: true,
         fishCatches: {
           include: { fishType: true }
+        },
+        invoices: {
+          where: { status: "UNPAID" },
+          include: { items: true }
         }
       },
       orderBy: { startTime: "desc" }
     });
+
+    // Calculate real-time amount for each active session
+    const calculatedSessions = sessions.map(session => {
+      if (session.status !== "ACTIVE") return session;
+
+      let sessionCost = 0;
+      const now = new Date();
+      const startTime = new Date(session.startTime);
+      const diffMs = now.getTime() - startTime.getTime();
+      const diffMins = Math.max(0, Math.floor(diffMs / 60000));
+
+      if (session.FishingPackage) {
+        sessionCost = Number(session.FishingPackage.price);
+        // Basic overtime logic: if over package duration, add hourly rate for extra hours
+        const packageMins = session.FishingPackage.durationHours * 60;
+        if (diffMins > packageMins) {
+          const overtimeHours = Math.ceil((diffMins - packageMins) / 60);
+          sessionCost += overtimeHours * Number(session.hourlyRate);
+        }
+      } else {
+        const hours = Math.ceil(diffMins / 60) || 1;
+        sessionCost = hours * Number(session.hourlyRate);
+      }
+
+      const productsCost = session.invoices?.[0]?.items?.reduce((sum, item) => sum + Number(item.totalPrice), 0) || 0;
+      const buybackCredit = session.fishCatches?.reduce((sum, c) => sum + Number(c.totalAmount), 0) || 0;
+      
+      const currentTotal = sessionCost + productsCost - buybackCredit;
+
+      return {
+        ...session,
+        sessionAmount: currentTotal
+      };
+    });
     
-    return NextResponse.json(sessions);
+    return NextResponse.json(calculatedSessions);
   } catch (error: any) {
     return NextResponse.json({ success: false, message: error.message }, { status: 500 });
   }
@@ -202,6 +241,9 @@ export async function POST(req: NextRequest) {
       }
 
       return newSession;
+    }, {
+      maxWait: 15000,
+      timeout: 30000
     });
 
     return NextResponse.json(result);

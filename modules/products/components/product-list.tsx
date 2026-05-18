@@ -19,7 +19,10 @@ export function ProductList({ initialProducts }: ProductListProps) {
   const filteredProducts = useMemo(() => {
     return initialProducts.filter(p => {
       const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = category === "All" || p.category === category;
+      const matchesCategory = category === "All" || 
+        p.category === category || 
+        (typeof p.category === 'object' && p.category && (p.category as any).name?.toUpperCase().includes(category.toUpperCase())) ||
+        (p.categoryId && p.categoryId.toUpperCase().includes(category.toUpperCase()));
       return matchesSearch && matchesCategory;
     });
   }, [initialProducts, search, category]);

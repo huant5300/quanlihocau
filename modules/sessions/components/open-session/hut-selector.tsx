@@ -76,10 +76,10 @@ export function HutSelector({ selectedId, onSelect }: HutSelectorProps) {
               className={cn(
                 "h-12 rounded-xl font-black text-xs flex items-center justify-center border-2 transition-all relative overflow-hidden",
                 isOccupied 
-                  ? "border-red-500/50 bg-red-500/10 text-red-500 cursor-not-allowed" 
+                  ? "border-red-500/30 bg-red-500/5 text-red-500/80 cursor-not-allowed" 
                   : isSelected
-                    ? "border-primary bg-primary text-white shadow-lg shadow-primary/20"
-                    : "border-green-500/20 bg-green-500/5 text-green-500 hover:border-green-500/50"
+                    ? "border-primary bg-primary text-white shadow-lg shadow-primary/20 scale-[1.02]"
+                    : "border-green-500/30 bg-green-500/10 text-green-600 dark:border-green-500/20 dark:bg-green-500/5 dark:text-green-500 hover:bg-green-500/20 hover:border-green-500"
               )}
             >
               {displayValue}

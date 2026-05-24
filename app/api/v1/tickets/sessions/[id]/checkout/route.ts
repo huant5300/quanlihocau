@@ -43,7 +43,15 @@ export async function POST(
       
       // 2. Calculate Session Cost
       let sessionCost = 0;
-      if (fishingSession.FishingPackage) {
+      if (fishingSession.customPrice) {
+        sessionCost = Number(fishingSession.customPrice);
+        const customMins = (fishingSession.customDuration || 0) * 60;
+        if (customMins > 0 && totalMinutes > customMins) {
+          const overtimeMinutes = totalMinutes - customMins;
+          const overtimeHours = Math.ceil(overtimeMinutes / 60);
+          sessionCost += overtimeHours * Number(fishingSession.hourlyRate);
+        }
+      } else if (fishingSession.FishingPackage) {
         sessionCost = Number(fishingSession.FishingPackage.price);
         // Handle overtime if any (simplified: charge per hour extra)
         const packageMinutes = fishingSession.FishingPackage.durationHours * 60;
@@ -141,6 +149,17 @@ export async function POST(
             category: "SESSION",
             referenceId: updatedSession.id,
             description: `Thanh toán lượt câu - Ô số ${fishingSession.area.name} - ${fishingSession.customer?.fullName || "Khách lẻ"}`
+          }
+        });
+      }
+
+      // 10. Update Customer Stats if applicable
+      if (fishingSession.customerId) {
+        await tx.customer.update({
+          where: { id: fishingSession.customerId },
+          data: {
+            totalSpent: { increment: totalAmount },
+            visitCount: { increment: 1 }
           }
         });
       }

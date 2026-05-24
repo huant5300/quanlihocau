@@ -89,9 +89,9 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
 
           <div className="overflow-y-auto no-scrollbar flex-1">
             {/* Guidance Bar */}
-            <div className="px-8 py-3 bg-white/5 border-b border-white/10 flex items-center gap-3">
-              <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-              <p className="text-[10px] font-bold tracking-[0.05em] text-white">
+            <div className="px-8 py-3 bg-accent/40 dark:bg-white/5 border-b border-black/5 dark:border-white/10 flex items-center gap-3">
+              <div className="w-1.5 h-1.5 rounded-full bg-primary dark:bg-white animate-pulse" />
+              <p className="text-[10px] font-black uppercase tracking-[0.05em] text-foreground/80 dark:text-white">
                 {!currentPhone || !currentName ? "bước 1: nhập sđt hoặc tên khách hàng" : 
                  !currentHutId ? "bước 2: chọn ô số đang trống" :
                  !currentPackageId ? "bước 3: chọn gói thời gian khách muốn câu" :
@@ -134,8 +134,57 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
                   </div>
                   <PackageSelector 
                     selectedId={form.watch("package_id")} 
-                    onSelect={(id) => form.setValue("package_id", id)} 
+                    onSelect={(id) => {
+                      form.setValue("package_id", id);
+                      if (id !== "custom") {
+                        form.setValue("is_custom_package", false);
+                        form.setValue("custom_hours", undefined);
+                        form.setValue("custom_price", undefined);
+                      } else {
+                        form.setValue("is_custom_package", true);
+                        if (!form.getValues("custom_hours")) {
+                          form.setValue("custom_hours", 1);
+                        }
+                        if (!form.getValues("custom_price")) {
+                          form.setValue("custom_price", 50000);
+                        }
+                      }
+                    }} 
                   />
+
+                  {currentPackageId === "custom" && (
+                    <div className="mt-4 p-5 bg-slate-100 dark:bg-zinc-800 rounded-2xl grid grid-cols-2 gap-4 border-2 border-slate-300 dark:border-zinc-700 animate-in fade-in slide-in-from-top-2 duration-200">
+                      <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200 ml-1">Số giờ câu</label>
+                        <input 
+                          type="number"
+                          min="1"
+                          placeholder="Số giờ"
+                          value={form.watch("custom_hours") || ""}
+                          onChange={(e) => {
+                            const hours = Number(e.target.value);
+                            form.setValue("custom_hours", hours);
+                            form.setValue("is_custom_package", true);
+                          }}
+                          className="w-full h-14 px-4 bg-white dark:bg-zinc-900 rounded-xl border-2 border-slate-300 dark:border-zinc-700 outline-none font-black text-base focus:border-primary text-slate-900 dark:text-white"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200 ml-1">Tổng tiền ca (VNĐ)</label>
+                        <input 
+                          type="number"
+                          placeholder="Nhập giá vé"
+                          value={form.watch("custom_price") || ""}
+                          onChange={(e) => {
+                            const price = Number(e.target.value);
+                            form.setValue("custom_price", price);
+                            form.setValue("is_custom_package", true);
+                          }}
+                          className="w-full h-14 px-4 bg-white dark:bg-zinc-900 rounded-xl border-2 border-slate-300 dark:border-zinc-700 outline-none font-black text-base focus:border-primary text-slate-900 dark:text-white"
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -148,30 +197,31 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
               </div>
 
               {/* Payment & Summary */}
-              <div className="pt-8 border-t border-white/5 space-y-6">
+              <div className="pt-8 border-t border-black/5 dark:border-white/5 space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tiền tạm thu (VNĐ)</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200 ml-1">Tiền tạm thu (VNĐ)</label>
                     <input 
                       type="number"
                       placeholder="0"
                       value={form.watch("prepaid_amount") || ""}
                       onChange={(e) => form.setValue("prepaid_amount", Number(e.target.value))}
-                      className="w-full h-16 px-6 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-black text-xl"
+                      className="w-full h-16 px-6 bg-slate-50 focus:bg-white text-slate-900 border-2 border-slate-300 focus:border-primary dark:bg-zinc-800 dark:focus:bg-zinc-900 dark:text-slate-100 dark:border-zinc-700 dark:focus:border-primary rounded-2xl outline-none transition-all font-black text-xl"
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">In hóa đơn</label>
+                    <label className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-200 ml-1">In hóa đơn</label>
                     <button 
                       onClick={() => form.setValue("should_print", !form.watch("should_print"))}
+                      type="button"
                       className={cn(
-                        "w-full h-16 rounded-2xl border-2 transition-all flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[10px]",
+                        "w-full h-16 rounded-2xl border-2 transition-all flex items-center justify-center gap-3 font-black uppercase tracking-widest text-xs",
                         form.watch("should_print") 
-                          ? "border-primary bg-primary/10 text-primary" 
-                          : "border-transparent bg-accent/50 text-muted-foreground"
+                          ? "border-primary bg-primary/10 text-primary dark:text-primary-foreground shadow-sm" 
+                          : "border-slate-300 bg-slate-50 hover:bg-slate-100 text-slate-700 dark:border-zinc-700 dark:bg-zinc-800 dark:text-slate-300"
                       )}
                     >
-                      <Printer size={18} />
+                      <Printer size={20} />
                       {form.watch("should_print") ? "Có in bill" : "Không in bill"}
                     </button>
                   </div>
@@ -183,6 +233,10 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
                     const products = form.watch("products") || [];
                     const productsTotal = products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
                     
+                    if (pkgId === "custom") {
+                      const customPrice = form.watch("custom_price") || 0;
+                      return Number(customPrice) + productsTotal;
+                    }
                     const selectedPkg = packages.find(p => p.id === pkgId);
                     const packagePrice = selectedPkg ? Number(selectedPkg.price) : 0;
                     return packagePrice + productsTotal;

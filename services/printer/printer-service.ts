@@ -13,44 +13,89 @@ export class PrinterService {
   async printBill(bill: any) {
     const builder = new EscPosBuilder();
     
+    // Khởi tạo ngày giờ in hóa đơn thực tế
+    const now = new Date();
+    const formattedDateTime = `${now.getDate().toString().padStart(2, "0")}/${(now.getMonth() + 1).toString().padStart(2, "0")}/${now.getFullYear()} ${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    // Helper rút gọn chuỗi có độ dài cố định để vừa khít khổ in 58mm (32 ký tự)
+    const formatItemRow = (name: string, qty: string, priceStr: string): string => {
+      // 32 ký tự: Tên sản phẩm (14 ký tự) + SL (3 ký tự) + Thành tiền (15 ký tự)
+      let cleanName = name;
+      if (cleanName.length > 13) {
+        cleanName = cleanName.substring(0, 11) + "..";
+      }
+      const colName = cleanName.padEnd(14, " ");
+      const colQty = qty.padStart(3, " ");
+      const colPrice = priceStr.padStart(15, " ");
+      return `${colName}${colQty}${colPrice}`;
+    };
+
     builder
       .align("center")
+      .bold()
       .size("double")
-      .line("HO CAU SAAS")
+      .line("QUAN LY HO CAU")
       .size("normal")
-      .line("Dich vu giai tri & Thu gian")
+      .bold(false)
+      .line("Dich vu Giai tri & Thu gian")
+      .line("Ket noi nhanh - In nhanh")
       .separator()
       .align("left")
-      .line(`Hoa don: ${bill.sessionId}`)
-      .line(`Choi: ${bill.hutNumber}`)
-      .line(`Khach: ${bill.customerName}`)
+      .line(`Hoa don:  ${bill.sessionId ? bill.sessionId.substring(0, 8).toUpperCase() : "12345"}`)
+      .line(`O/Choi:   ${bill.hutNumber || "Chua chon"}`)
+      .line(`Khach:    ${bill.customerName || "Khach le"}`)
+      .line(`Ngay in:  ${formattedDateTime}`)
       .separator()
-      .line("Noi dung          SL   Thanh tien")
-      .line(`Goi cau           1    ${bill.sessionFee.toLocaleString()}`)
-      
-    bill.products.forEach((p: any) => {
-      const pName = p.name || "Sản phẩm";
-      builder.line(`${pName.padEnd(16)} ${p.quantity}    ${(p.price * p.quantity).toLocaleString()}`);
-    });
+      .bold()
+      .line("Ten san pham   SL    Thanh tien")
+      .bold(false)
+      .separator();
 
-    if (bill.buybackDeduction > 0) {
-      builder
-        .separator()
-        .line(`Khau tru ca:      -${bill.buybackDeduction.toLocaleString()}`);
+    // In tiền giờ câu đầu tiên
+    const sessionFee = bill.sessionFee || 0;
+    builder.line(formatItemRow("Goi gio cau", "1", sessionFee.toLocaleString() + "d"));
+
+    // In danh sách sản phẩm dịch vụ đi kèm
+    if (bill.products && bill.products.length > 0) {
+      bill.products.forEach((p: any) => {
+        const pName = p.name || "San pham";
+        const pQty = String(p.quantity || 1);
+        const pTotal = ((p.price || 0) * (p.quantity || 1)).toLocaleString() + "d";
+        builder.line(formatItemRow(pName, pQty, pTotal));
+      });
     }
 
+    builder.separator();
+
+    // Hiển thị các chi tiết khấu trừ/tạm tính
+    const subtotal = bill.subtotal || 0;
+    builder.align("right").line(`Tam tinh: ${subtotal.toLocaleString()}d`);
+
+    if (bill.prepaidAmount && bill.prepaidAmount > 0) {
+      builder.line(`Da tra truoc: -${bill.prepaidAmount.toLocaleString()}d`);
+    }
+
+    if (bill.buybackDeduction && bill.buybackDeduction > 0) {
+      builder.line(`Khau tru ca:  -${bill.buybackDeduction.toLocaleString()}d`);
+    }
+
+    builder.separator();
+
+    // Tổng tiền thanh toán cuối cùng
+    const totalAmount = bill.totalAmount || 0;
     builder
-      .separator()
       .bold()
       .size("double")
       .align("right")
-      .line(`TONG: ${bill.totalAmount.toLocaleString()}d`)
+      .line(`TONG CONG:`)
+      .line(`${totalAmount.toLocaleString()}d`)
       .size("normal")
       .bold(false)
-      .feed(2)
+      .separator()
+      .feed(1)
       .align("center")
       .line("Cam on Quy khach!")
-      .line("Hen gap lai!")
+      .line("Hen gap lai cac Can thu!")
       .feed(4)
       .cut();
 
@@ -85,11 +130,17 @@ export class PrinterService {
     }
 
     try {
-      // Send data in chunks of 20 bytes (BLE limit for some devices)
+      // Chia nhỏ gói tin thành 20 bytes (BLE limit để tránh rụng kết nối)
       const chunkSize = 20;
       for (let i = 0; i < data.length; i += chunkSize) {
         const chunk = data.slice(i, i + chunkSize);
-        await this.characteristic.writeValue(chunk);
+        
+        // Tối ưu cực mạnh cho máy in PT-210: Gửi dữ liệu không chờ phản hồi giúp in nhanh gấp 5-10 lần
+        if (typeof (this.characteristic as any).writeValueWithoutResponse === "function") {
+          await (this.characteristic as any).writeValueWithoutResponse(chunk);
+        } else {
+          await this.characteristic.writeValue(chunk);
+        }
       }
       return true;
     } catch (error) {

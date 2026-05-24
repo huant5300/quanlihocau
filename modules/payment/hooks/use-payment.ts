@@ -25,9 +25,17 @@ export function usePayment(totalAmount: number, sessionId: string) {
   const onSubmit = async (data: PaymentInput) => {
     setIsLoading(true);
     try {
+      const methodMapping: Record<string, string> = {
+        "Cash": "CASH",
+        "Bank Transfer": "TRANSFER",
+        "QR Payment": "TRANSFER"
+      };
+      const paymentMethod = methodMapping[data.paymentMethod] || "CASH";
+
       await sessionService.checkoutSession(sessionId, {
         amount: data.amountPaid,
-        method: data.paymentMethod.toUpperCase()
+        paymentMethod: paymentMethod,
+        notes: data.notes
       });
       setIsSuccess(true);
       queryClient.invalidateQueries({ queryKey: ["sessions"] });

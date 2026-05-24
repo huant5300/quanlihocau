@@ -25,6 +25,8 @@ export async function GET(
   }
 }
 
+import prisma from "@/lib/prisma";
+
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -37,6 +39,22 @@ export async function PATCH(
 
     const { id } = await params;
     const body = await req.json();
+
+    if (body.phone) {
+      const existing = await prisma.customer.findFirst({
+        where: { 
+          phone: body.phone,
+          id: { not: id }
+        }
+      });
+
+      if (existing) {
+        return NextResponse.json({ 
+          success: false, 
+          message: `Số điện thoại ${body.phone} đã được đăng ký bởi khách hàng "${existing.fullName}"` 
+        }, { status: 400 });
+      }
+    }
 
     const customer = await CustomerRepository.update(id, {
       fullName: body.fullName || body.full_name,

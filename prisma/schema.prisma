@@ -25,6 +25,8 @@ model User {
   managedLake   FishingLake[]  @relation("LakeManager")
   notifications Notification[]
   sessions      Session[]
+  lakeId        String?
+  lake          FishingLake?   @relation("LakeStaff", fields: [lakeId], references: [id])
 }
 
 model Account {
@@ -89,6 +91,7 @@ model FishingLake {
   invoices    Invoice[]
   expenses    Expense[]
   transactions Transaction[]
+  staff       User[]         @relation("LakeStaff")
 }
 
 model FishingArea {
@@ -121,6 +124,8 @@ model FishingSession {
   updatedAt      DateTime        @updatedAt
   packageId      String?
   prepaidAmount  Decimal         @default(0) @db.Decimal(12, 2)
+  customPrice    Decimal?        @db.Decimal(12, 2)
+  customDuration Float?
   fishCatches    FishCatch[]
   area           FishingArea     @relation(fields: [areaId], references: [id])
   customer       Customer?       @relation(fields: [customerId], references: [id])

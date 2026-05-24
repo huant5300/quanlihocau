@@ -47,7 +47,14 @@ export async function GET(req: NextRequest) {
       const diffMs = now.getTime() - startTime.getTime();
       const diffMins = Math.max(0, Math.floor(diffMs / 60000));
 
-      if (session.FishingPackage) {
+      if (session.customPrice) {
+        sessionCost = Number(session.customPrice);
+        const customMins = (session.customDuration || 0) * 60;
+        if (customMins > 0 && diffMins > customMins) {
+          const overtimeHours = Math.ceil((diffMins - customMins) / 60);
+          sessionCost += overtimeHours * Number(session.hourlyRate);
+        }
+      } else if (session.FishingPackage) {
         sessionCost = Number(session.FishingPackage.price);
         // Basic overtime logic: if over package duration, add hourly rate for extra hours
         const packageMins = session.FishingPackage.durationHours * 60;
@@ -96,6 +103,20 @@ export async function POST(req: NextRequest) {
     const hourlyRate = body.hourlyRate || 50000;
     const packageId = body.packageId;
     const prepaidAmount = Number(body.prepaidAmount || 0);
+    const customPrice = body.customPrice !== undefined && body.customPrice !== null ? Number(body.customPrice) : null;
+    const customDuration = body.customDuration !== undefined && body.customDuration !== null ? Number(body.customDuration) : null;
+
+    // Chống thất thoát: Chỉ OWNER hoặc SUPER_ADMIN mới được đặt giá tùy chỉnh hoặc thời lượng tùy chỉnh
+    const userRole = session_auth?.user?.role;
+    if ((customPrice !== null || customDuration !== null) && 
+        userRole !== "OWNER" && 
+        userRole !== "SUPER_ADMIN" && 
+        !isOwner) {
+      return NextResponse.json({ 
+        success: false, 
+        message: "Bạn không có quyền thiết lập giá tùy chỉnh hoặc thời lượng tùy chỉnh. Chỉ Chủ Hồ mới có quyền này." 
+      }, { status: 403 });
+    }
 
     if (!areaId) {
       return NextResponse.json({ success: false, message: "Thiếu thông tin vị trí (khu vực/chòi)" }, { status: 400 });
@@ -105,19 +126,20 @@ export async function POST(req: NextRequest) {
       // 1. Find or Create Customer if phone exists
       let customerId = body.customerId;
       if (!customerId && phone) {
-        // Try to find customer by phone in this lake
-        const existingCustomer = await tx.customer.findFirst({ 
-          where: { 
-            phone,
-            OR: [
-              { lakeId },
-              { lakeId: null }
-            ]
-          } 
+        // Find customer globally by phone number to prevent duplicate key database crashes
+        const existingCustomer = await tx.customer.findUnique({ 
+          where: { phone } 
         });
         
         if (existingCustomer) {
           customerId = existingCustomer.id;
+          // Optionally update lakeId connection if customer is visiting this lake for the first time
+          if (!existingCustomer.lakeId) {
+            await tx.customer.update({
+              where: { id: existingCustomer.id },
+              data: { lakeId }
+            });
+          }
         } else {
           const newCustomer = await tx.customer.create({
             data: {
@@ -130,13 +152,15 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Calculate endTime if package exists
+      // 2. Calculate endTime if package or custom duration exists
       let endTime = null;
       if (packageId) {
         const pkg = await tx.fishingPackage.findUnique({ where: { id: packageId } });
         if (pkg) {
           endTime = new Date(new Date(startTime).getTime() + Number(pkg.durationHours) * 60 * 60 * 1000);
         }
+      } else if (customDuration) {
+        endTime = new Date(new Date(startTime).getTime() + customDuration * 60 * 60 * 1000);
       }
 
       // 3. Create the session
@@ -152,6 +176,8 @@ export async function POST(req: NextRequest) {
           status: "ACTIVE",
           prepaidAmount,
           sessionAmount: 0,
+          customPrice,
+          customDuration,
         },
         include: {
           area: true,

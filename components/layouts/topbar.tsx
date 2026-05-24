@@ -13,7 +13,7 @@ import {
   Menu
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/utils/utils";
 import { SyncStatusIndicator } from "@/modules/offline/components/sync-status-indicator";
@@ -72,44 +72,50 @@ export function Topbar() {
             <div className="hidden sm:flex flex-col">
               <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none">Hồ đang quản lý</h2>
               
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-2 mt-1 cursor-pointer group">
-                    <p className="text-sm font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
-                    <ChevronDown size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2">
-                  <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground p-3">Chọn hồ câu</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/50" />
-                  {lakes.map((lake) => (
-                    <DropdownMenuItem 
-                      key={lake.id}
-                      onClick={() => handleLakeSwitch(lake.id, lake.name)}
-                      className={cn(
-                        "rounded-xl p-3 cursor-pointer font-bold text-xs transition-all",
-                        currentLakeId === lake.id ? "bg-primary text-white" : "hover:bg-accent"
-                      )}
-                    >
-                      {lake.name}
-                    </DropdownMenuItem>
-                  ))}
-                  {lakes.length === 0 && (
-                    <div className="p-3 text-[10px] italic text-muted-foreground">Không tìm thấy hồ nào</div>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {user?.role === "STAFF" || user?.role === "CASHIER" ? (
+                <div className="flex items-center gap-2 mt-1">
+                  <p className="text-sm font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
+                </div>
+              ) : (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <div className="flex items-center gap-2 mt-1 cursor-pointer group">
+                      <p className="text-sm font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
+                      <ChevronDown size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    </div>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2">
+                    <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground p-3">Chọn hồ câu</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-border/50" />
+                    {lakes.map((lake) => (
+                      <DropdownMenuItem 
+                        key={lake.id}
+                        onClick={() => handleLakeSwitch(lake.id, lake.name)}
+                        className={cn(
+                          "rounded-xl p-3 cursor-pointer font-bold text-xs transition-all",
+                          currentLakeId === lake.id ? "bg-primary text-white" : "hover:bg-accent"
+                        )}
+                      >
+                        {lake.name}
+                      </DropdownMenuItem>
+                    ))}
+                    {lakes.length === 0 && (
+                      <div className="p-3 text-[10px] italic text-muted-foreground">Không tìm thấy hồ nào</div>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
             </div>
           </div>
         </div>
 
         {/* Center: Search (POS Style) */}
-        <div className="hidden md:flex items-center flex-1 max-w-sm mx-8 relative group">
-          <Search className="absolute left-4 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+        <div className="hidden md:flex items-center flex-1 max-w-sm mx-8 relative group pointer-events-auto">
+          <Search className="absolute left-4 text-slate-500 group-focus-within:text-primary transition-colors z-10" size={18} />
           <input 
             type="text" 
             placeholder="Tìm kiếm nhanh..."
-            className="w-full h-11 pl-11 pr-4 bg-background/50 rounded-2xl border-2 border-transparent focus:border-primary/20 focus:bg-background outline-none transition-all font-bold text-xs"
+            className="w-full h-12 pl-12 pr-4 bg-slate-50 focus:bg-white text-slate-900 border-2 border-slate-300 focus:border-primary dark:bg-zinc-800 dark:focus:bg-zinc-900 dark:text-slate-100 dark:border-zinc-700 dark:focus:border-primary rounded-2xl outline-none transition-all font-bold text-xs shadow-sm"
           />
         </div>
 
@@ -135,22 +141,52 @@ export function Topbar() {
           <div className="h-8 w-[1px] bg-border mx-1" />
 
           {/* User Profile */}
-          <button className="flex items-center gap-3 p-1 rounded-2xl hover:bg-accent transition-all group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 overflow-hidden">
-              {user?.image ? (
-                <img src={user.image} alt="User" className="w-full h-full object-cover" />
-              ) : (
-                <User size={20} />
-              )}
-            </div>
-            <div className="hidden lg:flex flex-col items-start">
-              <div className="flex items-center gap-1">
-                <span className="text-[13px] font-black leading-none">{user?.name || "Quản trị viên"}</span>
-                <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">{user?.role || "Chủ hồ"}</span>
-            </div>
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="flex items-center gap-3 p-1 rounded-2xl hover:bg-accent transition-all group">
+                <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 overflow-hidden">
+                  {user?.image ? (
+                    <img src={user.image} alt="User" className="w-full h-full object-cover" />
+                  ) : (
+                    <User size={20} />
+                  )}
+                </div>
+                <div className="hidden lg:flex flex-col items-start">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[13px] font-black leading-none">{user?.name || "Quản trị viên"}</span>
+                    <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                  </div>
+                  <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">{user?.role || "Chủ hồ"}</span>
+                </div>
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2">
+              <DropdownMenuLabel className="flex flex-col p-3">
+                <span className="text-xs font-black uppercase tracking-tight">{user?.name || "Quản trị viên"}</span>
+                <span className="text-[9px] font-bold text-muted-foreground truncate mt-0.5">{user?.email || "huant5300@gmail.com"}</span>
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-border/50" />
+              <DropdownMenuItem 
+                onClick={() => window.location.href = "/dashboard/settings"}
+                className="rounded-xl p-3 cursor-pointer font-bold text-xs hover:bg-accent transition-all"
+              >
+                Cài đặt hồ
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => window.location.href = "/dashboard/settings"}
+                className="rounded-xl p-3 cursor-pointer font-bold text-xs hover:bg-accent transition-all"
+              >
+                Hồ sơ
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="bg-border/50" />
+              <DropdownMenuItem 
+                onClick={() => signOut({ callbackUrl: "/" })}
+                className="rounded-xl p-3 cursor-pointer font-bold text-xs hover:bg-destructive/10 text-destructive transition-all"
+              >
+                Đăng xuất
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>

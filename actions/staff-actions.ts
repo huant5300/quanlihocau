@@ -6,22 +6,18 @@ import { UserRole } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 
+import { getActiveLakeId } from "@/lib/lake-context";
+
 export async function getStaffMembers(lakeId: string) {
   const session = await auth();
   if (!session) return { success: false, error: "Unauthorized" };
 
   try {
-    // In this simple multi-tenant model, staff might be linked to a lake via managedLake or we might need a join table.
-    // However, the schema has User.managedLake. 
-    // Let's fetch users who are not SUPER_ADMIN and potentially linked to this lake.
-    
-    // For now, let's return all users who are not SUPER_ADMIN for simplicity, 
-    // or filter by some logic if we had a many-to-many staff-lake table.
+    const targetLakeId = lakeId || await getActiveLakeId();
     const staff = await prisma.user.findMany({
       where: {
-        role: { not: "SUPER_ADMIN" },
-        // If we want to filter by lake, we'd need a relation. 
-        // Let's assume for now staff are per-tenant (lake).
+        role: { in: [UserRole.STAFF, UserRole.CASHIER] },
+        lakeId: targetLakeId,
       },
       orderBy: { createdAt: "desc" },
     });
@@ -44,6 +40,11 @@ export async function createStaffMember(data: {
   }
 
   try {
+    const currentLakeId = await getActiveLakeId();
+    if (!currentLakeId) {
+      return { success: false, error: "Không tìm thấy hồ câu hoạt động để gán nhân viên" };
+    }
+
     const password = data.password || "123456";
     const hashedPassword = await bcrypt.hash(password, 12);
     
@@ -54,6 +55,7 @@ export async function createStaffMember(data: {
         phone: data.phone,
         password: hashedPassword,
         role: data.role,
+        lakeId: currentLakeId,
       },
     });
     
@@ -62,7 +64,7 @@ export async function createStaffMember(data: {
     return { success: true, data: user };
   } catch (error: any) {
     if (error.code === "P2002") {
-      return { success: false, error: "Email or Phone already exists" };
+      return { success: false, error: "Email hoặc Số điện thoại đã được đăng ký" };
     }
     return { success: false, error: "Failed to create staff" };
   }
@@ -74,7 +76,9 @@ export async function updateStaffMember(id: string, data: Partial<{
   isActive: boolean;
 }>) {
   const session = await auth();
-  if (!session) return { success: false, error: "Unauthorized" };
+  if (!session || (session.user.role !== UserRole.OWNER && session.user.role !== UserRole.SUPER_ADMIN)) {
+    return { success: false, error: "Unauthorized" };
+  }
 
   try {
     const user = await prisma.user.update({

@@ -62,10 +62,10 @@ export function SessionRow({ session }: SessionRowProps) {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         className={cn(
-          "w-full lg:h-24 bg-card/40 backdrop-blur-xl border-2 rounded-3xl lg:rounded-[2rem] flex flex-col lg:flex-row items-stretch lg:items-center p-4 lg:p-6 lg:px-8 gap-3 lg:gap-8 group transition-all relative overflow-hidden",
+          "w-full lg:h-24 bg-card/90 dark:bg-card/40 backdrop-blur-xl border-2 rounded-3xl lg:rounded-[2rem] flex flex-col lg:flex-row items-stretch lg:items-center p-4 lg:p-6 lg:px-8 gap-3 lg:gap-8 group transition-all relative overflow-hidden",
           isWarning 
             ? "border-red-500 bg-red-500/10 shadow-[0_0_30px_rgba(239,68,68,0.2)] animate-pulse-fast" 
-            : "border-white/5 hover:border-primary/20",
+            : "border-black/5 dark:border-white/5 hover:border-primary/20",
           isPending && "opacity-75"
         )}
       >
@@ -96,7 +96,7 @@ export function SessionRow({ session }: SessionRowProps) {
           </div>
 
           {/* Right: Countdown Timer */}
-          <div className="flex items-center lg:justify-center lg:px-8 lg:border-x border-white/5 lg:h-full shrink-0">
+          <div className="flex items-center lg:justify-center lg:px-8 lg:border-x border-black/5 dark:border-white/5 lg:h-full shrink-0">
             <div className="flex flex-col items-end lg:items-center">
               <p className="text-[8px] lg:text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Còn lại</p>
               <CountdownTimer 
@@ -109,7 +109,7 @@ export function SessionRow({ session }: SessionRowProps) {
         </div>
 
         {/* ROW 2: Mobile Actions & Financials (Tạm tính & Buttons) / Flat on Desktop */}
-        <div className="flex items-center justify-between lg:contents w-full pt-3 lg:pt-0 border-t border-white/5 lg:border-t-0">
+        <div className="flex items-center justify-between lg:contents w-full pt-3 lg:pt-0 border-t border-black/5 dark:border-white/5 lg:border-t-0">
           {/* Left: Total Amount */}
           <div className="flex flex-col items-start lg:items-end justify-center min-w-[80px] lg:min-w-[120px]">
             <p className="text-[8px] lg:text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Tạm tính</p>
@@ -126,17 +126,17 @@ export function SessionRow({ session }: SessionRowProps) {
             <AddProductModal 
               sessionId={session.id} 
               hutNumber={formattedHutNumber} 
-              className="w-10 h-10 lg:w-auto lg:h-12 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-0 lg:px-4 shrink-0"
+              className="w-10 h-10 lg:w-auto lg:h-12 bg-accent/40 hover:bg-accent/80 dark:bg-accent/30 dark:hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-0 lg:px-4 shrink-0 text-foreground/80"
             />
             <ExtendSessionModal 
               sessionId={session.id} 
               hutNumber={formattedHutNumber} 
-              className="w-10 h-10 lg:w-auto lg:h-12 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-0 lg:px-4 shrink-0"
+              className="w-10 h-10 lg:w-auto lg:h-12 bg-accent/40 hover:bg-accent/80 dark:bg-accent/30 dark:hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-0 lg:px-4 shrink-0 text-foreground/80"
             />
             <FishBuybackModal 
               sessionId={session.id} 
               hutNumber={formattedHutNumber} 
-              className="w-10 h-10 lg:w-auto lg:h-12 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-0 lg:px-4 shrink-0"
+              className="w-10 h-10 lg:w-auto lg:h-12 bg-accent/40 hover:bg-accent/80 dark:bg-accent/30 dark:hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-0 lg:px-4 shrink-0 text-foreground/80"
             />
             <button 
               onClick={handleCheckout}

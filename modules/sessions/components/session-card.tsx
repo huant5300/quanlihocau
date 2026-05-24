@@ -106,7 +106,7 @@ export function SessionCard({ session }: SessionCardProps) {
         </div>
 
         {/* Timer & Info */}
-        <div className="bg-background/50 rounded-3xl p-6 border border-white/5 space-y-4">
+        <div className="bg-background/50 rounded-3xl p-6 border border-black/5 dark:border-white/5 space-y-4">
           <div className="flex items-center justify-between">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Thời gian còn lại</p>
             <CountdownTimer 
@@ -116,7 +116,7 @@ export function SessionCard({ session }: SessionCardProps) {
             />
           </div>
           
-          <div className="flex items-center justify-between pt-4 border-t border-white/5">
+          <div className="flex items-center justify-between pt-4 border-t border-black/5 dark:border-white/5">
             <div className="flex items-center gap-2 text-muted-foreground">
               <ShoppingBag size={14} />
               <span className="text-[11px] font-bold uppercase tracking-wider">Sản phẩm</span>
@@ -137,17 +137,17 @@ export function SessionCard({ session }: SessionCardProps) {
             <AddProductModal 
               sessionId={session.id} 
               hutNumber={formattedHutNumber} 
-              className="h-11 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1"
+              className="h-11 bg-accent/40 hover:bg-accent/80 dark:bg-accent/30 dark:hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1 text-foreground/80"
             />
             <ExtendSessionModal 
               sessionId={session.id} 
               hutNumber={formattedHutNumber} 
-              className="h-11 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1"
+              className="h-11 bg-accent/40 hover:bg-accent/80 dark:bg-accent/30 dark:hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1 text-foreground/80"
             />
             <FishBuybackModal 
               sessionId={session.id} 
               hutNumber={formattedHutNumber} 
-              className="h-11 bg-accent/30 hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1"
+              className="h-11 bg-accent/40 hover:bg-accent/80 dark:bg-accent/30 dark:hover:bg-accent/50 rounded-xl flex items-center justify-center gap-1.5 font-black text-[9px] uppercase tracking-wider transition-all active:scale-95 text-center px-1 text-foreground/80"
             />
           </div>
           
@@ -165,7 +165,7 @@ export function SessionCard({ session }: SessionCardProps) {
         </div>
 
         {/* Guidance Line */}
-        <div className="mt-2 pt-4 border-t border-white/5 flex items-center gap-3">
+        <div className="mt-2 pt-4 border-t border-black/5 dark:border-white/5 flex items-center gap-3">
           <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest leading-none">
             {isWarning 

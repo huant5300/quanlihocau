@@ -5,7 +5,7 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Fishing Lake SaaS | Quản lý Hồ câu Cá chuyên nghiệp",
+  title: "Quản lý Hồ câu | Quản lý Hồ câu Cá chuyên nghiệp",
   description: "Giải pháp quản lý hồ câu toàn diện cho chủ hồ ",
 };
 
@@ -17,7 +17,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning className="dark">
+    <html lang="vi" suppressHydrationWarning className="light">
       <body className={`${inter.className} antialiased`} suppressHydrationWarning>
         <AppProviders>
           {children}

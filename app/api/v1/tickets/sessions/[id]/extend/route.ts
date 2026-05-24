@@ -49,10 +49,15 @@ export async function POST(
         });
       }
 
-      // 2. Note the extension in the session (optional)
+      const newEndTime = fishingSession.endTime 
+        ? new Date(new Date(fishingSession.endTime).getTime() + hours * 60 * 60 * 1000)
+        : null;
+
+      // 2. Note the extension in the session and update endTime
       return await tx.fishingSession.update({
         where: { id },
         data: {
+          endTime: newEndTime,
           notes: fishingSession.notes 
             ? `${fishingSession.notes}\nGia hạn +${hours}h (${cost}đ)` 
             : `Gia hạn +${hours}h (${cost}đ)`

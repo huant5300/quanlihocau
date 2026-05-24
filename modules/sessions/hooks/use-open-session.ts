@@ -37,31 +37,46 @@ export function useOpenSession() {
   // Tự động điền số tiền tạm thu bằng tổng cộng khi gói câu hoặc sản phẩm thay đổi
   const watchedPackageId = form.watch("package_id");
   const watchedProducts = form.watch("products");
+  const watchedIsCustom = form.watch("is_custom_package");
+  const watchedCustomPrice = form.watch("custom_price");
 
   useEffect(() => {
-    const selectedPkg = packages.find(p => p.id === watchedPackageId);
-    const packagePrice = selectedPkg ? Number(selectedPkg.price) : 0;
+    let packagePrice = 0;
+    if (watchedPackageId === "custom" || watchedIsCustom) {
+      packagePrice = Number(watchedCustomPrice || 0);
+    } else {
+      const selectedPkg = packages.find(p => p.id === watchedPackageId);
+      packagePrice = selectedPkg ? Number(selectedPkg.price) : 0;
+    }
     const productsPrice = (watchedProducts || []).reduce((sum, p) => sum + (p.price * p.quantity), 0);
     
     form.setValue("prepaid_amount", packagePrice + productsPrice);
-  }, [watchedPackageId, watchedProducts, packages, form]);
+  }, [watchedPackageId, watchedProducts, watchedIsCustom, watchedCustomPrice, packages, form]);
 
   const onSubmit = async (data: OpenSessionInput) => {
     setIsLoading(true);
     try {
-      const selectedPkg = packages.find((p: FishingPackage) => p.id === data.package_id);
-      if (!selectedPkg) {
-        toast.error("Vui lòng chọn gói câu");
-        return false;
+      let durationHours = 0;
+      let sessionPrice = 0;
+      let selectedPkgName = "";
+
+      if (data.package_id === "custom" || data.is_custom_package) {
+        durationHours = Number(data.custom_hours || 1);
+        sessionPrice = Number(data.custom_price || 0);
+        selectedPkgName = `Giờ lẻ (${durationHours}h - Tự nhập)`;
+      } else {
+        const selectedPkg = packages.find((p: FishingPackage) => p.id === data.package_id);
+        if (!selectedPkg) {
+          toast.error("Vui lòng chọn gói câu");
+          return false;
+        }
+        durationHours = Number(selectedPkg.durationHours) || 2;
+        sessionPrice = data.custom_price !== undefined && data.custom_price !== null ? Number(data.custom_price) : Number(selectedPkg.price);
+        selectedPkgName = selectedPkg.name;
       }
 
       const productsPrice = data.products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-      const sessionPrice = Number(selectedPkg.price);
       const totalAmount = sessionPrice + productsPrice;
-
-      // Calculate end time
-      const durationHours = Number(selectedPkg.durationHours) || 2;
-      const endTime = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString();
 
       const result = await sessionService.createSession({
         areaId: data.hut_id,
@@ -69,9 +84,11 @@ export function useOpenSession() {
         customerId: undefined, // Will handle customer creation/selection in API if needed
         customer_name: data.customer_name,
         phone: data.phone_number,
-        hourlyRate: Number(selectedPkg.price) / durationHours, // Approximate hourly rate for overtime
-        packageId: data.package_id,
+        hourlyRate: sessionPrice / durationHours, // Approximate hourly rate for overtime
+        packageId: data.package_id === "custom" ? undefined : data.package_id,
         prepaidAmount: data.prepaid_amount,
+        customPrice: sessionPrice,
+        customDuration: durationHours,
         products: data.products.map(p => ({
           productId: p.id,
           quantity: p.quantity,

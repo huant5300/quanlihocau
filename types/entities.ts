@@ -76,6 +76,8 @@ export interface SessionInsert {
   packageId?: string;
   prepaidAmount?: number;
   total_amount?: number;
+  customPrice?: number;
+  customDuration?: number;
   products?: any[];
 }
 

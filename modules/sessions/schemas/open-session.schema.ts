@@ -15,6 +15,9 @@ export const openSessionSchema = z.object({
   })),
   prepaid_amount: z.number(),
   should_print: z.boolean(),
+  is_custom_package: z.boolean().optional(),
+  custom_hours: z.number().optional(),
+  custom_price: z.number().optional(),
 });
 
 export type OpenSessionInput = z.infer<typeof openSessionSchema>;

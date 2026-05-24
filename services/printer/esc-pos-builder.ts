@@ -1,3 +1,5 @@
+import { removeVietnameseAccents } from "@/utils/vietnamese-util";
+
 /**
  * ESC/POS Command Builder for 58mm Thermal Printers
  * Supports basic text formatting, alignment, and paper cutting.
@@ -26,10 +28,9 @@ export class EscPosBuilder {
   }
 
   text(content: string): this {
-    // Basic Vietnamese accent removal for simple thermal printers if needed, 
-    // but modern ones might support UTF-8/TCVN3. 
-    // For now, we'll send UTF-8 and assume the printer handles it or the user will configure encoding.
-    this.buffer.push(this.encoder.encode(content));
+    // Tự động chuyển đổi tiếng Việt sang không dấu để máy in nhiệt PT-210 hiển thị đúng 100%
+    const cleanContent = removeVietnameseAccents(content);
+    this.buffer.push(this.encoder.encode(cleanContent));
     return this;
   }
 

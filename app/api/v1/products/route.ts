@@ -44,16 +44,31 @@ export async function POST(req: NextRequest) {
     const lakeId = await getActiveLakeId();
 
     // Basic validation
-    if (!body.name || !body.categoryId || !body.price) {
+    if (!body.name || !body.price) {
       return NextResponse.json({ 
         success: false, 
-        message: "Thiếu thông tin sản phẩm (tên, danh mục, giá)" 
+        message: "Thiếu thông tin sản phẩm (tên, giá)" 
       }, { status: 400 });
+    }
+
+    let categoryId = body.categoryId;
+
+    // Handle hardcoded or missing category gracefully
+    if (!categoryId || categoryId === "cmp5ikhn00000w9ts0i0n76fh") {
+      const defaultCat = await prisma.productCategory.findFirst();
+      if (defaultCat) {
+        categoryId = defaultCat.id;
+      } else {
+        const newCat = await prisma.productCategory.create({
+          data: { name: "Khác" }
+        });
+        categoryId = newCat.id;
+      }
     }
 
     const product = await ProductRepository.create({
       name: body.name,
-      categoryId: body.categoryId,
+      categoryId: categoryId,
       price: body.price,
       stock: body.stock || 0,
       lakeId: lakeId,

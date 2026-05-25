@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
 import { ProductRepository } from "@/repositories/product-repository";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { auth } from "@/auth";

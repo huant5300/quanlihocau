@@ -56,11 +56,11 @@ export async function POST(req: NextRequest) {
 
     // Handle hardcoded or missing category gracefully
     if (!categoryId || categoryId === "cmp5ikhn00000w9ts0i0n76fh") {
-      const defaultCat = await prisma.productCategory.findFirst();
+      const defaultCat = await prisma!.productCategory.findFirst();
       if (defaultCat) {
         categoryId = defaultCat.id;
       } else {
-        const newCat = await prisma.productCategory.create({
+        const newCat = await prisma!.productCategory.create({
           data: { name: "Khác" }
         });
         categoryId = newCat.id;

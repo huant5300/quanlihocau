@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function HutSettings() {
-  const [huts, setHuts] = useState<Array<{ id: string; number: string; status: string; capacity: number }>>([]);
+  const [huts, setHuts] = useState<Array<{ id: string; name: string; status: string; capacity: number }>>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -51,7 +51,7 @@ export function HutSettings() {
       }
 
       const existingNumbers = huts
-        .map(h => parseInt(h.number.replace(/\D/g, '')))
+        .map(h => parseInt((h.name || '').replace(/\D/g, '')))
         .filter(n => !isNaN(n));
       const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
 
@@ -59,7 +59,7 @@ export function HutSettings() {
       for (let i = 1; i <= quantity; i++) {
         promises.push(
           settingsService.createHut({
-            number: (maxNumber + i).toString().padStart(2, '0'),
+            name: (maxNumber + i).toString().padStart(2, '0'),
             capacity,
             status: "Available"
           })
@@ -97,7 +97,7 @@ export function HutSettings() {
                 hut.status === "Available" ? "bg-green-500 text-white" : 
                 hut.status === "Maintenance" ? "bg-orange-500 text-white" : "bg-blue-500 text-white"
               )}>
-                <span className="font-black text-lg">{hut.number}</span>
+                <span className="font-black text-lg">{hut.name}</span>
               </div>
               <div>
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">

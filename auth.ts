@@ -1,3 +1,5 @@
+
+
 import NextAuth from "next-auth";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import prisma from "@/lib/prisma";
@@ -12,7 +14,7 @@ import { authConfig } from "./auth.config";
 async function setupOnboardingData(userId: string, userName: string) {
   try {
     console.log(`Setting up onboarding data for user: ${userId} (${userName})`);
-    
+
     // 1. Create a default lake
     const lakeName = `Hồ câu ${userName}`;
     const lake = await prisma.fishingLake.create({
@@ -25,7 +27,7 @@ async function setupOnboardingData(userId: string, userName: string) {
         totalSpots: 10,
       },
     });
-    
+
     // 2. Associate the manager user with this lake directly
     await prisma.user.update({
       where: { id: userId },
@@ -99,6 +101,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       checks: ["none"],
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: "Credentials",

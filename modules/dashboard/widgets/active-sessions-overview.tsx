@@ -36,7 +36,7 @@ export function ActiveSessionsOverview({ initialSessions }: ActiveSessionsOvervi
   return (
     <DashboardWidget
       title="Lượt câu đang hoạt động"
-      subtitle={`Tổng số ${sessions.length} chòi đang có khách`}
+      subtitle={`Tổng số ${sessions.length} ô câu đang có khách`}
       icon={Waves}
       headerAction={<RefreshCcw size={16} className="text-muted-foreground cursor-pointer hover:rotate-180 transition-all duration-500" />}
     >

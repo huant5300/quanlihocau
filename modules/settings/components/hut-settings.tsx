@@ -31,7 +31,7 @@ export function HutSettings() {
       const data = await settingsService.getHuts();
       setHuts(data || []);
     } catch (error) {
-      toast.error("Không thể tải danh sách chòi");
+      toast.error("Không thể tải danh sách ô câu");
     } finally {
       setIsLoading(false);
     }
@@ -42,25 +42,37 @@ export function HutSettings() {
     setIsSaving(true);
     try {
       const formData = new FormData(e.currentTarget);
-      const number = formData.get("number");
+      const quantity = Number(formData.get("quantity"));
       const capacity = Number(formData.get("capacity"));
       
-      if (!number || Number.isNaN(capacity)) {
-        toast.error("Thông tin chòi không hợp lệ");
+      if (!quantity || Number.isNaN(capacity) || quantity <= 0) {
+        toast.error("Số lượng không hợp lệ");
         return;
       }
 
-      await settingsService.createHut({
-        number,
-        capacity,
-        status: "Available"
-      });
+      const existingNumbers = huts
+        .map(h => parseInt(h.number.replace(/\D/g, '')))
+        .filter(n => !isNaN(n));
+      const maxNumber = existingNumbers.length > 0 ? Math.max(...existingNumbers) : 0;
+
+      const promises = [];
+      for (let i = 1; i <= quantity; i++) {
+        promises.push(
+          settingsService.createHut({
+            number: (maxNumber + i).toString().padStart(2, '0'),
+            capacity,
+            status: "Available"
+          })
+        );
+      }
+
+      await Promise.all(promises);
       
-      toast.success("Đã thêm chòi mới");
+      toast.success(`Đã thêm ${quantity} ô câu mới`);
       setIsOpen(false);
       loadHuts();
     } catch (error: any) {
-      toast.error(error.message || "Lỗi khi thêm chòi");
+      toast.error(error.message || "Lỗi khi thêm ô câu");
     } finally {
       setIsSaving(false);
     }
@@ -68,8 +80,8 @@ export function HutSettings() {
 
   return (
     <SettingsCard 
-      title="Quản lý Chòi" 
-      description="Quản lý danh sách các chòi và vị trí câu."
+      title="Quản lý Ô Câu" 
+      description="Quản lý danh sách các ô câu và vị trí câu."
       icon={MapPin}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -101,32 +113,36 @@ export function HutSettings() {
           <DialogTrigger asChild>
             <button className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 rounded-2xl transition-all gap-2 min-h-[120px]">
               <Plus size={20} className="text-muted-foreground" />
-              <span className="text-[8px] font-black uppercase tracking-widest">Thêm chòi</span>
+              <span className="text-[8px] font-black uppercase tracking-widest">Thêm ô câu</span>
             </button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Thêm chòi mới</DialogTitle>
+              <DialogTitle>Thêm ô câu mới</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleAddHut} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số chòi / Tên chòi</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số lượng ô câu muốn thêm</label>
                 <input 
-                  name="number"
+                  name="quantity"
+                  type="number"
                   required
+                  min="1"
+                  max="100"
                   className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
-                  placeholder="04"
+                  placeholder="3"
+                  defaultValue="1"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sức chứa (người)</label>
+                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sức chứa (người/ô)</label>
                 <input 
                   name="capacity"
                   type="number"
                   required
                   className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
-                  placeholder="4"
-                  defaultValue="4"
+                  placeholder="1"
+                  defaultValue="1"
                 />
               </div>
               <DialogFooter className="pt-4">
@@ -136,7 +152,7 @@ export function HutSettings() {
                   className="h-14 px-8 bg-primary text-white rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50"
                 >
                   {isSaving ? <Loader2 className="animate-spin" size={18} /> : <Plus size={18} />}
-                  Thêm chòi
+                  Thêm ô câu
                 </button>
               </DialogFooter>
             </form>

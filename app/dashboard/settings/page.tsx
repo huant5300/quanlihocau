@@ -26,7 +26,7 @@ import { useTheme } from "next-themes";
 const SETTINGS_SECTIONS = [
   { id: "lake", label: "Cấu hình Hồ", icon: Building2 },
   { id: "packages", label: "Gói dịch vụ", icon: Package },
-  { id: "huts", label: "Vị trí & Chòi", icon: MapPin },
+  { id: "huts", label: "Ô Câu", icon: MapPin },
   { id: "fish", label: "Cá & Giá thu hồi", icon: Fish },
   { id: "staff", label: "Nhân sự", icon: Users },
   { id: "appearance", label: "Giao diện", icon: Palette },

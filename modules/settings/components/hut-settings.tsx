@@ -43,9 +43,9 @@ export function HutSettings() {
     try {
       const formData = new FormData(e.currentTarget);
       const quantity = Number(formData.get("quantity"));
-      const capacity = Number(formData.get("capacity"));
+      const capacity = 1; // Default to 1 unit per ô câu
       
-      if (!quantity || Number.isNaN(capacity) || quantity <= 0) {
+      if (!quantity || quantity <= 0) {
         toast.error("Số lượng không hợp lệ");
         return;
       }
@@ -103,7 +103,6 @@ export function HutSettings() {
                 <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                   {hut.status}
                 </p>
-                <p className="text-xs font-bold mt-1">Sức chứa: {hut.capacity}</p>
               </div>
             </div>
           ))
@@ -131,17 +130,6 @@ export function HutSettings() {
                   max="100"
                   className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                   placeholder="3"
-                  defaultValue="1"
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Sức chứa (người/ô)</label>
-                <input 
-                  name="capacity"
-                  type="number"
-                  required
-                  className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
-                  placeholder="1"
                   defaultValue="1"
                 />
               </div>

@@ -38,12 +38,20 @@ export function Topbar() {
   useEffect(() => {
     const fetchLakes = async () => {
       const result = await getMyLakes();
-      if (result.success) {
-        setLakes(result.data || []);
+      if (result.success && result.data) {
+        setLakes(result.data);
+        if (result.data.length > 0) {
+          // If the currently selected lake is not in the user's lakes (e.g., the hardcoded default "lake_01")
+          const hasCurrent = result.data.find(l => l.id === currentLakeId);
+          if (!hasCurrent) {
+            setCurrentLake(result.data[0].id, result.data[0].name);
+            switchLake(result.data[0].id); // Update server-side cookie/session
+          }
+        }
       }
     };
     fetchLakes();
-  }, []);
+  }, [currentLakeId, setCurrentLake]);
 
   const handleLakeSwitch = async (lakeId: string, lakeName: string) => {
     setCurrentLake(lakeId, lakeName);

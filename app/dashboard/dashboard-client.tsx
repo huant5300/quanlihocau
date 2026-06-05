@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { 
   DollarSign, 
   Users, 
@@ -48,15 +49,28 @@ interface DashboardClientProps {
 }
 
 export function DashboardClient({ initialData }: DashboardClientProps) {
-  const { data = initialData, isRefetching, refetch } = useQuery({
+  const [mounted, setMounted] = React.useState(false);
+  const [timeStr, setTimeStr] = React.useState<string>("");
+
+  React.useEffect(() => {
+    setMounted(true);
+    setTimeStr(new Date().toLocaleTimeString("vi-VN", { hour12: false }));
+    const timer = setInterval(() => {
+      setTimeStr(new Date().toLocaleTimeString("vi-VN", { hour12: false }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const { data = initialData, refetch } = useQuery({
     queryKey: ["dashboard-stats"],
     queryFn: async () => {
       const response = await axiosApiClient.get<any>("/api/v1/dashboard/stats");
       if (!response.success) throw new Error(response.error?.message || "Failed to fetch stats");
-      return response.data;
+      return response.data?.data || response.data;
     },
     initialData,
-    refetchInterval: 15000, // Refresh every 15 seconds for real-time feel
+    staleTime: 30000, // Coi dữ liệu là mới trong 30 giây (tránh refetch khi vừa mount)
+    refetchInterval: 15000, // Tự động làm mới mỗi 15 giây sau đó
   });
 
   const stats = [
@@ -65,28 +79,32 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
       value: `${Number(data?.todayRevenue || 0).toLocaleString()}đ`, 
       icon: DollarSign, 
       color: "text-green-500", 
-      bg: "bg-green-500/10" 
+      bg: "bg-green-500/10",
+      href: "/dashboard/reports"
     },
     { 
       label: "Lượt câu đang hoạt động", 
       value: (data?.activeSessions ?? 0).toString(), 
       icon: Activity, 
       color: "text-blue-500", 
-      bg: "bg-blue-500/10" 
+      bg: "bg-blue-500/10",
+      href: "/dashboard/sessions"
     },
     { 
       label: "Tổng hội viên", 
       value: (data?.totalCustomers ?? 0).toString(), 
       icon: Users, 
       color: "text-purple-500", 
-      bg: "bg-purple-500/10" 
+      bg: "bg-purple-500/10",
+      href: "/dashboard/customers"
     },
     { 
       label: "Cá đã thu hôm nay", 
       value: `${data?.todayCatchesCount ?? 0} con`, 
       icon: Fish, 
       color: "text-orange-500", 
-      bg: "bg-orange-500/10" 
+      bg: "bg-orange-500/10",
+      href: "/dashboard/sessions"
     },
   ];
 
@@ -101,21 +119,22 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
         <div>
           <h1 className="text-3xl font-black tracking-tight uppercase flex items-center gap-3">
             Tổng quan hệ thống
-            {isRefetching && (
-              <RefreshCw size={20} className="text-primary animate-spin" />
-            )}
           </h1>
-          <p className="text-muted-foreground flex items-center gap-2 mt-1">
-            <Calendar size={14} />
-            Hôm nay, {format(new Date(), "eeee, dd MMMM yyyy", { locale: vi })}
+          <p className="text-muted-foreground flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-xs">
+            <Calendar size={14} className="text-primary" />
+            <span suppressHydrationWarning>Hôm nay, {mounted ? format(new Date(), "eeee, dd MMMM yyyy", { locale: vi }) : "---"}</span>
+            <span className="text-white/20">|</span>
+            <span suppressHydrationWarning className="font-mono text-primary font-black tracking-widest bg-primary/10 px-2 py-0.5 rounded-lg text-[11px] animate-pulse">
+              {mounted ? timeStr : "--:--:--"}
+            </span>
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button 
             onClick={() => refetch()}
-            className="px-4 py-2 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-2 hover:bg-white/10 active:scale-95 transition-all"
+            className="px-4 py-2 bg-white/5 border border-white/5 rounded-2xl flex items-center gap-2 hover:bg-white/10 active:scale-95 transition-all animate-none"
           >
-            <RefreshCw size={14} className={cn(isRefetching && "animate-spin")} />
+            <RefreshCw size={14} />
             <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Làm mới</span>
           </button>
           <div className="px-4 py-2 bg-primary/10 border border-primary/20 rounded-2xl flex items-center gap-2">
@@ -128,22 +147,23 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, idx) => (
-          <motion.div 
-            key={stat.label} 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: idx * 0.05 }}
-            className="glass-card p-6 rounded-[2.5rem] relative overflow-hidden group hover:scale-[1.02] transition-all duration-300"
-          >
-            <div className={stat.bg + " absolute top-0 right-0 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-50 group-hover:scale-110 transition-transform duration-500"} />
-            <div className="relative z-10">
-              <div className={stat.color + " mb-4"}>
-                <stat.icon size={28} />
+          <Link key={stat.label} href={stat.href} className="block cursor-pointer group">
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: idx * 0.05 }}
+              className="glass-card p-6 rounded-[2.5rem] relative overflow-hidden group-hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 h-full"
+            >
+              <div className={stat.bg + " absolute top-0 right-0 w-32 h-32 rounded-bl-full -mr-8 -mt-8 opacity-50 group-hover:scale-110 transition-transform duration-500"} />
+              <div className="relative z-10">
+                <div className={stat.color + " mb-4"}>
+                  <stat.icon size={28} />
+                </div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
+                <h3 className="text-2xl font-black">{stat.value}</h3>
               </div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{stat.label}</p>
-              <h3 className="text-2xl font-black">{stat.value}</h3>
-            </div>
-          </motion.div>
+            </motion.div>
+          </Link>
         ))}
       </div>
 
@@ -275,9 +295,9 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
             </div>
           </div>
 
-          {/* Real-time Top Catches - Reporting fish count instead of kg */}
+          {/* Total catches in 1 month */}
           <div className="glass-card p-8 rounded-[3rem]">
-            <h2 className="text-xl font-black uppercase tracking-tight mb-6">Top cá thu hôm nay</h2>
+            <h2 className="text-xl font-black uppercase tracking-tight mb-6">Cá đã câu 1 tháng qua</h2>
             <div className="space-y-4">
               {data?.topCatches && data?.topCatches.length > 0 ? (
                 data?.topCatches.map((fish: any, i: number) => (
@@ -295,7 +315,7 @@ export function DashboardClient({ initialData }: DashboardClientProps) {
                 ))
               ) : (
                 <div className="py-8 text-center text-muted-foreground italic text-sm">
-                  Chưa ghi nhận lượt thu mua cá nào hôm nay
+                  Chưa ghi nhận lượt thu mua cá nào trong 1 tháng qua
                 </div>
               )}
             </div>

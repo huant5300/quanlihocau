@@ -108,40 +108,34 @@ export function PackageSettings() {
       icon={Package}
     >
       <div className="space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="animate-spin text-primary" size={32} />
-          </div>
-        ) : (
-          packages.map((pkg) => (
-            <div key={pkg.id} className="p-5 bg-accent/30 rounded-[2rem] border border-white/5 flex items-center justify-between group hover:bg-accent/50 transition-all">
-              <div className="flex items-center gap-6">
-                <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center font-black text-xs">
-                  {pkg.durationHours}h
-                </div>
-                <div>
-                  <p className="font-black text-sm uppercase tracking-tight">{pkg.name}</p>
-                  <p className="text-xs font-bold text-primary mt-1">{pkg.price.toLocaleString()}đ</p>
-                </div>
+        {packages.map((pkg) => (
+          <div key={pkg.id} className="p-5 bg-accent/30 rounded-[2rem] border border-white/5 flex items-center justify-between group hover:bg-accent/50 transition-all">
+            <div className="flex items-center gap-6">
+              <div className="w-12 h-12 rounded-xl bg-background flex items-center justify-center font-black text-xs">
+                {pkg.durationHours}h
               </div>
-              
-              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
-                <button 
-                  onClick={() => handleOpenEdit(pkg)}
-                  className="p-3 bg-background hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
-                >
-                  <Edit2 size={16} />
-                </button>
-                <button 
-                  onClick={() => handleDeletePackage(pkg.id)}
-                  className="p-3 bg-background hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all"
-                >
-                  <Trash2 size={16} />
-                </button>
+              <div>
+                <p className="font-black text-sm uppercase tracking-tight">{pkg.name}</p>
+                <p className="text-xs font-bold text-primary mt-1">{pkg.price.toLocaleString()}đ</p>
               </div>
             </div>
-          ))
-        )}
+            
+            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-all">
+              <button 
+                onClick={() => handleOpenEdit(pkg)}
+                className="p-3 bg-background hover:bg-primary/10 hover:text-primary rounded-xl transition-all"
+              >
+                <Edit2 size={16} />
+              </button>
+              <button 
+                onClick={() => handleDeletePackage(pkg.id)}
+                className="p-3 bg-background hover:bg-destructive/10 hover:text-destructive rounded-xl transition-all"
+              >
+                <Trash2 size={16} />
+              </button>
+            </div>
+          </div>
+        ))}
 
         <button 
           onClick={handleOpenAdd}

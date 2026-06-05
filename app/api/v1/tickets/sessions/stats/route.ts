@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
       where: {
         createdAt: { gte: today },
         invoice: {
-          session: { lakeId }
+          lakeId
         }
       }
     });

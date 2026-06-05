@@ -79,11 +79,7 @@ export function EmployeeSettings() {
       icon={Users}
     >
       <div className="space-y-4">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="animate-spin text-primary" size={32} />
-          </div>
-        ) : employees.length === 0 ? (
+        {employees.length === 0 ? (
           <div className="p-10 text-center bg-accent/20 rounded-[2.5rem] border border-dashed border-border">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Chưa có nhân viên nào ngoài bạn.</p>
           </div>

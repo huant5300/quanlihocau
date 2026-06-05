@@ -2,8 +2,9 @@ import { cookies } from "next/headers";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { UserRole } from "@prisma/client";
+import { cache } from "react";
 
-export async function getActiveLakeId() {
+export const getActiveLakeId = cache(async () => {
   const session = await auth();
   
   const cookieStore = await cookies();
@@ -51,7 +52,7 @@ export async function getActiveLakeId() {
   if (cookieLakeId) return cookieLakeId;
   const firstLake = await prisma.fishingLake.findFirst();
   return firstLake?.id || "lake_01";
-}
+});
 
 export async function setActiveLakeId(lakeId: string) {
   const cookieStore = await cookies();

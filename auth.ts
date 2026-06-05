@@ -188,7 +188,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.id = user.id;
         token.lakeId = (user as any).lakeId;
-      } else if (token.email) {
+      } else if (token.email && token.role === undefined) {
+        // Chỉ truy vấn khi token chưa có thông tin role (giảm hàng trăm truy vấn db dư thừa)
         const dbUser = await prisma.user.findUnique({
           where: { email: token.email },
           select: { role: true, id: true, lakeId: true },

@@ -3,6 +3,14 @@ import { FishingSession } from "@/modules/sessions/types/session.types";
 
 export type ConnectionStatus = "stable" | "reconnecting" | "offline";
 
+export interface AppNotification {
+  id: string;
+  type: "warning" | "expired";
+  hutNumber: string;
+  message: string;
+  timestamp: string;
+}
+
 interface UIState {
   // Sidebar & Nav State
   sidebarCollapsed: boolean;
@@ -38,6 +46,12 @@ interface UIState {
   currentLakeId: string | null;
   currentLakeName: string | null;
   setCurrentLake: (id: string, name: string) => void;
+
+  // System Notifications for Warnings & Expired Sessions
+  notifications: AppNotification[];
+  addNotification: (type: "warning" | "expired", hutNumber: string, message: string) => void;
+  removeNotificationByHut: (hutNumber: string, type: "warning" | "expired") => void;
+  clearNotifications: () => void;
 }
 
 export const useUIStore = create<UIState>((set) => ({
@@ -65,10 +79,30 @@ export const useUIStore = create<UIState>((set) => ({
   activeSessionForPayment: null,
   setActiveSessionForPayment: (session) => set({ activeSessionForPayment: session }),
   
-  tenantName: "Hồ Câu Đại Nam",
+  tenantName: "Hồ câu giải trí",
   setTenantName: (name) => set({ tenantName: name }),
   
   currentLakeId: "lake_01",
-  currentLakeName: "Hồ Câu Đại Nam",
+  currentLakeName: "Hồ câu giải trí",
   setCurrentLake: (id, name) => set({ currentLakeId: id, currentLakeName: name, tenantName: name }),
+
+  notifications: [],
+  addNotification: (type, hutNumber, message) => set((state) => {
+    // Avoid duplicate warnings for the same hut and type
+    const exists = state.notifications.some(n => n.hutNumber === hutNumber && n.type === type);
+    if (exists) return {};
+    
+    const newNotification: AppNotification = {
+      id: Math.random().toString(),
+      type,
+      hutNumber,
+      message,
+      timestamp: new Date().toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })
+    };
+    return { notifications: [newNotification, ...state.notifications] };
+  }),
+  removeNotificationByHut: (hutNumber, type) => set((state) => ({
+    notifications: state.notifications.filter(n => !(n.hutNumber === hutNumber && n.type === type))
+  })),
+  clearNotifications: () => set({ notifications: [] }),
 }));

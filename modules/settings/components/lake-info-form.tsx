@@ -59,12 +59,7 @@ export function LakeInfoForm() {
       description="Quản lý thông tin thương hiệu và liên hệ."
       icon={Building2}
     >
-      {isFetching ? (
-        <div className="flex justify-center py-10">
-          <Loader2 className="animate-spin text-primary" />
-        </div>
-      ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên Hồ câu</label>
             <input 
@@ -112,7 +107,6 @@ export function LakeInfoForm() {
             </button>
           </div>
         </form>
-      )}
     </SettingsCard>
   );
 }

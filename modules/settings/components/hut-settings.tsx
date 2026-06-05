@@ -85,29 +85,22 @@ export function HutSettings() {
       icon={MapPin}
     >
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {isLoading ? (
-          <div className="col-span-full flex items-center justify-center py-10">
-            <Loader2 className="animate-spin text-primary" size={32} />
-          </div>
-        ) : (
-          huts.map((hut) => (
-            <div key={hut.id} className="p-4 bg-accent/30 rounded-2xl border border-white/5 flex flex-col items-center text-center gap-3">
-              <div className={cn(
-                "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg",
-                hut.status === "Available" ? "bg-green-500 text-white" : 
-                hut.status === "Maintenance" ? "bg-orange-500 text-white" : "bg-blue-500 text-white"
-              )}>
-                <span className="font-black text-lg">{hut.name}</span>
-              </div>
-              <div>
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                  {hut.status}
-                </p>
-              </div>
+        {huts.map((hut) => (
+          <div key={hut.id} className="p-4 bg-accent/30 rounded-2xl border border-white/5 flex flex-col items-center text-center gap-3">
+            <div className={cn(
+              "w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg",
+              hut.status === "Available" ? "bg-green-500 text-white" : 
+              hut.status === "Maintenance" ? "bg-orange-500 text-white" : "bg-blue-500 text-white"
+            )}>
+              <span className="font-black text-lg">{hut.name}</span>
             </div>
-          ))
-        )}
-
+            <div>
+              <p className="font-black text-xs uppercase tracking-tight">{hut.name}</p>
+              <p className="text-[10px] text-muted-foreground mt-1 font-bold">Sức chứa: {hut.capacity} cần</p>
+            </div>
+          </div>
+        ))}
+        
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
           <DialogTrigger asChild>
             <button className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-border hover:border-primary/50 hover:bg-primary/5 rounded-2xl transition-all gap-2 min-h-[120px]">

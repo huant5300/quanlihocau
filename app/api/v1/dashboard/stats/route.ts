@@ -22,9 +22,10 @@ export async function GET(req: NextRequest) {
       activeSessions,
       todayRevenueAgg,
       totalCustomers,
-      todayCatches,
+      todayCatchesCountVal,
       recentTransactions,
-      sevenDaysTransactions
+      sevenDaysTransactions,
+      monthlyCatches
     ] = await Promise.all([
       // 1. Active sessions
       prisma.fishingSession.count({
@@ -48,16 +49,13 @@ export async function GET(req: NextRequest) {
           lakeId
         }
       }),
-      // 4. Fish catches today
-      prisma.fishCatch.findMany({
+      // 4. Fish catches today count
+      prisma.fishCatch.count({
         where: {
           createdAt: { gte: today },
           session: {
             lakeId
           }
-        },
-        include: {
-          fishType: true
         }
       }),
       // 5. Recent transactions
@@ -79,12 +77,24 @@ export async function GET(req: NextRequest) {
           amount: true,
           createdAt: true
         }
+      }),
+      // 7. Fish catches in the last 30 days
+      prisma.fishCatch.findMany({
+        where: {
+          createdAt: { gte: subDays(today, 30) },
+          session: {
+            lakeId
+          }
+        },
+        include: {
+          fishType: true
+        }
       })
     ]);
 
-    // Group catches by fish type and count the number of fish
+    // Group catches in the last 30 days by fish type and count the number of fish
     const fishTypeGroups: Record<string, number> = {};
-    todayCatches.forEach(c => {
+    monthlyCatches.forEach(c => {
       const name = c.fishType?.name || "Cá khác";
       fishTypeGroups[name] = (fishTypeGroups[name] || 0) + 1;
     });
@@ -94,7 +104,7 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.count - a.count);
 
     const todayRevenue = Number(todayRevenueAgg._sum.amount || 0);
-    const todayCatchesCount = todayCatches.length;
+    const todayCatchesCount = todayCatchesCountVal;
 
     // Fetch total capacity of lake spots (areas) to compute fill rate
     const spotsCount = await prisma.fishingArea.count({

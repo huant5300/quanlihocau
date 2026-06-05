@@ -91,11 +91,7 @@ export function FishSettings() {
       >
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {isLoadingTypes ? (
-              <div className="col-span-2 flex items-center justify-center py-10">
-                <Loader2 className="animate-spin text-primary" size={32} />
-              </div>
-            ) : fishTypes.length === 0 ? (
+            {fishTypes.length === 0 ? (
               <div className="col-span-2 text-center py-10 text-muted-foreground font-medium uppercase text-[10px] tracking-widest bg-accent/10 rounded-[2rem]">
                 Chưa có loại cá nào được cấu hình
               </div>
@@ -180,11 +176,7 @@ export function FishSettings() {
         icon={DollarSign}
       >
         <div className="overflow-x-auto no-scrollbar">
-          {isLoadingCatches ? (
-            <div className="flex items-center justify-center py-10">
-              <Loader2 className="animate-spin text-primary" size={32} />
-            </div>
-          ) : catches.length === 0 ? (
+          {catches.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground font-medium uppercase text-[10px] tracking-widest bg-accent/10 rounded-[2rem]">
               Chưa có lịch sử thu mua cá nào
             </div>

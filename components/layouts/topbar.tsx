@@ -32,8 +32,20 @@ export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
-  const { currentLakeId, currentLakeName, setCurrentLake, setIsMobileNavOpen } = useUIStore();
+  const { 
+    currentLakeId, 
+    currentLakeName, 
+    setCurrentLake, 
+    setIsMobileNavOpen,
+    notifications,
+    clearNotifications
+  } = useUIStore();
   const [lakes, setLakes] = useState<any[]>([]);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     const fetchLakes = async () => {
@@ -63,6 +75,9 @@ export function Topbar() {
     }
   };
 
+  const activeLake = lakes.find(l => l.id === currentLakeId);
+  const currentLakePhone = activeLake?.phone || "";
+
   return (
     <header className="sticky top-0 z-30 w-full p-2 sm:p-4 lg:p-6 pointer-events-none">
       <div className="bg-card/80 backdrop-blur-xl border border-border/50 h-16 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-6 flex items-center justify-between shadow-xl pointer-events-auto">
@@ -77,22 +92,30 @@ export function Topbar() {
           </button>
           
           <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col">
-              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none">Hồ đang quản lý</h2>
+            <div className="hidden sm:flex flex-col leading-tight">
+              <h2 className="text-[9px] font-black text-muted-foreground uppercase tracking-[0.15em] leading-none mb-1">Hồ đang quản lý</h2>
               
               {user?.role === "STAFF" || user?.role === "CASHIER" ? (
-                <div className="flex items-center gap-2 mt-1">
-                  <p className="text-sm font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
+                <div className="flex flex-col items-start">
+                  <p className="text-xs font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
+                  {currentLakePhone && (
+                    <p className="text-[10px] font-bold text-primary mt-0.5 tracking-wider">{currentLakePhone}</p>
+                  )}
                 </div>
               ) : (
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <div className="flex items-center gap-2 mt-1 cursor-pointer group">
-                      <p className="text-sm font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
-                      <ChevronDown size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                    <div className="flex flex-col items-start cursor-pointer group">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-xs font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
+                        <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary transition-colors shrink-0" />
+                      </div>
+                      {currentLakePhone && (
+                        <p className="text-[10px] font-bold text-primary mt-0.5 tracking-wider">{currentLakePhone}</p>
+                      )}
                     </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent align="start" className="w-56 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2">
+                  <DropdownMenuContent align="start" className="w-64 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2">
                     <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground p-3">Chọn hồ câu</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-border/50" />
                     {lakes.map((lake) => (
@@ -100,11 +123,17 @@ export function Topbar() {
                         key={lake.id}
                         onClick={() => handleLakeSwitch(lake.id, lake.name)}
                         className={cn(
-                          "rounded-xl p-3 cursor-pointer font-bold text-xs transition-all",
+                          "rounded-xl p-3 cursor-pointer font-bold text-xs transition-all flex flex-col items-start gap-0.5",
                           currentLakeId === lake.id ? "bg-primary text-white" : "hover:bg-accent"
                         )}
                       >
-                        {lake.name}
+                        <span>{lake.name}</span>
+                        {lake.phone && (
+                          <span className={cn(
+                            "text-[9px] font-bold tracking-wider",
+                            currentLakeId === lake.id ? "text-white/80" : "text-primary"
+                          )}>{lake.phone}</span>
+                        )}
                       </DropdownMenuItem>
                     ))}
                     {lakes.length === 0 && (
@@ -137,14 +166,63 @@ export function Topbar() {
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors"
           >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+            {mounted && theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
-          {/* Notifications */}
-          <button className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full border-2 border-background" />
-          </button>
+          {/* Notifications Dropdown */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button 
+                className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors relative"
+              >
+                <Bell size={20} className={cn(notifications.length > 0 && "text-red-500 animate-bounce")} />
+                {notifications.length > 0 && (
+                  <span className="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-[8px] font-black w-6 h-5 flex items-center justify-center rounded-full border-2 border-background animate-sos shadow-lg shadow-red-500/50">
+                    SOS {notifications.length}
+                  </span>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2 space-y-2">
+              <div className="flex items-center justify-between p-3">
+                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Thông báo hệ thống</span>
+                {notifications.length > 0 && (
+                  <button 
+                    onClick={() => clearNotifications()}
+                    className="text-[9px] font-black uppercase tracking-widest text-primary hover:underline"
+                  >
+                    Xóa tất cả
+                  </button>
+                )}
+              </div>
+              <DropdownMenuSeparator className="bg-border/50" />
+              {notifications.length === 0 ? (
+                <div className="p-6 text-center text-[10px] font-bold text-muted-foreground uppercase tracking-widest italic">
+                  Không có thông báo mới nào
+                </div>
+              ) : (
+                <div className="max-h-[300px] overflow-y-auto space-y-1 pr-1 custom-scrollbar">
+                  {notifications.map((n) => (
+                    <DropdownMenuItem 
+                      key={n.id} 
+                      className="rounded-xl p-3 flex items-start gap-3 cursor-pointer hover:bg-accent transition-all duration-200"
+                    >
+                      <div className={cn(
+                        "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-white font-black text-xs",
+                        n.type === "expired" ? "bg-red-500" : "bg-orange-500"
+                      )}>
+                        {n.type === "expired" ? "🚨" : "⚠️"}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black uppercase tracking-tight text-foreground">{n.message}</p>
+                        <p className="text-[9px] font-bold text-muted-foreground mt-1">{n.timestamp}</p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           <div className="h-8 w-[1px] bg-border mx-1" />
 

@@ -23,7 +23,10 @@ export class EscPosBuilder {
     LINE_FEED: new Uint8Array([0x0A]),
   };
 
-  constructor() {
+  private lineChars: number;
+
+  constructor(lineChars: number = 32) {
+    this.lineChars = lineChars;
     this.buffer.push(EscPosBuilder.COMMANDS.RESET);
   }
 
@@ -58,7 +61,7 @@ export class EscPosBuilder {
   }
 
   separator(): this {
-    this.line("--------------------------------");
+    this.line("-".repeat(this.lineChars));
     return this;
   }
 

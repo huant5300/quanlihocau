@@ -233,6 +233,16 @@ export default function OwnersPage() {
                     {owner.lakes.length} Hồ đang quản lý
                   </span>
                 </div>
+                {owner.lakes.length > 0 && (
+                  <div className="flex flex-col pl-6 pt-1 text-[10px] sm:text-[11px] border-l-2 border-primary/20 ml-1.5 space-y-1">
+                    {owner.lakes.map((lake) => (
+                      <div key={lake.id} className="flex justify-between items-center gap-2">
+                        <span className="font-bold text-slate-350 truncate max-w-[130px]">{lake.name}</span>
+                        <span className="font-black text-primary tracking-wider shrink-0">{lake.phone || "Chưa có SĐT"}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
               <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-between text-muted-foreground">

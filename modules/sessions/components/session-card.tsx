@@ -21,6 +21,7 @@ import { AddProductModal } from "./add-product-modal";
 import { ExtendSessionModal } from "./extend-session-modal";
 import { FishBuybackModal } from "./fish-buyback-modal";
 import { PaymentModal } from "@/modules/payment/components/payment-modal";
+import { useUIStore } from "@/stores/ui-store";
 
 interface SessionCardProps {
   session: FishingSession;
@@ -30,6 +31,7 @@ export function SessionCard({ session }: SessionCardProps) {
   const [isPending, startTransition] = useTransition();
   const [isWarning, setIsWarning] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const { addNotification, removeNotificationByHut } = useUIStore();
 
   const formattedHutNumber = (session.hut_number || "")
     .replace("Chòi ", "")
@@ -39,20 +41,82 @@ export function SessionCard({ session }: SessionCardProps) {
 
   const handleCheckout = () => {
     setIsPaymentOpen(true);
+    removeNotificationByHut(formattedHutNumber, "warning");
+    removeNotificationByHut(formattedHutNumber, "expired");
+  };
+
+  const handleAutoCheckout = async () => {
+    if (isPending) return;
+    
+    startTransition(async () => {
+      try {
+        const response = await fetch(`/api/v1/tickets/sessions/${session.id}/checkout`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            paymentMethod: "CASH",
+            notes: "Tự động thanh toán khi hết giờ"
+          })
+        });
+        const data = await response.json();
+        if (data.id) {
+          // Trigger expired notification and clear warnings
+          addNotification("expired", formattedHutNumber, `Ô số ${formattedHutNumber} đã tự động thanh toán!`);
+          removeNotificationByHut(formattedHutNumber, "warning");
+          
+          toast.success(`HỆ THỐNG: Ô số ${formattedHutNumber} đã hết giờ và tự động thanh toán thành công!`, {
+            duration: 10000,
+          });
+          
+          // Triggers refetch/refresh to sync data
+          window.location.reload();
+        }
+      } catch (err) {
+        console.error("Auto checkout error:", err);
+      }
+    });
   };
 
   const onWarning = () => {
     if (!isWarning) {
       setIsWarning(true);
-      // Play professional alert sound
-      const audio = new Audio("/sounds/alert.mp3");
-      audio.volume = 0.5;
-      audio.play().catch(() => console.log("Audio play blocked - user interaction required"));
+      addNotification("warning", formattedHutNumber, `Ô số ${formattedHutNumber} sắp hết giờ câu!`);
+      // Synthesize professional alert sound using Web Audio API (100% offline-ready & CORS safe)
+      try {
+        const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+        if (AudioContext) {
+          const ctx = new AudioContext();
+          const playNote = (freq: number, start: number, duration: number) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.15, start + 0.05);
+            gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start(start);
+            osc.stop(start + duration);
+          };
+          const now = ctx.currentTime;
+          playNote(523.25, now, 0.6); // C5
+          playNote(659.25, now + 0.15, 0.8); // E5
+        }
+      } catch (e) {
+        console.log("Audio play blocked or failed:", e);
+      }
       toast.error(`CẢNH BÁO: Ô số ${formattedHutNumber} sắp hết thời gian!`, {
         duration: 10000,
         position: "top-center",
       });
     }
+  };
+
+  const onExpire = () => {
+    handleAutoCheckout();
   };
 
   return (
@@ -113,6 +177,7 @@ export function SessionCard({ session }: SessionCardProps) {
               endTime={session.endTime ?? new Date().toISOString()} 
               sessionId={session.id} 
               onWarning={onWarning}
+              onExpire={onExpire}
             />
           </div>
           

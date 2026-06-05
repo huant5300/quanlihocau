@@ -22,481 +22,1143 @@ import {
   Activity,
   CreditCard,
   ChevronRight,
-  Check
+  Check,
+  Award,
+  Bell,
+  ShieldCheck,
+  Volume2,
+  FileText,
+  Star,
+  Users2,
+  CheckCircle,
+  HelpCircle,
+  Crown,
+  PhoneCall,
+  MessageSquare,
+  Gift,
+  Building,
+  ChevronDown,
+  Target,
+  Handshake
 } from "lucide-react";
+
+export const metadata = {
+  title: "Phần Mềm Quản Lý Hồ Câu Cá Chuyên Nghiệp | Tối Ưu Doanh Thu & Vận Hành SaaS",
+  description: "Giải pháp số hóa hồ câu cá hàng đầu Việt Nam. Tự động đếm ngược realtime, tự động thanh toán hết giờ, chuông SOS nhấp nháy đỏ, nhạc chuông Web Audio API offline và in hóa đơn nhiệt Bluetooth 58mm chuyên nghiệp.",
+  keywords: [
+    "quản lý hồ câu cá",
+    "phần mềm quản lý hồ câu",
+    "phần mềm hồ câu giải trí",
+    "quản lý ca câu realtime",
+    "in hóa đơn bluetooth di động",
+    "phần mềm saas hồ câu",
+    "thiết bị in hóa đơn pt-210",
+    "tự động hóa hồ câu",
+    "chuyển đổi số hồ câu"
+  ],
+  authors: [{ name: "Quản Lý Hồ Câu Team" }],
+  openGraph: {
+    title: "Phần Mềm Quản Lý Hồ Câu Cá Chuyên Nghiệp | Số Hóa Toàn Diện",
+    description: "Tăng 25% hiệu suất hồ câu, loại bỏ 100% thất thoát tài chính. Trải nghiệm hệ thống đếm ngược realtime, báo động SOS và in hóa đơn nhiệt Bluetooth thông minh.",
+    url: "https://quanlihocau.com",
+    siteName: "Quản Lý Hồ Câu",
+    images: [
+      {
+        url: "https://quanlihocau.com/fishing_bg.png",
+        width: 1200,
+        height: 630,
+        alt: "Giao diện Quản Lý Hồ Câu Thông Minh",
+      },
+    ],
+    locale: "vi_VN",
+    type: "website",
+  },
+  alternates: {
+    canonical: "https://quanlihocau.com",
+  },
+  verification: {
+    google: "google50db3f22f66b9054",
+  },
+};
 
 export default async function RootPage() {
   const session = await auth();
 
-  // Tự động chuyển hướng nếu người dùng đã đăng nhập
+  // Redirect to dashboard if already logged in
   if (session) {
     redirect("/dashboard");
   }
 
+  // Schema.org Structured Data
+  const jsonLdSchema = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Phần mềm Quản lý Hồ câu Cá Chuyên nghiệp",
+    "alternateName": "quanlihocau.com",
+    "url": "https://quanlihocau.com",
+    "logo": "https://quanlihocau.com/fishing_bg.png",
+    "operatingSystem": "Windows, macOS, iOS, Android",
+    "applicationCategory": "BusinessApplication",
+    "description": "Giải pháp số hóa quản lý hồ câu cá giải trí toàn diện tại Việt Nam. Hỗ trợ đếm ngược realtime, báo động SOS, in bill nhiệt cầm tay Bluetooth ESC/POS.",
+    "author": {
+      "@type": "Person",
+      "name": "Huân Trần",
+      "jobTitle": "Founder & Lead Developer",
+      "url": "https://quanlihocau.com"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.9",
+      "reviewCount": "139",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "VND",
+      "priceSpecification": {
+        "@type": "PriceSpecification",
+        "price": "0",
+        "priceCurrency": "VND",
+        "valueAddedTaxIncluded": true
+      }
+    },
+    "featureList": [
+      "Quản lý ca câu đếm ngược thời gian thực",
+      "Tự động khóa ca và thanh toán khi hết giờ",
+      "Cảnh báo SOS nhấp nháy đỏ hào quang dưới 15 phút",
+      "Nhạc chuông Web Audio API tự tổng hợp offline",
+      "Tích hợp máy in hóa đơn nhiệt Bluetooth 58mm PT-210",
+      "Thêm sản phẩm nhanh ngay ở bước Check-in"
+    ]
+  };
+
+  const faqJsonLdSchema = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Phần mềm quản lý hồ câu cá QuanLiHoCau™ là gì?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "QuanLiHoCau™ là giải pháp phần mềm quản lý hồ câu cá giải trí dịch vụ chuyên nghiệp hàng đầu tại Việt Nam. Phần mềm giúp các chủ hồ câu cá số hóa toàn diện quy trình vận hành: quản lý ca câu thời gian thực (realtime), tự động chốt tiền giờ, quản lý bán hàng (đồ ăn, nước uống, mồi câu), thu mua cá trực tiếp, in bill nhiệt Bluetooth không dây cầm tay và kiểm soát doanh thu chi tiết từ xa qua điện thoại di động."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Phần mềm hỗ trợ quản lý ca câu đếm ngược và cảnh báo bằng cách nào?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hệ thống tích hợp tính năng đếm ngược thời gian thực (realtime countdown) cực kỳ trực quan cho từng ô câu/chòi câu. Khi ca câu sắp hết giờ (dưới 15 phút), hệ thống sẽ tự động nhấp nháy đỏ báo động SOS và phát âm thanh cảnh báo thông minh thông qua Web Audio API tổng hợp nhạc chuông trực tiếp offline. Tính năng này giúp nhân viên kịp thời báo giỏ, gia hạn giờ hoặc chốt thu mua cá của cần thủ mà không sợ quên hay nhầm lẫn."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Tôi có cần mua thêm thiết bị đắt tiền để sử dụng máy in hóa đơn không?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Hoàn toàn không. QuanLiHoCau™ hỗ trợ kết nối trực tiếp với các dòng máy in bill nhiệt cầm tay Bluetooth 58mm giá rẻ (như PT-210) ngay trên trình duyệt điện thoại hoặc máy tính. Bạn có thể in hóa đơn nhiệt cho khách chỉ trong 3 giây thông qua kết nối Bluetooth không dây siêu mượt mà không cần dây cáp rườm rà hay máy vi tính cồng kềnh."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Làm thế nào để phần mềm chống thất thoát doanh số dịch vụ và nhân viên?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Phần mềm cung cấp tính năng phân quyền chặt chẽ giữa Chủ hồ (Admin), Thu ngân và Nhân viên trực chòi. Mọi hành động như mở ca câu, gia hạn giờ, hủy vé hay bán đồ ăn thức uống đều được lưu lại vết chi tiết (Activity Log). Nhân viên có thể thêm nhanh các sản phẩm nước ngọt, mồi câu ngay khi mở ca check-in, đối soát tồn kho tự động, triệt tiêu 100% việc nhân viên tự ý thu tiền riêng của khách hàng."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Chủ hồ câu có thể theo dõi hoạt động và báo cáo doanh thu từ xa không?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Có, QuanLiHoCau™ được xây dựng trên nền tảng Web App (SaaS) hiện đại, hoạt động mượt mà trên mọi thiết bị di động (iPhone, Android, máy tính bảng) và PC. Bạn có thể tự do rời hồ câu để đi du lịch hoặc làm công việc khác mà vẫn nắm rõ chính xác số lượng cần thủ đang câu, biểu đồ doanh thu realtime, nhật ký thả cá và lượng cá thu mua lại mọi lúc mọi nơi."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Hồ câu dịch vụ của tôi có được hỗ trợ cài đặt và setup ban đầu không?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "Chúng tôi cam kết đồng hành và hỗ trợ setup trọn gói ban đầu hoàn toàn miễn phí. Founder Huân Trần cùng đội ngũ kỹ thuật sẽ trực tiếp tư vấn cấu hình ô câu, chòi câu, biểu giá dịch vụ câu cá (ca 5h, 10h, giờ lẻ), danh mục mồi câu, nước uống và hướng dẫn nhân viên vận hành chi tiết tận nơi hoặc qua video gọi trực tiếp."
+        }
+      }
+    ]
+  };
+
   return (
-    <div className="min-h-screen bg-[#020617] text-slate-100 font-sans overflow-x-hidden selection:bg-primary/30 selection:text-white relative">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-950 relative smooth-scroll">
       
-      {/* ================= BACKGROUND GLOWS (NEBULA AESTHETIC) ================= */}
-      <div className="absolute inset-0 pointer-events-none overflow-hidden z-0">
-        {/* Soft cyan light top-left */}
-        <div className="absolute top-[-10%] left-[-15%] w-[800px] h-[800px] rounded-full bg-cyan-500/10 blur-[160px] animate-pulse" />
-        {/* Deep electric blue glow in the center */}
-        <div className="absolute top-[20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-primary/10 blur-[140px]" />
-        {/* Rich violet glow near the bottom */}
-        <div className="absolute bottom-[10%] left-[-10%] w-[700px] h-[700px] rounded-full bg-violet-600/5 blur-[160px]" />
-        {/* Tech grid layout background overlay */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b08_1px,transparent_1px),linear-gradient(to_bottom,#1e293b08_1px,transparent_1px)] bg-[size:4rem_4rem]" />
-      </div>
+      {/* Dynamic Google Fonts Stylesheet Injection */}
+      <link 
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Caveat:wght@400;700&display=swap" 
+        rel="stylesheet" 
+      />
 
-      {/* ================= HEADER / GLASSMARPHIC NAVIGATION ================= */}
-      <header className="z-50 border-b border-white/5 bg-[#020617]/40 backdrop-blur-2xl sticky top-0 transition-all">
-        <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 bg-gradient-to-tr from-primary to-blue-500 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-primary/25 hover:rotate-6 transition-all duration-300">
-              <Fish size={24} className="drop-shadow-md" />
-            </div>
-            <div className="flex flex-col items-start leading-tight">
-              <span className="font-extrabold text-xl tracking-tighter uppercase text-white bg-clip-text bg-gradient-to-r from-white via-white to-slate-400">
-                QUẢN LÝ HỒ CÂU
-              </span>
-              <span className="text-[9px] font-black text-primary uppercase tracking-widest mt-0.5 bg-primary/10 px-2 py-0.5 rounded-full border border-primary/20">
-                By Tech Founder HuanTran
-              </span>
-            </div>
-          </div>
+      {/* Inject Structured Data for Google SEO */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLdSchema) }}
+      />
 
+      {/* Inject FAQ Structured Data for GEO & LLMO Optimization */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLdSchema) }}
+      />
+
+      {/* ================= HEADER / NAVIGATION ================= */}
+      <header className="z-50 border-b border-slate-200 bg-white/95 backdrop-blur-md text-slate-900 sticky top-0 transition-all shadow-sm overflow-visible">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 flex items-center justify-between h-20 relative">
+          
+          {/* Logo Brand */}
+          <Link href="/" className="flex items-center gap-2.5 group shrink-0 select-none">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-emerald-600 flex items-center justify-center shadow-md shadow-emerald-500/10 group-hover:scale-105 transition-transform border border-emerald-400/20">
+              <Fish className="w-5.5 h-5.5 text-white" />
+            </div>
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1">
+                <span className="text-base font-extrabold tracking-tight text-slate-900 font-display">
+                  QuanLiHoCau
+                </span>
+                <span className="text-[10px] font-black text-emerald-600">™</span>
+              </div>
+              <span className="text-[9px] font-medium text-slate-400 tracking-wider -mt-0.5">
+                Phát triển bởi Huân Trần
+              </span>
+            </div>
+          </Link>
+
+          {/* Navigation Links in Center */}
+          <nav className="hidden lg:flex items-center gap-8">
+            <a href="#tinh-nang" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Tính năng
+            </a>
+            <a href="#giai-phap" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Giải pháp
+            </a>
+            <a href="#nha-sang-lap" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Câu chuyện Founder
+            </a>
+            <a href="#lien-he" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Liên hệ
+            </a>
+          </nav>
+
+          {/* Actions on Right */}
           <div className="flex items-center gap-4">
-            {/* Zalo Premium Header pill */}
             <a 
-              href="https://zalo.me/0855550813" 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="hidden md:flex h-11 border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary text-xs font-black uppercase tracking-wider rounded-2xl px-5 items-center justify-center gap-2 transition-all hover:scale-105 active:scale-95 shadow-md shadow-primary/5 group"
+              href="tel:0855550813" 
+              className="hidden xl:flex h-10 hover:bg-slate-100 text-slate-700 text-xs font-semibold rounded-full px-4 items-center justify-center gap-2 transition-all"
             >
-              <span className="w-2 h-2 rounded-full bg-primary animate-ping" />
-              <span>Zalo: 0855550813</span>
+              <PhoneCall size={13} className="text-emerald-600 animate-pulse" />
+              <span>Hỗ trợ: 0855 550 813</span>
             </a>
             
             <Link 
               href="/login" 
-              className="text-sm font-bold text-slate-300 hover:text-white transition-all px-4 py-2 hover:scale-105"
+              className="h-11 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold uppercase tracking-wide rounded-xl px-5 flex items-center justify-center transition-all shadow-md shadow-emerald-600/10 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98]"
+              id="register_nav_btn"
             >
-              Đăng nhập
+              TRẢI NGHIỆM MIỄN PHÍ NGAY
             </Link>
-            <Link 
-              href="/login" 
-              className="h-11 bg-gradient-to-r from-primary to-blue-600 text-white text-xs font-black uppercase tracking-wider rounded-xl px-6 flex items-center justify-center hover:from-primary hover:to-blue-700 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40 hover:-translate-y-0.5 active:translate-y-0"
-            >
-              Dùng thử miễn phí
-            </Link>
+
+            {/* Mobile menu checkbox hack */}
+            <input type="checkbox" id="mobile-menu-toggle" className="hidden peer" />
+            <label htmlFor="mobile-menu-toggle" className="lg:hidden flex flex-col justify-between w-6 h-4 cursor-pointer z-50 shrink-0">
+              <span className="w-full h-[2px] bg-slate-800 rounded transition-all duration-300 origin-left peer-checked:rotate-45" />
+              <span className="w-full h-[2px] bg-slate-800 rounded transition-all duration-300 peer-checked:opacity-0" />
+              <span className="w-full h-[2px] bg-slate-800 rounded transition-all duration-300 origin-left peer-checked:-rotate-45" />
+            </label>
+
+            {/* Mobile menu panel */}
+            <div className="fixed inset-0 bg-white z-40 translate-x-full peer-checked:translate-x-0 transition-transform duration-300 lg:hidden flex flex-col justify-center items-center gap-8 text-lg font-bold text-center">
+              <a href="#tinh-nang" className="text-slate-800 hover:text-emerald-600 transition-colors">Tính năng</a>
+              <a href="#giai-phap" className="text-slate-800 hover:text-emerald-600 transition-colors">Giải pháp</a>
+              <a href="#nha-sang-lap" className="text-slate-800 hover:text-emerald-600 transition-colors">Câu chuyện Founder</a>
+              <a href="#lien-he" className="text-slate-800 hover:text-emerald-600 transition-colors">Liên hệ</a>
+              <Link href="/login" className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-extrabold shadow-md">ĐĂNG NHẬP HỆ THỐNG</Link>
+            </div>
           </div>
+
         </div>
       </header>
 
-      {/* ================= HERO SECTION (FIRST FOLD) ================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 pt-20 pb-28 text-center">
+      {/* ================= HERO SECTION ================= */}
+      <section className="relative z-10 overflow-hidden bg-gradient-to-b from-white via-slate-50 to-white pt-12 pb-20 sm:pb-24 border-b border-slate-100">
         
-        {/* Shimmering Tech Pill */}
-        <div className="inline-flex items-center gap-2 bg-white/[0.02] border border-white/10 rounded-full px-5 py-2.5 mb-8 hover:bg-white/[0.04] hover:border-primary/35 transition-all shadow-lg shadow-primary/5 group">
-          <span className="w-2.5 h-2.5 rounded-full bg-gradient-to-tr from-cyan-400 to-primary animate-pulse" />
-          <span className="text-xs font-black uppercase tracking-widest text-slate-300 group-hover:text-white transition-colors">
-            TIÊN PHONG CÔNG NGHỆ – LẦN ĐẦU TIÊN XUẤT HIỆN
-          </span>
+        {/* Soft mint/light-blue background glow orbs */}
+        <div className="absolute top-1/4 left-0 w-[400px] h-[400px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none -z-10" />
+        <div className="absolute top-1/3 right-0 w-[500px] h-[500px] rounded-full bg-blue-500/5 blur-[120px] pointer-events-none -z-10" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+          
+          {/* Hero Content Left */}
+          <div className="lg:col-span-6 space-y-6 sm:space-y-8 text-left">
+            
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-extrabold tracking-wide uppercase">
+                <Sparkles size={12} />
+                PHẦN MỀM SAAS CHUYÊN NGHIỆP
+              </div>
+              
+              <h1 className="text-3xl sm:text-[40px] md:text-[46px] lg:text-[48px] xl:text-[50px] font-black tracking-tight leading-[1.15] text-slate-900" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                Quản lý hồ câu dễ hơn — <br className="hidden sm:inline" />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 via-emerald-700 to-teal-800 drop-shadow-sm">
+                  Theo dõi doanh thu mọi lúc mọi nơi.
+                </span>
+              </h1>
+            </div>
+
+            <p className="text-slate-500 text-sm sm:text-base md:text-lg leading-relaxed max-w-xl font-medium" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Giải pháp quản lý hồ câu toàn diện giúp chủ hồ loại bỏ hoàn toàn sổ sách thủ công, triệt tiêu 100% thất thoát thời gian và nâng tầm dịch vụ chuyên nghiệp hàng đầu.
+            </p>
+
+            {/* Checklist */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              {[
+                "Quản lý vé câu thông minh",
+                "Doanh thu báo cáo realtime",
+                "Hồ sơ khách hàng VIP",
+                "Quản lý nhân viên trực chòi",
+                "Kho hàng & sản phẩm dịch vụ",
+                "Nhật ký thả cá và thu mua",
+                "Dữ liệu vận hành tự động",
+                "Hoạt động mượt trên mọi thiết bị"
+              ].map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center shrink-0">
+                    <Check size={11} className="stroke-[3]" />
+                  </div>
+                  <span className="text-slate-700 text-xs sm:text-sm font-semibold tracking-wide">{item}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA and Pointer */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4 relative">
+              <Link 
+                href="/login" 
+                className="h-14 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase tracking-wider text-sm rounded-xl px-8 flex items-center justify-center gap-2.5 transition-all hover:scale-[1.01] active:scale-[0.98] hover:shadow-lg hover:shadow-emerald-600/10 duration-300 border border-emerald-600/20"
+                style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
+              >
+                BẮT ĐẦU MIỄN PHÍ NGAY
+                <Zap size={14} className="fill-white animate-pulse" />
+              </Link>
+            </div>
+
+            {/* Trust lines */}
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[11px] font-bold text-slate-400 uppercase tracking-widest pt-2">
+              <span className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> Miễn phí cài đặt</span>
+              <span className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> Không cần thẻ tín dụng</span>
+              <span className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> Hỗ trợ tận nơi</span>
+              <span className="flex items-center gap-1.5"><Check size={12} className="text-emerald-500" /> Đồng hành setup ban đầu</span>
+            </div>
+
+          </div>
+
+          {/* Hero Visual Mockup Right - REAL HIGH-FIDELITY DASHBOARD MOCKUP */}
+          <div className="lg:col-span-6 relative mt-6 lg:mt-0 flex justify-center items-center">
+            
+            {/* Soft decorative background glow */}
+            <div className="absolute inset-0 w-full h-full bg-slate-200/50 rounded-[2.5rem] overflow-hidden -z-10 shadow-inner border border-slate-100 flex items-center justify-center" />
+
+            {/* Premium Simulated SaaS Dashboard Setup */}
+            <div className="w-full max-w-[520px] relative px-2 py-4 flex flex-col items-center">
+              
+              {/* Floating Award Seal Badge */}
+              <div className="absolute -top-6 -left-3 z-30 bg-gradient-to-br from-amber-400 to-yellow-600 border-2 border-white rounded-full w-24 h-24 shadow-lg flex flex-col items-center justify-center text-center p-2 transform -rotate-12 animate-attention-pulse hover:scale-105 transition-transform select-none">
+                <Crown className="w-5 h-5 text-white" />
+                <span className="text-[8px] font-black text-amber-950 uppercase tracking-tighter mt-0.5 leading-none">
+                  GIẢI PHÁP SỐ 1
+                </span>
+                <span className="text-[7px] font-bold text-white uppercase tracking-widest leading-none mt-0.5">
+                  CHO HỒ CÂU
+                </span>
+                <div className="flex gap-0.5 mt-1">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={7} className="fill-white text-transparent" />)}
+                </div>
+              </div>
+
+              {/* 1. SaaS Main Web Application Interface Simulator */}
+              <div className="w-full bg-slate-900 rounded-2xl p-2.5 shadow-2xl border border-slate-800 relative">
+                
+                {/* Simulated Screen Body */}
+                <div className="bg-[#0b1329] rounded-xl overflow-hidden border border-slate-800 shadow-inner aspect-[16/10.5] relative flex flex-col">
+                  
+                  {/* Dashboard Header Bar */}
+                  <div className="flex items-center justify-between border-b border-white/5 px-3 py-2 text-[9px]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                      <span className="font-extrabold text-slate-300 tracking-wider ml-1 uppercase">HỒ CÂU ĐẠI AN</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="bg-emerald-500/10 border border-emerald-500/25 px-2 py-0.5 rounded text-[8px] text-emerald-400 font-extrabold animate-pulse">
+                        LIVE
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Core Statistics Cards */}
+                  <div className="grid grid-cols-3 gap-2 px-3 py-2 text-[9px]">
+                    <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[7px] text-slate-400 font-extrabold uppercase">Vé đang câu</p>
+                      <p className="font-black text-white mt-0.5">12 Ô Hoạt Động</p>
+                    </div>
+                    <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[7px] text-slate-400 font-extrabold uppercase">Doanh thu ngày</p>
+                      <p className="font-black text-emerald-400 mt-0.5">4,250,000 đ</p>
+                    </div>
+                    <div className="bg-white/[0.03] border border-white/5 rounded-lg p-2 text-center">
+                      <p className="text-[7px] text-slate-400 font-extrabold uppercase">Cá thu mua</p>
+                      <p className="font-black text-amber-400 mt-0.5">32.8 Kg</p>
+                    </div>
+                  </div>
+
+                  {/* Active Slots Time Real-time Grid View */}
+                  <div className="flex-1 px-3 pb-3 space-y-1.5 text-[8px] overflow-hidden">
+                    <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest mb-1">Phiên câu đang hoạt động</p>
+                    
+                    {/* Slot 1 - Active */}
+                    <div className="flex items-center justify-between bg-white/[0.02] border border-white/5 p-2 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="font-bold text-slate-200">Ô SỐ 08 - ANH HOÀNG (VIP)</span>
+                      </div>
+                      <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-black">Còn: 03:14:22</span>
+                    </div>
+
+                    {/* Slot 2 - SOS Alert (Core business feature) */}
+                    <div className="flex items-center justify-between bg-rose-500/10 border border-rose-500/20 p-2 rounded-lg animate-sos">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
+                        <span className="font-bold text-white uppercase tracking-wide">Ô SỐ 12 - ANH KHÁNH (SOS)</span>
+                      </div>
+                      <span className="bg-rose-600 text-white px-2 py-0.5 rounded font-black text-[9px]">SẮP HẾT GIỜ: 00:08:45</span>
+                    </div>
+
+                    {/* Slot 3 - Active */}
+                    <div className="flex items-center justify-between bg-white/[0.02] border border-white/5 p-2 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                        <span className="font-bold text-slate-200">Ô SỐ 03 - ANH PHÚC</span>
+                      </div>
+                      <span className="bg-emerald-500/20 text-emerald-400 px-2 py-0.5 rounded font-black">Còn: 01:45:10</span>
+                    </div>
+                  </div>
+
+                  {/* Top Bar of the Mockup displaying Stocked Fish stats */}
+                  <div className="bg-slate-950 px-3 py-1.5 text-[7px] text-slate-400 flex items-center justify-between border-t border-white/5 font-mono">
+                    <span>Nhật ký thả cá gần nhất: Trắm Đen (150kg) • Chép Giòn (80kg)</span>
+                    <span className="text-emerald-400 font-bold">Cập nhật: 2 giờ trước</span>
+                  </div>
+
+                </div>
+
+              </div>
+
+              {/* 2. Bluetooth Portable Thermal Receipt Printer Simulator (Overlaid left-front) */}
+              <div className="absolute -bottom-10 -left-6 w-44 sm:w-48 bg-[#1f1f23] rounded-xl p-3 shadow-2xl border border-zinc-700 flex flex-col justify-between hover:scale-105 transition-transform duration-300 z-20">
+                <div className="flex items-center justify-between border-b border-zinc-800 pb-1.5 text-[8px] font-bold text-zinc-400">
+                  <span className="flex items-center gap-1">
+                    <Printer size={10} className="text-emerald-400" />
+                    IN NHIỆT PT-210
+                  </span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                </div>
+
+                {/* Simulated thermal printed bill paper */}
+                <div className="bg-slate-50 text-slate-900 rounded p-2.5 mt-2 font-mono text-[7px] leading-normal uppercase shadow-lg border-t-4 border-emerald-500 transform -rotate-1 select-none">
+                  <div className="text-center font-black text-[9px] leading-tight tracking-tight">HỒ CÂU ĐẠI AN</div>
+                  <div className="h-[1px] bg-slate-300 my-1 border-dashed" />
+                  <p className="font-bold">VỊ TRÍ: Ô SỐ 12</p>
+                  <p>KHÁCH: ANH KHÁNH</p>
+                  <div className="h-[1px] bg-slate-200 my-0.5" />
+                  <div className="flex justify-between">
+                    <span>Ca 4 giờ</span>
+                    <span>240,000đ</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>2 Nước ngọt</span>
+                    <span>24,000đ</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>1 Mồi cá chép</span>
+                    <span>25,000đ</span>
+                  </div>
+                  <div className="flex justify-between text-rose-600 font-bold">
+                    <span>Thu cá trắm 5.2kg</span>
+                    <span>-104,000đ</span>
+                  </div>
+                  <div className="h-[1px] bg-slate-300 my-1 border-dashed" />
+                  <div className="text-right font-black text-[8px] text-slate-950">THỰC THU: 185,000đ</div>
+                </div>
+              </div>
+
+              {/* 3. Smartphone App view Simulator (Overlaid right-front) */}
+              <div className="absolute -bottom-12 -right-4 w-32 sm:w-36 bg-[#0a0f1d] rounded-[2rem] p-2.5 shadow-2xl border-[3px] border-slate-700 flex flex-col justify-between hover:scale-105 transition-transform duration-300 z-20 aspect-[9/18.5]">
+                
+                {/* Simulated mobile screen view */}
+                <div className="bg-slate-950 rounded-[1.6rem] overflow-hidden flex-1 flex flex-col p-2 text-white text-[7.5px] font-sans justify-between relative">
+                  
+                  {/* Smartphone camera notch */}
+                  <div className="absolute top-0 left-1/2 transform -translate-x-1/2 bg-slate-800 rounded-b-xl w-12 h-3.5 z-10" />
+                  <div className="h-2" />
+
+                  {/* Active Countdown block */}
+                  <div className="bg-rose-500/10 border border-rose-500/20 p-2 rounded-xl flex flex-col items-center justify-center text-center mt-1">
+                    <span className="text-[5px] text-rose-400 font-extrabold uppercase tracking-widest">Ô 12 SẮP HẾT GIỜ</span>
+                    <span className="text-base font-black text-rose-500 tracking-tight my-0.5 leading-none">00:08:45</span>
+                    <span className="text-[5.5px] text-slate-400 font-bold bg-white/5 px-1.5 py-0.5 rounded mt-0.5">BẤM GIA HẠN NHANH</span>
+                  </div>
+
+                  {/* Small customer list in mobile view */}
+                  <div className="flex-1 my-2.5 space-y-1.5 overflow-hidden leading-tight font-bold text-[6.5px]">
+                    <div className="bg-white/[0.03] p-1.5 rounded flex justify-between items-center">
+                      <span>Anh Hoàng Đại An</span>
+                      <span className="text-emerald-400">Đang câu</span>
+                    </div>
+                    <div className="bg-white/[0.03] p-1.5 rounded flex justify-between items-center">
+                      <span>Anh Phúc Hà Nội</span>
+                      <span className="text-emerald-400">Đang câu</span>
+                    </div>
+                    <div className="bg-white/[0.03] p-1.5 rounded flex justify-between items-center">
+                      <span>Anh Tiến Dũng</span>
+                      <span className="text-slate-500">Đã thanh toán</span>
+                    </div>
+                  </div>
+
+                  {/* Mobile navigation bottom tab bar */}
+                  <div className="border-t border-white/5 pt-1.5 flex justify-around text-[5px] text-slate-500 font-bold uppercase tracking-wider">
+                    <span className="text-emerald-400">Trang chủ</span>
+                    <span>Tạo Vé</span>
+                    <span>Báo cáo</span>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+
+          </div>
+
         </div>
+      </section>
 
-        {/* Cinematic Title */}
-        <h1 className="text-5xl sm:text-7xl md:text-8xl font-black tracking-tighter max-w-6xl mx-auto leading-[0.95] text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-slate-400 drop-shadow-sm">
-          Mang công nghệ hiện đại nhất <br />
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-primary to-indigo-500 drop-shadow-md">
-            vào ngành Hồ câu Việt Nam
-          </span>
-        </h1>
+      {/* ================= SECTION — PAIN POINTS ================= */}
+      <section className="py-20 sm:py-24 bg-white relative overflow-hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <h2 className="text-2xl sm:text-3.5xl font-black text-slate-900 uppercase tracking-tight" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Bạn đang gặp những vấn đề này trong vận hành hồ câu?
+            </h2>
+            <div className="w-12 h-1 bg-emerald-500 mx-auto rounded-full mt-2" />
+          </div>
 
-        {/* Pitch Statement */}
-        <p className="mt-10 text-lg sm:text-2xl text-slate-300 max-w-4xl mx-auto font-medium leading-relaxed">
-          Chúng tôi tự hào là người đi đầu (tiên phong) số hóa hoạt động kinh doanh hồ câu. 
-          Không còn cảnh ghi chép sổ sách thủ công dễ nhầm lẫn. Ứng dụng này giúp các chủ hồ và nhân viên quản lý mọi hoạt động cực kỳ dễ dàng, chính xác tuyệt đối, chuẩn theo quy trình từ hồ nhỏ lẻ cho đến chuỗi nhiều hồ câu (chuỗi hệ sinh thái).
-        </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              {
+                title: "Thất thoát doanh thu dịch vụ",
+                desc: "Không kiểm soát được nước uống, đồ ăn, mồi câu nhân viên bán ra. Thiếu sự đối soát giữa số tiền thu về và tồn kho sản phẩm thực tế.",
+                icon: Coins,
+                color: "bg-rose-50 border-rose-100 text-rose-600"
+              },
+              {
+                title: "Nhân viên thao tác thiếu minh bạch",
+                desc: "Không quản lý được nhân viên trực chòi có tự ý tạo ca câu, thu tiền khách lẻ rồi bỏ túi riêng hay không. Khó truy vết lịch sử tạo vé.",
+                icon: Users,
+                color: "bg-amber-50 border-amber-100 text-amber-600"
+              },
+              {
+                title: "Quản lý thủ công bằng sổ sách rườm rà",
+                desc: "Ghi chép tay mệt mỏi, dễ nhầm lẫn giờ ra vào của cần thủ, tính toán hóa đơn sai sót dẫn đến tranh cãi không đáng có với khách hàng.",
+                icon: FileText,
+                color: "bg-blue-50 border-blue-100 text-blue-600"
+              },
+              {
+                title: "Không theo dõi dữ liệu từ xa",
+                desc: "Chủ hồ không thể rời hồ câu lấy 1 ngày vì không biết doanh số thực tế, số lượng khách đang câu, tình hình hồ ra sao khi vắng mặt.",
+                icon: WifiOff,
+                color: "bg-purple-50 border-purple-100 text-purple-600"
+              },
+              {
+                title: "Khó khăn khi kiểm soát giờ câu",
+                desc: "Hàng chục cần thủ câu các ca 5 giờ, 10 giờ hay giờ lẻ khác nhau. Nhân viên không nhớ nổi ai sắp hết giờ để đi báo giỏ hoặc thu cá.",
+                icon: Clock,
+                color: "bg-red-50 border-red-100 text-red-600"
+              },
+              {
+                title: "Khó theo dõi lịch sử và biểu giá cá",
+                desc: "Thất thoát tiền do cân cá thu mua của khách sai biểu giá, nhập cá thả xuống hồ ghi chép thủ công dễ nhầm lẫn số lượng và chi phí.",
+                icon: Fish,
+                color: "bg-teal-50 border-teal-100 text-teal-600"
+              }
+            ].map((card, idx) => (
+              <div key={idx} className="bg-slate-50 border border-slate-100 rounded-2xl p-6 sm:p-8 hover:shadow-md transition-all duration-200">
+                <div className={`w-10 h-10 rounded-xl border flex items-center justify-center font-bold text-sm mb-4 ${card.color}`}>
+                  <card.icon size={18} className="stroke-[2.5]" />
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 mb-2 uppercase tracking-tight" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  {card.title}
+                </h3>
+                <p className="text-slate-500 text-xs sm:text-sm font-semibold leading-relaxed" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  {card.desc}
+                </p>
+              </div>
+            ))}
+          </div>
 
-        {/* CTA Buttons */}
-        <div className="mt-14 flex flex-col items-center justify-center gap-6">
-          <div className="flex flex-col sm:flex-row items-center gap-4 w-full justify-center">
-            <Link 
-              href="/login" 
-              className="w-full sm:w-auto h-16 bg-gradient-to-r from-primary via-blue-600 to-indigo-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl px-12 flex items-center justify-center gap-3 hover:opacity-95 transition-all shadow-2xl shadow-primary/30 hover:shadow-primary/50 hover:-translate-y-1 active:translate-y-0"
-            >
-              Đăng ký dùng thử miễn phí ngay <ArrowRight size={18} />
-            </Link>
-            <a 
-              href="#chuc-nang" 
-              className="w-full sm:w-auto h-16 bg-white/[0.03] border border-white/10 hover:bg-white/10 text-slate-200 hover:text-white text-xs font-black uppercase tracking-widest rounded-2xl px-8 flex items-center justify-center gap-2 transition-all active:scale-95"
-            >
-              Xem các chức năng vượt trội
+          <div className="mt-12 text-center">
+            <p className="text-slate-800 font-extrabold text-sm sm:text-base uppercase tracking-wider mb-2">
+              Chúng tôi thấu hiểu những đau đầu đó và mang lại giải pháp số hóa toàn diện
+            </p>
+            <a href="#tinh-nang" className="inline-flex items-center gap-1 text-xs font-black text-emerald-600 uppercase tracking-widest hover:text-emerald-700 transition-colors">
+              Xem giải pháp của QuanLiHoCau <ArrowRight size={14} />
             </a>
           </div>
 
-          {/* Zero Install Badge */}
-          <div className="flex flex-col md:flex-row items-center gap-4 md:gap-8 text-slate-400 text-xs font-black bg-white/[0.02] border border-white/5 backdrop-blur-md rounded-[2rem] px-8 py-4 mt-4 shadow-xl shadow-black/10">
-            <div className="flex items-center gap-2.5 text-primary">
-              <Zap size={16} />
-              <span>KHÔNG CẦN CÀI ĐẶT</span>
+        </div>
+      </section>
+
+      {/* ================= SECTION — WHY CHOOSE US ================= */}
+      <section className="py-20 sm:py-24 bg-slate-50 border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <h2 className="text-2xl sm:text-3.5xl font-black text-slate-900 uppercase tracking-tight" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Tại sao nhiều chủ hồ chuyển sang số hóa?
+            </h2>
+            <div className="w-12 h-1 bg-emerald-500 mx-auto rounded-full mt-2" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Triệt tiêu 100% thất thoát doanh thu",
+                desc: "Hệ thống tự động hóa hoàn toàn việc cộng dồn tiền giờ câu, tiền sản phẩm và trừ tiền thu mua cá trực tiếp trên bill in nhiệt Bluetooth."
+              },
+              {
+                title: "Kiểm soát nhân viên dễ dàng hơn",
+                desc: "Mọi thao tác tạo vé, gia hạn giờ, hủy vé đều được lưu vết chi tiết. Phân quyền chặt chẽ giữa Admin chủ hồ, thu ngân và nhân viên trực chòi."
+              },
+              {
+                title: "Tạo và kiểm tra vé câu nhanh gấp 5 lần",
+                desc: "Nhập thông tin, tích chọn ca câu mẫu (5h/10h) hoặc nhập giờ lẻ và in bill chỉ trong 3 giây. Trực quan hóa toàn bộ ô câu trên một màn hình."
+              },
+              {
+                title: "Theo dõi tình hình hồ câu từ xa",
+                desc: "Chủ hồ tự do đi du lịch hay làm việc khác mà vẫn kiểm soát được chính xác doanh số phát sinh, số lượng khách đang câu realtime qua điện thoại."
+              },
+              {
+                title: "Báo cáo doanh thu & cá thả realtime",
+                desc: "Tự động thống kê doanh số bán sản phẩm, tiền giờ câu, tổng trọng lượng cá thu mua lại và số lượng cá đã thả xuống hồ trong ngày."
+              },
+              {
+                title: "Loại bỏ hoàn toàn các sai sót thủ công",
+                desc: "Hệ thống tự động phát âm thanh cảnh báo SOS nhấp nháy đỏ trên màn hình khi cần thủ sắp hết giờ câu, tự động chốt hóa đơn chính xác."
+              }
+            ].map((benefit, idx) => (
+              <div key={idx} className="bg-white border border-slate-200/60 rounded-2xl p-6 sm:p-8 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center mb-6">
+                  <CheckCircle size={20} className="stroke-[2.5]" />
+                </div>
+                <h3 className="text-base sm:text-lg font-black text-slate-800 mb-2 uppercase tracking-tight" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  {benefit.title}
+                </h3>
+                <p className="text-slate-500 text-xs sm:text-sm font-semibold leading-relaxed" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                  {benefit.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ================= SECTION — FEATURES ================= */}
+      <section id="tinh-nang" className="py-20 sm:py-24 bg-white scroll-mt-20">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <p className="text-emerald-600 font-extrabold uppercase tracking-widest text-xs sm:text-sm">
+              PHÁT TRIỂN CHUYÊN BIỆT CHO NGÀNH HỒ CÂU VIỆT NAM
+            </p>
+            <h2 className="text-2xl sm:text-3.5xl font-black text-slate-900 uppercase tracking-tight animate-fade-in" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Hệ tính năng chuyên sâu — May đo cho hồ câu
+            </h2>
+            <div className="w-12 h-1 bg-emerald-500 mx-auto rounded-full mt-2" />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
+            {[
+              {
+                title: "Quản lý vé câu tiện lợi",
+                desc: "Tạo nhanh vé mới, tự động đếm ngược giờ câu realtime. Hỗ trợ tạo ca câu 5h, 10h hoặc nhập giờ lẻ tùy chỉnh linh hoạt.",
+                icon: Layers,
+                color: "bg-emerald-50 text-emerald-600 border-emerald-100"
+              },
+              {
+                title: "Báo cáo doanh thu realtime",
+                desc: "Cập nhật tức thì doanh số, tiền thực thu, sản phẩm bán chạy, sản lượng cá thu hồi theo ngày, tuần, tháng rõ ràng.",
+                icon: TrendingUp,
+                color: "bg-blue-50 text-blue-600 border-blue-100"
+              },
+              {
+                title: "Lưu lịch sử khách hàng",
+                desc: "Quản lý dữ liệu cần thủ: số điện thoại, lịch sử ca câu, tổng số tiền đã chi tiêu để phục vụ chăm sóc và tạo thẻ VIP.",
+                icon: Users,
+                color: "bg-purple-50 text-purple-600 border-purple-100"
+              },
+              {
+                title: "Phân quyền nhân viên chặt chẽ",
+                desc: "Tạo tài khoản và phân quyền độc lập cho Admin (chủ hồ), Nhân viên trực chòi và Thu ngân nhằm bảo mật dữ liệu tuyệt đối.",
+                icon: ShieldCheck,
+                color: "bg-amber-50 text-amber-600 border-amber-100"
+              },
+              {
+                title: "Kho sản phẩm & dịch vụ",
+                desc: "Thêm nhanh các mặt hàng nước uống, mồi câu đặc chủng, đồ ăn... trực tiếp ngay từ bước Check-in mở ca câu ban đầu.",
+                icon: Package,
+                color: "bg-rose-50 text-rose-600 border-rose-100"
+              },
+              {
+                title: "Quản lý cá thả xuống hồ",
+                desc: "Ghi nhật ký chi tiết các đợt thả cá mới xuống hồ, biểu giá thu mua lại cá câu được từ cần thủ cực kỳ trực quan.",
+                icon: Fish,
+                color: "bg-teal-50 text-teal-600 border-teal-100"
+              },
+              {
+                title: "Cảnh báo SOS thông minh",
+                desc: "Tự động kích hoạt thông báo chuông nhấp nháy đỏ trên màn hình khi ca câu còn dưới 15 phút, nhắc nhở thu chòi câu kịp thời.",
+                icon: Bell,
+                color: "bg-red-50 text-red-600 border-red-100"
+              },
+              {
+                title: "Truy cập trên đa thiết bị",
+                desc: "Hệ thống thiết kế theo chuẩn Web App mượt mà, sử dụng trơn tru trên cả điện thoại di động và máy tính không cần cài đặt.",
+                icon: Monitor,
+                color: "bg-cyan-50 text-cyan-600 border-cyan-100"
+              }
+            ].map((feat, idx) => (
+              <div key={idx} className="bg-white border border-slate-200/80 rounded-2xl p-6 sm:p-7 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between h-full">
+                <div className="space-y-4">
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center border shadow-sm ${feat.color} group-hover:scale-105 transition-transform`}>
+                    <feat.icon size={22} className="stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-800 mb-1.5 uppercase tracking-tight" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                      {feat.title}
+                    </h3>
+                    <p className="text-slate-500 text-xs sm:text-sm font-semibold leading-relaxed" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                      {feat.desc}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ================= SECTION — TRUST / SOCIAL PROOF ================= */}
+      <section id="giai-phap" className="py-20 sm:py-24 bg-slate-900 text-white relative overflow-hidden">
+        
+        {/* Decorative elements */}
+        <div className="absolute top-1/4 left-0 w-[300px] h-[300px] rounded-full bg-emerald-500/5 blur-[100px] pointer-events-none -z-10" />
+        <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] rounded-full bg-blue-500/5 blur-[100px] pointer-events-none -z-10" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <p className="text-emerald-400 font-extrabold uppercase tracking-widest text-xs sm:text-sm">
+              XÂY DỰNG DÀNH RIÊNG CHO NGÀNH HỒ CÂU
+            </p>
+            <h2 className="text-2xl sm:text-3.5xl font-black uppercase tracking-tight" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Đồng hành cùng sự phát triển của các chủ hồ
+            </h2>
+            <div className="w-12 h-1 bg-emerald-500 mx-auto rounded-full mt-2" />
+          </div>
+
+          {/* Metrics */}
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-8 text-center mb-20" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+            <div className="space-y-2">
+              <h3 className="text-3xl sm:text-5xl font-black text-emerald-400">139+</h3>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-450 uppercase tracking-widest">Tài khoản chủ hồ câu & nhân viên</p>
             </div>
-            <div className="hidden md:block w-px h-5 bg-white/10" />
-            <div className="flex items-center gap-3 text-cyan-400">
-              <Monitor size={16} />
-              <Phone size={16} />
-              <span>SỬ DỤNG TRỰC TIẾP TRÊN TRÌNH DUYỆT (PC & ĐIỆN THOẠI)</span>
+            <div className="space-y-2">
+              <h3 className="text-3xl sm:text-5xl font-black text-emerald-400">24/7</h3>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-450 uppercase tracking-widest">Giám sát hoạt động Realtime</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl sm:text-5xl font-black text-emerald-400">100%</h3>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-450 uppercase tracking-widest">Bảo mật dữ liệu tuyệt đối</p>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-3xl sm:text-5xl font-black text-emerald-400">2 Giây</h3>
+              <p className="text-[10px] sm:text-xs font-bold text-slate-450 uppercase tracking-widest">In bill nhiệt Bluetooth mượt mà</p>
             </div>
           </div>
+
+          <div className="w-full h-[1px] bg-slate-800 mb-16" />
+
+          {/* Testimonial cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                name: "Anh Hoàng",
+                role: "Chủ Hồ Câu Đại Nga (HCM)",
+                content: "Từ khi dùng phần mềm, tôi không còn phải lo nhân viên gian lận hay nhầm lẫn giờ của khách nữa. Khách cần thủ câu ca 5h hay 10h hết giờ là hệ thống nhấp nháy chuông đỏ SOS báo ngay. In bill nhiệt Bluetooth PT-210 qua điện thoại cực nhanh, rất chuyên nghiệp!"
+              },
+              {
+                name: "Chị Thanh Tâm",
+                role: "Chủ Hồ Câu Giải Trí Thanh Tâm (Đồng Nai)",
+                content: "Tôi thích nhất tính năng theo dõi doanh thu từ xa qua điện thoại. Đi chợ hay đi công việc vẫn nắm rõ hồ đang có bao nhiêu khách câu, doanh thu sản phẩm dịch vụ thực tế thế nào. Phần mềm cực dễ dùng, nhân viên chòi lớn tuổi vẫn thao tác mượt mà."
+              },
+              {
+                name: "Anh Bình An",
+                role: "Chủ Hồ Câu Bình An (Bình Dương)",
+                content: "Quy trình thêm sản phẩm nhanh ở bước Check-in cực hay. Cần thủ vào gọi nước, gọi mồi câu chép là lên đơn in bill luôn. Phần mềm tính tiền chuẩn xác, trừ tiền cá cần thủ câu được tự động theo biểu giá nên khách rất tin tưởng."
+              }
+            ].map((test, idx) => (
+              <div key={idx} className="bg-slate-950/40 border border-slate-800 rounded-2xl p-6 sm:p-8 space-y-4">
+                <div className="flex gap-0.5 text-amber-400">
+                  {[...Array(5)].map((_, i) => <Star key={i} size={14} className="fill-amber-400 text-amber-400" />)}
+                </div>
+                <p className="text-slate-300 text-xs sm:text-sm font-medium leading-relaxed italic">
+                  "{test.content}"
+                </p>
+                <div>
+                  <h4 className="text-sm font-extrabold text-white" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                    {test.name}
+                  </h4>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                    {test.role}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+
         </div>
+      </section>
 
-        {/* ================= HIGH-FIDELITY APP INTERACTION PREVIEW ================= */}
-        <div className="mt-24 relative max-w-5xl mx-auto rounded-[2.5rem] border border-white/10 bg-white/[0.01] p-3.5 shadow-[0_0_50px_rgba(59,130,246,0.1)] backdrop-blur-sm group">
-          <div className="absolute inset-0 rounded-[2.5rem] bg-gradient-to-tr from-primary/15 via-transparent to-cyan-500/10 pointer-events-none" />
-          
-          {/* Glowing tech lines */}
-          <div className="absolute top-0 left-1/4 right-1/4 h-[1px] bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-80" />
-          <div className="absolute bottom-0 left-1/3 right-1/3 h-[1px] bg-gradient-to-r from-transparent via-primary to-transparent opacity-80" />
+      {/* ================= SECTION — FOUNDER STORY ================= */}
+      <section id="nha-sang-lap" className="py-20 sm:py-24 bg-[#0c111e] relative overflow-hidden border-b border-slate-950 scroll-mt-20">
+        {/* Glowing background decorations */}
+        <div className="absolute top-1/4 left-0 w-[400px] h-[400px] rounded-full bg-emerald-500/[0.03] blur-[120px] pointer-events-none -z-10" />
+        <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full bg-blue-500/[0.03] blur-[120px] pointer-events-none -z-10" />
 
-          <div className="rounded-[2rem] overflow-hidden border border-white/5 bg-[#050a17] shadow-inner p-6 sm:p-8 flex flex-col lg:flex-row gap-8 relative text-left">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             
-            {/* Mockup Dashboard Pane */}
-            <div className="flex-1 space-y-6">
-              <div className="flex items-center justify-between border-b border-white/5 pb-4">
-                <div className="flex items-center gap-3">
-                  <span className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <span className="w-3 h-3 rounded-full bg-yellow-500/60" />
-                  <span className="w-3 h-3 rounded-full bg-green-500/60" />
-                  <span className="text-[10px] font-black text-slate-500 tracking-widest uppercase ml-3">App Preview Live</span>
-                </div>
-                <div className="text-[10px] font-black text-emerald-450 uppercase bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20 flex items-center gap-1.5 shadow-md">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
-                  Đang hoạt động
-                </div>
+            {/* Founder Story Block (Left Column) */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="space-y-3">
+                <span className="text-emerald-500 font-extrabold uppercase tracking-widest text-xs sm:text-sm block" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  Người đứng sau
+                </span>
+                <h2 className="text-3xl sm:text-[40px] font-black text-white uppercase tracking-tight leading-none" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  QuanLyHoCau<span className="text-emerald-500">.com</span>
+                </h2>
               </div>
 
-              {/* Fake dashboard cards */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 bg-primary/20 text-primary rounded-xl flex items-center justify-center shadow-md">
-                    <Activity size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Đang câu</p>
-                    <p className="text-xl font-black text-white">12 Cần thủ</p>
-                  </div>
-                </div>
-                
-                <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 flex items-center gap-4">
-                  <div className="w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-xl flex items-center justify-center shadow-md">
-                    <Coins size={20} />
-                  </div>
-                  <div>
-                    <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Doanh thu ngày</p>
-                    <p className="text-xl font-black text-white">4,850,000d</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Fake Realtime Active slots */}
-              <div className="bg-white/[0.01] border border-white/5 rounded-2xl p-5 space-y-4">
-                <p className="text-xs font-black uppercase text-slate-400 tracking-widest flex items-center gap-2">
-                  <Clock size={14} className="text-primary" /> Ca câu đang diễn ra (Realtime)
+              {/* Core Statement Quote */}
+              <div className="relative pl-6 sm:pl-8 py-2">
+                <span className="absolute left-0 top-0 text-emerald-500/30 text-6xl font-serif leading-none select-none">“</span>
+                <p className="text-lg sm:text-xl font-bold text-slate-100 leading-relaxed italic" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  Tôi không chỉ phát triển phần mềm – tôi cũng là <span className="text-emerald-400 font-extrabold">chủ hồ câu</span>.
                 </p>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between bg-white/[0.02] border border-white/5 p-3 rounded-xl hover:border-primary/30 transition-all">
-                    <div>
-                      <h4 className="text-xs font-bold text-white uppercase">Choi so 3 - Anh Khanh</h4>
-                      <p className="text-[9px] font-black text-slate-500 uppercase mt-0.5">Ca 5 gio • Đa bat dau: 07:30</p>
-                    </div>
-                    <span className="text-xs font-black bg-primary/20 text-primary px-3 py-1 rounded-lg">Ca con: 2h 15m</span>
-                  </div>
-                  <div className="flex items-center justify-between bg-red-500/5 border border-red-500/20 p-3 rounded-xl animate-pulse">
-                    <div>
-                      <h4 className="text-xs font-bold text-red-400 uppercase">Choi VIP 1 - Anh Minh</h4>
-                      <p className="text-[9px] font-black text-red-500/70 uppercase mt-0.5">Ca 10 gio • Đa bat dau: 05:00</p>
-                    </div>
-                    <span className="text-xs font-black bg-red-500/20 text-red-400 px-3 py-1 rounded-lg">Sap het gio! (12m)</span>
-                  </div>
-                </div>
               </div>
-            </div>
 
-            {/* Mockup PT-210 Thermal Print Preview Pane */}
-            <div className="w-full lg:w-[320px] bg-slate-900/50 border border-white/10 rounded-2xl p-6 relative flex flex-col justify-between overflow-hidden shadow-2xl">
-              <div className="absolute top-[-10%] right-[-10%] w-[150px] h-[150px] bg-emerald-500/10 blur-[40px] rounded-full pointer-events-none" />
-              
-              <div>
-                <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest mb-4 flex items-center gap-2 border-b border-white/5 pb-2">
-                  <Printer size={15} className="text-emerald-400" /> Bảng hóa đơn PT-210
+              <div className="w-full h-[1px] bg-emerald-500/20" />
+
+              {/* Founder Meta Details */}
+              <div className="space-y-2">
+                <h4 className="text-2xl font-black text-white tracking-wide uppercase font-display" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                  Huân Trần
+                </h4>
+                <span className="inline-block bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md border border-emerald-500/30">
+                  Founder & Developer
+                </span>
+              </div>
+
+              {/* Founder Story Body Paragraphs */}
+              <div className="space-y-4 text-slate-300 text-xs sm:text-sm leading-relaxed font-semibold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                <p>
+                  Tôi là founder của QuanLyHoCau.com và cũng đang trực tiếp vận hành hồ câu.
                 </p>
-
-                {/* Simulated thermal bill */}
-                <div className="bg-white text-black p-4 rounded-xl font-mono text-[9px] shadow-lg leading-tight space-y-2 uppercase">
-                  <div className="text-center space-y-1">
-                    <h5 className="font-extrabold text-[11px] tracking-tighter">QUAN LY HO CAU</h5>
-                    <p className="text-[7px]">Dich vu Giai tri & Thu gian</p>
-                    <p className="text-[7px]">Hotline/Zalo: 0855550813</p>
-                    <p className="text-[8px]">--------------------------------</p>
-                  </div>
-                  <div>
-                    <p>Hoa don:  HC987AB</p>
-                    <p>O/Choi:   Choi so 3</p>
-                    <p>Khach:    Anh Khanh (VIP)</p>
-                    <p>Ngay in:  24/05/2026 15:45</p>
-                    <p>--------------------------------</p>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex justify-between">
-                      <span>Goi gio cau (5h)</span>
-                      <span>300,000d</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Nuoc ngot (x2)</span>
-                      <span>30,000d</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Moi cau sieu cap</span>
-                      <span>150,000d</span>
-                    </div>
-                    <div className="flex justify-between text-red-650 font-bold">
-                      <span>Khau tru ca (4.5kg)</span>
-                      <span>-90,000d</span>
-                    </div>
-                    <p>--------------------------------</p>
-                  </div>
-                  <div className="text-right space-y-0.5">
-                    <p>Tam tinh:  480,000d</p>
-                    <p className="font-bold text-[10px] text-right">TONG: 390,000d</p>
-                  </div>
-                </div>
+                <p>
+                  Từ thực tế vận hành, tôi <span className="text-emerald-400 font-bold">hiểu rõ</span> những khó khăn của chủ hồ câu, vì vậy tôi xây dựng hệ thống phần mềm này để giúp công việc quản lý đơn giản hơn, minh bạch hơn và hiệu quả hơn.
+                </p>
               </div>
 
-              <div className="mt-6 border-t border-white/5 pt-4 text-center">
-                <span className="text-[9px] font-black text-slate-450 uppercase tracking-widest">
-                  Chuẩn hóa 58mm di động 32 ký tự
+              {/* 4 Core Value Pillars Grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-4">
+                {[
+                  { icon: Target, label: "Hiểu rõ ngành hồ câu" },
+                  { icon: Monitor, label: "Giải pháp thực tế" },
+                  { icon: Lock, label: "Uy tín trung thực" },
+                  { icon: Handshake, label: "Đồng hành lâu dài" }
+                ].map((item, idx) => (
+                  <div key={idx} className="flex flex-col items-center text-center space-y-2 p-2 bg-slate-900/30 border border-slate-800/40 rounded-xl backdrop-blur-sm">
+                    <div className="w-10 h-10 rounded-full border border-emerald-500/20 flex items-center justify-center text-emerald-400 bg-emerald-950/20">
+                      <item.icon size={18} className="stroke-[2.5]" />
+                    </div>
+                    <span className="text-[10px] font-bold text-slate-300 uppercase tracking-wider leading-snug">
+                      {item.label}
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Elegant Signature */}
+              <div className="pt-4 flex flex-col items-start select-none">
+                <span className="text-emerald-400 text-4xl font-signature leading-none" style={{ fontFamily: "'Caveat', cursive" }}>
+                  Huân Trần
+                </span>
+                <span className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest mt-1">
+                  Founder QuanLyHoCau.com
                 </span>
               </div>
             </div>
-            
+
+            {/* Founder Image Block (Right Column) */}
+            <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
+              <div className="relative group w-full max-w-[380px]">
+                
+                {/* Decorative border frame matching the original screenshot style */}
+                <div className="absolute -inset-4 bg-emerald-500/5 rounded-3xl blur-2xl group-hover:opacity-100 opacity-70 transition duration-500" />
+                
+                {/* The main picture container */}
+                <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-3 shadow-2xl overflow-hidden">
+                  <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative bg-slate-950">
+                    <img 
+                      src="/founder_dark.jpg" 
+                      alt="Huân Trần - Founder & Developer" 
+                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                    />
+                  </div>
+                </div>
+
+                {/* Overlapping Premium Quote Box */}
+                <div className="mt-6 w-full bg-emerald-950/50 border border-emerald-500/20 rounded-2xl p-5 backdrop-blur-md relative overflow-hidden shadow-xl">
+                  {/* Subtle design ornament inside quote box */}
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/[0.02] rounded-bl-full pointer-events-none" />
+                  
+                  <span className="text-emerald-400 text-4xl font-serif leading-none block mb-0.5">“</span>
+                  <p className="text-xs sm:text-sm font-semibold leading-relaxed text-slate-100 italic" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    Mục tiêu của tôi là đồng hành cùng chủ hồ câu để tối ưu doanh thu, giảm thất thoát và phát triển bền vững.
+                  </p>
+                </div>
+
+              </div>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* ================= CORE FEATURES GRID ================= */}
-      <section id="chuc-nang" className="relative z-10 max-w-7xl mx-auto px-6 py-28 border-t border-white/5">
-        <div className="text-center max-w-3xl mx-auto mb-20">
-          <span className="text-primary font-black uppercase tracking-widest text-[10px] bg-primary/10 rounded-full px-4 py-1.5 border border-primary/20">
-            TÍNH NĂNG VƯỢT TRỘI KHÁC
-          </span>
-          <h2 className="text-3xl sm:text-5xl font-black tracking-tight mt-6 uppercase text-transparent bg-clip-text bg-gradient-to-r from-white via-white to-slate-400">
-            Vận hành hoàn hảo mọi quy trình
-          </h2>
-          <p className="text-slate-450 mt-4 text-sm sm:text-base leading-relaxed font-medium">
-            Thiết kế bài bản, hiện đại, loại bỏ hoàn toàn mệt mỏi từ cách tính toán thủ công truyền thống.
-          </p>
-        </div>
+      {/* ================= SECTION — FAQ (GEO & LLMO OPTIMIZATION) ================= */}
+      <section id="faq" className="py-20 sm:py-24 bg-white relative overflow-hidden scroll-mt-20 border-b border-slate-100">
+        <div className="absolute top-1/4 left-0 w-[300px] h-[300px] rounded-full bg-emerald-500/5 blur-[80px] pointer-events-none -z-10" />
+        <div className="absolute bottom-1/4 right-0 w-[300px] h-[300px] rounded-full bg-blue-500/5 blur-[80px] pointer-events-none -z-10" />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6">
           
-          {/* Card A-Z Process */}
-          <div className="group bg-white/[0.01] border border-white/5 rounded-3xl p-8 hover:bg-white/[0.03] hover:border-primary/25 transition-all shadow-lg hover:shadow-primary/5 flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            <div className="space-y-5">
-              <div className="w-14 h-14 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center border border-blue-500/20 group-hover:bg-blue-500 group-hover:text-white transition-all shadow-md">
-                <Layers size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-white uppercase tracking-tight">Quy trình từ A đến Z</h3>
-              <p className="text-slate-350 text-sm leading-relaxed font-medium">
-                Bám sát quy trình từ A đến Z: Từ lúc khách vào mua vé, thuê cần, mua mồi, gọi nước uống, cho đến lúc tính tiền bù giờ, cân cá thưởng – tất cả chỉ cần chạm nhẹ trên màn hình điện thoại.
-              </p>
-            </div>
-            <div className="mt-8 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-blue-400 opacity-80 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all">
-              Bắt đầu ngay <ChevronRight size={14} />
-            </div>
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+            <p className="text-emerald-600 font-extrabold uppercase tracking-widest text-xs sm:text-sm">
+              GIẢI ĐÁP THẮC MẮC • TỐI ƯU HÓA HOẠT ĐỘNG
+            </p>
+            <h2 className="text-2xl sm:text-3.5xl font-black text-slate-900 uppercase tracking-tight font-display" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Câu hỏi thường gặp về phần mềm hồ câu
+            </h2>
+            <div className="w-12 h-1 bg-emerald-500 mx-auto rounded-full mt-2" />
           </div>
 
-          {/* Card Any Scale */}
-          <div className="group bg-white/[0.01] border border-white/5 rounded-3xl p-8 hover:bg-white/[0.03] hover:border-primary/25 transition-all shadow-lg hover:shadow-primary/5 flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            <div className="space-y-5">
-              <div className="w-14 h-14 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20 group-hover:bg-primary group-hover:text-white transition-all shadow-md">
-                <TrendingUp size={24} />
+          <div className="space-y-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+            {[
+              {
+                q: "Phần mềm quản lý hồ câu cá QuanLiHoCau™ là gì?",
+                a: "QuanLiHoCau™ là giải pháp phần mềm quản lý hồ câu cá giải trí dịch vụ chuyên nghiệp hàng đầu tại Việt Nam. Phần mềm giúp các chủ hồ câu cá số hóa toàn diện quy trình vận hành: quản lý ca câu thời gian thực (realtime), tự động chốt tiền giờ, quản lý bán hàng (đồ ăn, nước uống, mồi câu), thu mua cá trực tiếp, in bill nhiệt Bluetooth không dây cầm tay và kiểm soát doanh thu chi tiết từ xa qua điện thoại di động."
+              },
+              {
+                q: "Phần mềm hỗ trợ quản lý ca câu đếm ngược và cảnh báo bằng cách nào?",
+                a: "Hệ thống tích hợp tính năng đếm ngược thời gian thực (realtime countdown) cực kỳ trực quan cho từng ô câu/chòi câu. Khi ca câu sắp hết giờ (dưới 15 phút), hệ thống sẽ tự động nhấp nháy đỏ báo động SOS và phát âm thanh cảnh báo thông minh thông qua Web Audio API tổng hợp nhạc chuông trực tiếp offline. Tính năng này giúp nhân viên kịp thời báo giỏ, gia hạn giờ hoặc chốt thu mua cá của cần thủ mà không sợ quên hay nhầm lẫn."
+              },
+              {
+                q: "Tôi có cần mua thêm thiết bị đắt tiền để sử dụng máy in hóa đơn không?",
+                a: "Hoàn toàn không. QuanLiHoCau™ hỗ trợ kết nối trực tiếp với các dòng máy in bill nhiệt cầm tay Bluetooth 58mm giá rẻ (như PT-210) ngay trên trình duyệt điện thoại hoặc máy tính. Bạn có thể in hóa đơn nhiệt cho khách chỉ trong 3 giây thông qua kết nối Bluetooth không dây siêu mượt mà không cần dây cáp rườm rà hay máy vi tính cồng kềnh."
+              },
+              {
+                q: "Làm thế nào để phần mềm chống thất thoát doanh số dịch vụ và nhân viên?",
+                a: "Phần mềm cung cấp tính năng phân quyền chặt chẽ giữa Chủ hồ (Admin), Thu ngân và Nhân viên trực chòi. Mọi hành động như mở ca câu, gia hạn giờ, hủy vé hay bán đồ ăn thức uống đều được lưu lại vết chi tiết (Activity Log). Nhân viên có thể thêm nhanh các sản phẩm nước ngọt, mồi câu ngay khi mở ca check-in, đối soát tồn kho tự động, triệt tiêu 100% việc nhân viên tự ý thu tiền riêng của khách hàng."
+              },
+              {
+                q: "Chủ hồ câu có thể theo dõi hoạt động và báo cáo doanh thu từ xa không?",
+                a: "Có, QuanLiHoCau™ được xây dựng trên nền tảng Web App (SaaS) hiện đại, hoạt động mượt mà trên mọi thiết bị di động (iPhone, Android, máy tính bảng) và PC. Bạn có thể tự do rời hồ câu để đi du lịch hoặc làm công việc khác mà vẫn nắm rõ chính xác số lượng cần thủ đang câu, biểu đồ doanh thu realtime, nhật ký thả cá và lượng cá thu mua lại mọi lúc mọi nơi."
+              },
+              {
+                q: "Hồ câu dịch vụ của tôi có được hỗ trợ cài đặt và setup ban đầu không?",
+                a: "Chúng tôi cam kết đồng hành và hỗ trợ setup trọn gói ban đầu hoàn toàn miễn phí. Founder Huân Trần cùng đội ngũ kỹ thuật sẽ trực tiếp tư vấn cấu hình ô câu, chòi câu, biểu giá dịch vụ câu cá (ca 5h, 10h, giờ lẻ), danh mục mồi câu, nước uống và hướng dẫn nhân viên vận hành chi tiết tận nơi hoặc qua video gọi trực tiếp."
+              }
+            ].map((item, idx) => (
+              <div key={idx} className="border border-slate-200/80 rounded-2xl p-5 hover:border-emerald-500/30 transition-all duration-300 bg-slate-50/50 hover:bg-white hover:shadow-md group">
+                <details className="group [&_summary::-webkit-details-marker]:hidden">
+                  <summary className="flex items-center justify-between cursor-pointer focus:outline-none select-none">
+                    <h3 className="text-sm sm:text-base font-black text-slate-800 tracking-tight pr-4 uppercase leading-snug group-hover:text-emerald-700 transition-colors" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+                      {item.q}
+                    </h3>
+                    <span className="shrink-0 ml-1.5 p-1.5 bg-slate-100 group-hover:bg-emerald-50 text-slate-500 group-hover:text-emerald-600 rounded-full transition-colors">
+                      <svg
+                        className="w-4 h-4 transition duration-300 group-open:-rotate-180"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </span>
+                  </summary>
+                  <p className="mt-4 text-slate-500 text-xs sm:text-sm font-semibold leading-relaxed border-t border-slate-100 pt-4" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+                    {item.a}
+                  </p>
+                </details>
               </div>
-              <h3 className="text-xl font-bold text-white uppercase tracking-tight">Cân mọi quy mô</h3>
-              <p className="text-slate-350 text-sm leading-relaxed font-medium">
-                Dù anh chỉ có 1 hồ câu gia đình nhỏ hay là ông chủ của một chuỗi hệ thống nhiều hồ câu ở các tỉnh khác nhau, phần mềm đều tự động tổng hợp báo cáo tài chính về điện thoại của anh theo từng phút (thời gian thực - real-time).
-              </p>
-            </div>
-            <div className="mt-8 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-primary opacity-80 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all">
-              Báo cáo realtime <ChevronRight size={14} />
-            </div>
-          </div>
-
-          {/* Card Offline Mode */}
-          <div className="group bg-white/[0.01] border border-white/5 rounded-3xl p-8 hover:bg-white/[0.03] hover:border-primary/25 transition-all shadow-lg hover:shadow-primary/5 flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-            <div className="space-y-5">
-              <div className="w-14 h-14 bg-emerald-500/10 text-emerald-450 rounded-2xl flex items-center justify-center border border-emerald-500/20 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-md">
-                <WifiOff size={24} />
-              </div>
-              <h3 className="text-xl font-bold text-white uppercase tracking-tight">Chế độ ngoại tuyến (Offline)</h3>
-              <p className="text-slate-350 text-sm leading-relaxed font-medium">
-                Nếu hồ câu ở khu vực sóng yếu hoặc mất mạng Wi-Fi, app vẫn hoạt động bình thường, lưu lại mọi dữ liệu một cách an toàn và tự đồng bộ hóa (sync) lên mạng ngay khi có kết nối trở lại.
-              </p>
-            </div>
-            <div className="mt-8 flex items-center gap-2 text-xs font-black uppercase tracking-widest text-emerald-400 opacity-80 group-hover:opacity-100 group-hover:translate-x-1.5 transition-all">
-              Tự động đồng bộ <ChevronRight size={14} />
-            </div>
-          </div>
-
-        </div>
-      </section>
-
-      {/* ================= COMING SOON LAB (3 UNIQUE EXCLUSIVE FEATURES) ================= */}
-      <section className="relative z-10 max-w-7xl mx-auto px-6 py-28 border-t border-white/5 bg-gradient-to-b from-transparent to-[#040818]/45 overflow-hidden rounded-[3rem]">
-        
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-500/5 blur-[120px] pointer-events-none rounded-full" />
-
-        <div className="text-center max-w-3xl mx-auto mb-20 relative z-10">
-          <span className="bg-amber-500/10 border border-amber-500/30 text-amber-400 font-black uppercase tracking-widest text-[9px] px-5 py-2 rounded-full shadow-md">
-            COMING SOON – LẦN ĐẦU TIÊN CÓ TẠI VIỆT NAM
-          </span>
-          <h2 className="text-4xl sm:text-6xl font-black tracking-tighter mt-6 uppercase text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500">
-            3 Tính năng độc quyền đột phá
-          </h2>
-          <p className="text-slate-450 mt-4 text-sm sm:text-base leading-relaxed font-medium">
-            Chúng tôi luôn đổi mới không ngừng để dẫn đầu cuộc cách mạng công nghệ phục vụ ngành giải trí hồ câu cá.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative z-10">
-          
-          {/* Coming Card 1 - AI Camera */}
-          <div className="group bg-white/[0.01] border border-white/5 rounded-3xl p-8 hover:bg-white/[0.03] transition-all shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold uppercase tracking-widest text-[8px] px-2 py-0.5 rounded">
-              AI Vision
-            </div>
-            <div className="space-y-5 pb-6">
-              <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center border border-amber-500/20">
-                <Camera size={22} />
-              </div>
-              <h3 className="text-lg font-bold text-white uppercase tracking-tight">AI Camera nhận diện cá khủng</h3>
-              <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                Kết hợp camera thông minh tại hồ để nhận diện chính xác cân nặng, loại cá (ví dụ: Trắm Đen) khi khách lên cá. Tự động cộng điểm thưởng cho khách và cập nhật lượng cá còn lại dưới hồ (số lượng tồn kho sinh học) mà không cần chủ hồ có mặt.
-              </p>
-            </div>
-            {/* Đóng dấu Sắp ra mắt nghệ thuật */}
-            <div className="absolute bottom-6 right-6 border-2 border-dashed border-amber-500/30 text-amber-450 font-black uppercase text-[9px] tracking-widest px-3 py-1.5 rounded-lg -rotate-12 bg-amber-500/5 select-none animate-pulse">
-              Sắp ra mắt
-            </div>
-          </div>
-
-          {/* Coming Card 2 - Split Shift & Commission */}
-          <div className="group bg-white/[0.01] border border-white/5 rounded-3xl p-8 hover:bg-white/[0.03] transition-all shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold uppercase tracking-widest text-[8px] px-2 py-0.5 rounded">
-              Anti-Fraud
-            </div>
-            <div className="space-y-5 pb-6">
-              <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center border border-amber-500/20">
-                <Lock size={22} />
-              </div>
-              <h3 className="text-lg font-bold text-white uppercase tracking-tight">Quản lý chia doanh thu ca trực</h3>
-              <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                Hệ thống tự động theo dõi lịch trực của nhân viên, số tiền thu vào trong ca, tự tính tiền hoa hồng (tiền bồi dưỡng - commission) dựa trên số giờ làm hoặc lượng nước uống, mồi câu họ bán được. Nhân viên không thể gian lận (anti-fraud).
-              </p>
-            </div>
-            {/* Đóng dấu Sắp ra mắt nghệ thuật */}
-            <div className="absolute bottom-6 right-6 border-2 border-dashed border-amber-500/30 text-amber-450 font-black uppercase text-[9px] tracking-widest px-3 py-1.5 rounded-lg -rotate-12 bg-amber-500/5 select-none animate-pulse">
-              Sắp ra mắt
-            </div>
-          </div>
-
-          {/* Coming Card 3 - Online Booking Map */}
-          <div className="group bg-white/[0.01] border border-white/5 rounded-3xl p-8 hover:bg-white/[0.03] transition-all shadow-md flex flex-col justify-between relative overflow-hidden">
-            <div className="absolute top-4 right-4 bg-amber-500/10 border border-amber-500/20 text-amber-400 font-extrabold uppercase tracking-widest text-[8px] px-2 py-0.5 rounded">
-              Smart booking
-            </div>
-            <div className="space-y-5 pb-6">
-              <div className="w-12 h-12 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center border border-amber-500/20">
-                <Calendar size={22} />
-              </div>
-              <h3 className="text-lg font-bold text-white uppercase tracking-tight">Đặt chòi & hố trước online</h3>
-              <p className="text-slate-400 text-xs leading-relaxed font-medium">
-                Khách câu có thể xem bản đồ hồ câu trực tuyến trên điện thoại để chọn trước chòi VIP, vị trí hố câu (điểm câu đẹp) và đặt cọc tiền trước. Hệ thống tự động khóa vị trí đó, tránh tình trạng tranh chấp chỗ ngồi giữa các cần thủ.
-              </p>
-            </div>
-            {/* Đóng dấu Sắp ra mắt nghệ thuật */}
-            <div className="absolute bottom-6 right-6 border-2 border-dashed border-amber-500/30 text-amber-450 font-black uppercase text-[9px] tracking-widest px-3 py-1.5 rounded-lg -rotate-12 bg-amber-500/5 select-none animate-pulse">
-              Sắp ra mắt
-            </div>
+            ))}
           </div>
 
         </div>
       </section>
 
-      {/* ================= MARKETING CTA & VALUE OFFER SECTION ================= */}
-      <section className="relative z-10 max-w-5xl mx-auto px-6 py-28 text-center">
-        <div className="bg-gradient-to-tr from-white/5 to-white/[0.01] border border-white/5 rounded-[3rem] p-12 sm:p-20 relative overflow-hidden shadow-2xl">
-          
-          {/* Internal blurred neon orbs */}
-          <div className="absolute -top-[20%] -left-[20%] w-[50%] h-[50%] rounded-full bg-primary/20 blur-[100px] pointer-events-none" />
-          <div className="absolute -bottom-[20%] -right-[20%] w-[50%] h-[50%] rounded-full bg-blue-500/10 blur-[100px] pointer-events-none" />
-          
-          <span className="text-emerald-400 font-black uppercase tracking-widest text-[10px] bg-emerald-500/10 rounded-full px-5 py-2.5 border border-emerald-500/20 shadow-md">
-            DÙNG THỬ KHÔNG RỦI RO - FREE TRIAL
-          </span>
-          
-          <h2 className="text-3xl sm:text-6xl font-black uppercase tracking-tighter mt-8 leading-none max-w-3xl mx-auto text-white">
-            Bắt đầu đổi mới hồ câu <br />
-            của bạn ngay hôm nay!
-          </h2>
-          
-          <p className="text-slate-300 mt-6 text-sm sm:text-lg leading-relaxed max-w-2xl mx-auto font-medium">
-            Đăng ký dùng thử miễn phí 1 tháng. <br />
-            Đơn giản hóa việc quản lý – Nhân đôi doanh thu – Chăm sóc cần thủ chuyên nghiệp như Resort.
-          </p>
+      {/* ================= SECTION — FINAL CTA ================= */}
+      <section className="py-20 sm:py-24 bg-gradient-to-br from-slate-900 to-[#020a17] text-white relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-36 h-36 rounded-bl-full bg-emerald-500/5 pointer-events-none" />
 
-          <div className="mt-12 relative z-20">
-            <Link 
-              href="/login" 
-              className="inline-flex h-16 bg-primary hover:bg-primary/95 text-white font-black uppercase tracking-widest text-xs rounded-2xl px-14 items-center justify-center gap-3 transition-all hover:scale-[1.03] active:scale-[0.97] shadow-2xl shadow-primary/30 hover:shadow-primary/50"
-            >
-              Đăng ký ngay <ArrowRight size={18} />
-            </Link>
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mt-5">
-              Miễn phí hoàn toàn kích hoạt trong 5 giây • Không cần thẻ thanh toán
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 text-center space-y-8 relative z-10">
+          
+          <div className="space-y-4">
+            <span className="text-emerald-400 font-extrabold uppercase tracking-widest text-xs sm:text-sm block">
+              BẮT ĐẦU CHUYỂN ĐỔI SỐ HỒ CÂU CỦA BẠN NGAY HÔM NAY
+            </span>
+            <h2 className="text-3xl sm:text-4.5xl font-black uppercase tracking-tight leading-none" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Sẵn sàng quản lý hồ câu chuyên nghiệp hơn?
+            </h2>
+            <p className="text-slate-400 text-xs sm:text-sm font-semibold max-w-xl mx-auto leading-relaxed" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Bắt đầu trải nghiệm hệ thống giúp bạn kiểm soát doanh thu chặt chẽ, chấm dứt thất thoát nước/mồi câu và tự động hóa vận hành dễ dàng hơn bao giờ hết.
             </p>
           </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+            <Link 
+              href="/login" 
+              className="inline-flex h-14 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold uppercase tracking-wider text-xs sm:text-sm rounded-xl px-8 items-center justify-center gap-2.5 transition-all hover:scale-[1.01] active:scale-[0.98] shadow-lg shadow-emerald-600/10 cursor-pointer"
+              style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
+            >
+              BẮT ĐẦU MIỄN PHÍ NGAY
+              <Zap size={14} className="fill-white" />
+            </Link>
+            
+            <a 
+              href="https://zalo.me/0855550813"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex h-14 w-full sm:w-auto border border-slate-800 hover:border-slate-700 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs sm:text-sm rounded-xl px-8 items-center justify-center gap-2 transition-all cursor-pointer"
+              style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}
+            >
+              <MessageSquare size={13} /> LIÊN HỆ TRỰC TIẾP QUA ZALO
+            </a>
+          </div>
+
+          {/* Trust lines */}
+          <div className="flex flex-wrap justify-center items-center gap-x-6 gap-y-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            <span>✓ HỖ TRỢ SETUP TRỌN GÓI</span>
+            <span>✓ KHÔNG RỦI RO</span>
+            <span>✓ ĐỒNG HÀNH TRỌN ĐỜI</span>
+          </div>
+
         </div>
       </section>
 
-      {/* ================= PREMIUM FOOTER ================= */}
-      <footer className="relative z-10 border-t border-white/5 bg-[#01040a] py-12">
-        <div className="max-w-7xl mx-auto px-6 flex flex-col lg:flex-row items-center justify-between gap-6 text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-widest">
-          <div className="flex flex-col sm:flex-row items-center gap-2 text-center sm:text-left">
-            <div className="flex items-center gap-2">
-              <Fish size={16} className="text-primary animate-pulse" />
-              <span className="text-slate-350">QUẢN LÝ HỒ CÂU © {new Date().getFullYear()}</span>
+      {/* ================= FOOTER ================= */}
+      <footer className="border-t border-slate-200 bg-white py-12 text-slate-800" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+        <div className="max-w-7xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+          
+          <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-2 text-slate-800 select-none">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500 flex items-center justify-center text-white">
+                <Fish size={14} />
+              </div>
+              <span className="text-sm font-extrabold tracking-tight">QuanLiHoCau™</span>
             </div>
-            <span className="hidden sm:inline text-slate-800">|</span>
-            <span className="text-slate-450 font-black">ĐƯỢC TẠO BỞI TECH FOUNDER HUANTRAN</span>
+            <span className="hidden sm:inline text-slate-300">|</span>
+            <span className="text-slate-600 font-extrabold">Huân Trần • Founder & Chủ hồ câu</span>
           </div>
+
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
-            <a href="#" className="hover:text-slate-300 transition-colors">Điều khoản</a>
-            <a href="#" className="hover:text-slate-300 transition-colors">Bảo mật</a>
+            <a href="#" className="hover:text-slate-900 transition-colors">Điều khoản</a>
+            <a href="#" className="hover:text-slate-900 transition-colors">Bảo mật</a>
             <a 
               href="https://zalo.me/0855550813" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="hover:text-primary text-primary flex items-center gap-1.5 normal-case font-black border border-primary/20 bg-primary/5 rounded-full px-4 py-1.5 shadow-md shadow-primary/5 hover:scale-105 transition-all"
+              className="hover:text-emerald-700 text-emerald-600 flex items-center gap-2 normal-case font-extrabold border border-emerald-100 bg-emerald-50 rounded-xl px-4 py-1.5 transition-all shadow-sm"
+              id="footer_zalo_btn"
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Liên hệ Zalo/SĐT: 0855550813
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" />
+              <span>Zalo hỗ trợ: 0855550813</span>
             </a>
           </div>
+
+        </div>
+        
+        <div suppressHydrationWarning className="max-w-7xl mx-auto px-6 text-center text-[10px] text-slate-400 mt-8 font-semibold uppercase tracking-widest">
+          © {new Date().getFullYear()} QuanLiHoCau. Phát triển bởi Huân Trần với tất cả tâm huyết.
         </div>
       </footer>
+
+      {/* ================= FLOATING CONTACT WIDGETS ================= */}
+      <div className="fixed bottom-6 right-6 z-50 flex flex-col gap-3" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+        
+        {/* Hotline Quick Call Bubble */}
+        <a 
+          href="tel:0855550813"
+          className="w-12 h-12 bg-gradient-to-tr from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all group relative cursor-pointer"
+          title="Gọi Hotline Tư Vấn"
+        >
+          <div className="absolute inset-0 rounded-full bg-emerald-500 animate-ping opacity-20 pointer-events-none" />
+          <PhoneCall size={18} className="animate-pulse" />
+          
+          <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-slate-950 text-white font-extrabold text-[9px] tracking-wider uppercase px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Hotline: 0855 550 813
+          </span>
+        </a>
+
+        {/* Zalo Direct Chat Bubble */}
+        <a 
+          href="https://zalo.me/0855550813"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-12 h-12 bg-gradient-to-tr from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white rounded-full flex items-center justify-center shadow-lg hover:scale-105 transition-all group relative cursor-pointer"
+          title="Chat Zalo Hỗ Trợ"
+        >
+          <div className="absolute inset-0 rounded-full bg-blue-600 animate-ping opacity-20 pointer-events-none" />
+          <MessageSquare size={18} />
+          
+          <span className="absolute right-14 top-1/2 -translate-y-1/2 bg-slate-950 text-white font-extrabold text-[9px] tracking-wider uppercase px-2.5 py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Zalo Đăng Ký
+          </span>
+        </a>
+
+      </div>
+
     </div>
   );
 }

@@ -77,7 +77,7 @@ export function MainLayout({ children }: MainLayoutProps) {
       <div className="flex-1 flex flex-col min-w-0 relative h-screen overflow-hidden">
         <Topbar />
         
-        <main className="flex-1 overflow-y-auto no-scrollbar pb-24 lg:pb-8">
+        <main className="flex-1 overflow-y-auto no-scrollbar pb-[45vh] lg:pb-8">
           <div className="p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto">
             {children}
           </div>

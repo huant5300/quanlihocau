@@ -10,7 +10,7 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 215 100% 50%;
+    --primary: 142 71% 45%;
     --primary-foreground: 210 40% 98%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
@@ -22,18 +22,18 @@
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 215 100% 50%;
+    --ring: 142 71% 45%;
     --radius: 1.25rem;
   }
 
   .dark {
-    --background: 222 47% 4%;
+    --background: 222 47% 2%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 6%;
+    --card: 222 47% 4%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 6%;
+    --popover: 222 47% 4%;
     --popover-foreground: 210 40% 98%;
-    --primary: 215 100% 55%;
+    --primary: 142 76% 45%;
     --primary-foreground: 210 40% 98%;
     --secondary: 217.2 32.6% 12%;
     --secondary-foreground: 210 40% 98%;
@@ -45,7 +45,7 @@
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 12%;
     --input: 217.2 32.6% 12%;
-    --ring: 215 100% 55%;
+    --ring: 142 76% 45%;
   }
 }
 
@@ -77,12 +77,16 @@
   }
 
   /* Mobile Optimizations */
+  /* Mobile Optimizations */
   @media (max-width: 640px) {
     html {
       font-size: 16px;
     }
     .glass-card {
-      @apply rounded-[1.5rem] p-4;
+      @apply rounded-[1.5rem] p-4 bg-card dark:bg-zinc-900 backdrop-blur-none border-border/80;
+    }
+    .glass {
+      @apply bg-background dark:bg-background backdrop-blur-none border-border/80;
     }
     button, a {
       min-height: 48px;
@@ -92,6 +96,10 @@
   /* Touch Feedback & Responsiveness */
   * {
     -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Target transitions specifically to interactive components to avoid layout rendering bottleneck */
+  button, a, input, select, textarea, .glass-card, .motion-div, .transition-element {
     @apply transition-all duration-200 ease-in-out;
   }
 
@@ -129,5 +137,39 @@
 
   .animate-pulse-fast {
     animation: pulse-fast 0.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  @keyframes sos-blink {
+    0%, 100% {
+      background-color: rgb(239, 68, 68);
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+      transform: scale(1);
+    }
+    50% {
+      background-color: rgb(185, 28, 28);
+      box-shadow: 0 0 20px 8px rgba(239, 68, 68, 0.5);
+      transform: scale(1.1);
+    }
+  }
+
+  .animate-sos {
+    animation: sos-blink 0.5s infinite alternate;
+  }
+
+  @keyframes attention-pulse {
+    0%, 100% {
+      box-shadow: 0 0 8px 1px rgba(16, 185, 129, 0.2);
+      border-color: rgba(16, 185, 129, 0.3);
+      filter: brightness(1);
+    }
+    50% {
+      box-shadow: 0 0 22px 6px rgba(16, 185, 129, 0.75);
+      border-color: rgba(16, 185, 129, 0.9);
+      filter: brightness(1.15);
+    }
+  }
+
+  .animate-attention-pulse {
+    animation: attention-pulse 1.8s infinite ease-in-out;
   }
 }

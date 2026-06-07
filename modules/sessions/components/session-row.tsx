@@ -177,7 +177,7 @@ export function SessionRow({ session }: SessionRowProps) {
         {/* Right Section: Timer, Status, Price & Chevron */}
         <div className="flex items-center gap-6 shrink-0">
           {/* Realtime Countdown Timer */}
-          <div className="flex flex-col items-end hidden xs:flex">
+          <div className="flex flex-col items-end">
             <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Thời gian</span>
             <CountdownTimer 
               endTime={session.endTime ?? new Date().toISOString()} 

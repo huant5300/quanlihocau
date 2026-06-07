@@ -57,10 +57,10 @@ export function CountdownTimer({ endTime, sessionId, onExpire, onWarning }: Coun
 
   return (
     <div className={cn(
-      "flex items-center gap-2 font-black text-2xl tracking-tighter",
+      "flex items-center gap-1.5 font-black text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl tracking-tighter",
       isWarning ? "text-orange-500" : "text-foreground"
     )}>
-      <Clock size={20} className={cn(isWarning && "animate-pulse")} />
+      <Clock className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 md:w-5 md:h-5 shrink-0", isWarning && "animate-pulse")} />
       <span>{timeLeft}</span>
     </div>
   );

@@ -89,7 +89,9 @@ export function SessionsClient({ initialSessions }: SessionsClientProps) {
                   })) || [],
                   fish_buybacks: session.fishCatches?.map((c: any) => ({
                     id: c.id,
-                    total_price: Number(c.totalAmount)
+                    total_price: Number(c.totalAmount),
+                    weight: Number(c.weight || 0),
+                    fish_name: c.fishType?.name || "Cá"
                   })) || []
                 }} 
               />

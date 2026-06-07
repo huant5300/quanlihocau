@@ -46,7 +46,7 @@ export async function startFishingAction(areaId: string, customerId?: string, pa
       throw new Error("Không tìm thấy hồ câu này");
     }
 
-    // Only check availability if not the owner (bypass for Huân)
+    // Only check availability if not the owner (bypass for administrator)
     if (area.status !== "AVAILABLE" && !isOwner) {
       throw new Error("Hồ câu này hiện không sẵn sàng (đang có người câu hoặc bảo trì)");
     }

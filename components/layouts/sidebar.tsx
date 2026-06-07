@@ -71,6 +71,7 @@ export function Sidebar() {
             return (
               <button
                 key="create-ticket"
+                id="tour-sidebar-create-ticket"
                 onClick={() => setOpenSessionModalOpen(true)}
                 className="w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group text-slate-600 dark:text-muted-foreground hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white"
               >
@@ -81,11 +82,20 @@ export function Sidebar() {
           }
 
           const isActive = pathname === item.href;
+          const tourId = item.href === "/dashboard" 
+            ? "tour-sidebar-dashboard" 
+            : item.href === "/dashboard/sessions"
+              ? "tour-sidebar-sessions"
+              : item.href === "/dashboard/settings"
+                ? "tour-sidebar-settings"
+                : undefined;
+
           return (
             <Link key={item.href} href={item.href}>
               <motion.div
                 whileHover={{ x: 4 }}
                 whileTap={{ scale: 0.98 }}
+                id={tourId}
                 className={cn(
                   "flex items-center gap-3 px-4 py-3.5 rounded-2xl transition-all relative group",
                   isActive 

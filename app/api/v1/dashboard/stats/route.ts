@@ -25,7 +25,8 @@ export async function GET(req: NextRequest) {
       todayCatchesCountVal,
       recentTransactions,
       sevenDaysTransactions,
-      monthlyCatches
+      monthlyCatches,
+      spotsCount
     ] = await Promise.all([
       // 1. Active sessions
       prisma.fishingSession.count({
@@ -89,6 +90,12 @@ export async function GET(req: NextRequest) {
         include: {
           fishType: true
         }
+      }),
+      // 8. Spot capacity (areas)
+      prisma.fishingArea.count({
+        where: {
+          lakeId
+        }
       })
     ]);
 
@@ -105,13 +112,6 @@ export async function GET(req: NextRequest) {
 
     const todayRevenue = Number(todayRevenueAgg._sum.amount || 0);
     const todayCatchesCount = todayCatchesCountVal;
-
-    // Fetch total capacity of lake spots (areas) to compute fill rate
-    const spotsCount = await prisma.fishingArea.count({
-      where: {
-        lakeId
-      }
-    });
 
     // 7-day daily trend calculations
     const days = eachDayOfInterval({ start: startOf7Days, end: new Date() });

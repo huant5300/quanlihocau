@@ -101,9 +101,8 @@ export default async function RootPage() {
     "applicationCategory": "BusinessApplication",
     "description": "Giải pháp số hóa quản lý hồ câu cá giải trí toàn diện tại Việt Nam. Hỗ trợ đếm ngược realtime, báo động SOS, in bill nhiệt cầm tay Bluetooth ESC/POS.",
     "author": {
-      "@type": "Person",
-      "name": "Huân Trần",
-      "jobTitle": "Founder & Lead Developer",
+      "@type": "Organization",
+      "name": "Đội ngũ QuanLiHoCau",
       "url": "https://quanlihocau.com"
     },
     "aggregateRating": {
@@ -183,7 +182,7 @@ export default async function RootPage() {
         "name": "Hồ câu dịch vụ của tôi có được hỗ trợ cài đặt và setup ban đầu không?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Chúng tôi cam kết đồng hành và hỗ trợ setup trọn gói ban đầu hoàn toàn miễn phí. Founder Huân Trần cùng đội ngũ kỹ thuật sẽ trực tiếp tư vấn cấu hình ô câu, chòi câu, biểu giá dịch vụ câu cá (ca 5h, 10h, giờ lẻ), danh mục mồi câu, nước uống và hướng dẫn nhân viên vận hành chi tiết tận nơi hoặc qua video gọi trực tiếp."
+          "text": "Chúng tôi cam kết đồng hành và hỗ trợ setup trọn gói ban đầu hoàn toàn miễn phí. Đội ngũ kỹ thuật QuanLiHoCau sẽ trực tiếp tư vấn cấu hình ô câu, chòi câu, biểu giá dịch vụ câu cá (ca 5h, 10h, giờ lẻ), danh mục mồi câu, nước uống và hướng dẫn nhân viên vận hành chi tiết tận nơi hoặc qua video gọi trực tiếp."
         }
       }
     ]
@@ -227,7 +226,7 @@ export default async function RootPage() {
                 <span className="text-[10px] font-black text-emerald-600">™</span>
               </div>
               <span className="text-[9px] font-medium text-slate-400 tracking-wider -mt-0.5">
-                Phát triển bởi Huân Trần
+                Phát triển bởi Đội ngũ QuanLiHoCau
               </span>
             </div>
           </Link>
@@ -240,8 +239,8 @@ export default async function RootPage() {
             <a href="#giai-phap" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
               Giải pháp
             </a>
-            <a href="#nha-sang-lap" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
-              Câu chuyện Founder
+            <a href="#doi-ngu" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Đội ngũ hỗ trợ
             </a>
             <a href="#lien-he" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
               Liên hệ
@@ -278,7 +277,7 @@ export default async function RootPage() {
             <div className="fixed inset-0 bg-white z-40 translate-x-full peer-checked:translate-x-0 transition-transform duration-300 lg:hidden flex flex-col justify-center items-center gap-8 text-lg font-bold text-center">
               <a href="#tinh-nang" className="text-slate-800 hover:text-emerald-600 transition-colors">Tính năng</a>
               <a href="#giai-phap" className="text-slate-800 hover:text-emerald-600 transition-colors">Giải pháp</a>
-              <a href="#nha-sang-lap" className="text-slate-800 hover:text-emerald-600 transition-colors">Câu chuyện Founder</a>
+              <a href="#doi-ngu" className="text-slate-800 hover:text-emerald-600 transition-colors">Đội ngũ hỗ trợ</a>
               <a href="#lien-he" className="text-slate-800 hover:text-emerald-600 transition-colors">Liên hệ</a>
               <Link href="/login" className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-extrabold shadow-md">ĐĂNG NHẬP HỆ THỐNG</Link>
             </div>
@@ -348,6 +347,10 @@ export default async function RootPage() {
                 BẮT ĐẦU MIỄN PHÍ NGAY
                 <Zap size={14} className="fill-white animate-pulse" />
               </Link>
+              <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                Đăng nhập siêu tốc bằng Google / Zalo
+              </div>
             </div>
 
             {/* Trust lines */}
@@ -849,8 +852,8 @@ export default async function RootPage() {
         </div>
       </section>
 
-      {/* ================= SECTION — FOUNDER STORY ================= */}
-      <section id="nha-sang-lap" className="py-20 sm:py-24 bg-[#0c111e] relative overflow-hidden border-b border-slate-950 scroll-mt-20">
+      {/* ================= SECTION — SUPPORT TEAM ================= */}
+      <section id="doi-ngu" className="py-20 sm:py-24 bg-[#0c111e] relative overflow-hidden border-b border-slate-950 scroll-mt-20">
         {/* Glowing background decorations */}
         <div className="absolute top-1/4 left-0 w-[400px] h-[400px] rounded-full bg-emerald-500/[0.03] blur-[120px] pointer-events-none -z-10" />
         <div className="absolute bottom-1/4 right-0 w-[400px] h-[400px] rounded-full bg-blue-500/[0.03] blur-[120px] pointer-events-none -z-10" />
@@ -858,14 +861,14 @@ export default async function RootPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
             
-            {/* Founder Story Block (Left Column) */}
+            {/* Team Block (Left Column) */}
             <div className="lg:col-span-7 space-y-6">
               <div className="space-y-3">
                 <span className="text-emerald-500 font-extrabold uppercase tracking-widest text-xs sm:text-sm block" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
-                  Người đứng sau
+                  Đội ngũ đồng hành
                 </span>
                 <h2 className="text-3xl sm:text-[40px] font-black text-white uppercase tracking-tight leading-none" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
-                  QuanLyHoCau<span className="text-emerald-500">.com</span>
+                  QuanLiHoCau<span className="text-emerald-500">™</span>
                 </h2>
               </div>
 
@@ -873,29 +876,29 @@ export default async function RootPage() {
               <div className="relative pl-6 sm:pl-8 py-2">
                 <span className="absolute left-0 top-0 text-emerald-500/30 text-6xl font-serif leading-none select-none">“</span>
                 <p className="text-lg sm:text-xl font-bold text-slate-100 leading-relaxed italic" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
-                  Tôi không chỉ phát triển phần mềm – tôi cũng là <span className="text-emerald-400 font-extrabold">chủ hồ câu</span>.
+                  Chúng tôi xây dựng giải pháp công nghệ xuất phát từ sự thấu hiểu sâu sắc <span className="text-emerald-400 font-extrabold">vấn đề thực tế</span> của chủ hồ.
                 </p>
               </div>
 
               <div className="w-full h-[1px] bg-emerald-500/20" />
 
-              {/* Founder Meta Details */}
+              {/* Team Meta Details */}
               <div className="space-y-2">
                 <h4 className="text-2xl font-black text-white tracking-wide uppercase font-display" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
-                  Huân Trần
+                  Đội ngũ Quản Lý Hồ Câu
                 </h4>
                 <span className="inline-block bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-md border border-emerald-500/30">
-                  Founder & Developer
+                  Hệ sinh thái quản lý hồ câu chuyên nghiệp
                 </span>
               </div>
 
-              {/* Founder Story Body Paragraphs */}
+              {/* Team Body Paragraphs */}
               <div className="space-y-4 text-slate-300 text-xs sm:text-sm leading-relaxed font-semibold" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
                 <p>
-                  Tôi là founder của QuanLyHoCau.com và cũng đang trực tiếp vận hành hồ câu.
+                  QuanLiHoCau được phát triển và vận hành bởi tập thể các kỹ sư phần mềm tâm huyết cùng các chuyên gia có kinh nghiệm trực tiếp quản lý các tổ hợp câu cá giải trí, hồ câu dịch vụ lớn tại Việt Nam.
                 </p>
                 <p>
-                  Từ thực tế vận hành, tôi <span className="text-emerald-400 font-bold">hiểu rõ</span> những khó khăn của chủ hồ câu, vì vậy tôi xây dựng hệ thống phần mềm này để giúp công việc quản lý đơn giản hơn, minh bạch hơn và hiệu quả hơn.
+                  Với mục tiêu tối ưu hóa vận hành và triệt tiêu hoàn toàn thất thoát doanh thu, chúng tôi liên tục cải tiến hệ thống để mang lại trải nghiệm mượt mà nhất cho cả chủ hồ, nhân viên và cần thủ.
                 </p>
               </div>
 
@@ -904,7 +907,7 @@ export default async function RootPage() {
                 {[
                   { icon: Target, label: "Hiểu rõ ngành hồ câu" },
                   { icon: Monitor, label: "Giải pháp thực tế" },
-                  { icon: Lock, label: "Uy tín trung thực" },
+                  { icon: Lock, label: "Uy tín bảo mật" },
                   { icon: Handshake, label: "Đồng hành lâu dài" }
                 ].map((item, idx) => (
                   <div key={idx} className="flex flex-col items-center text-center space-y-2 p-2 bg-slate-900/30 border border-slate-800/40 rounded-xl backdrop-blur-sm">
@@ -920,29 +923,31 @@ export default async function RootPage() {
 
               {/* Elegant Signature */}
               <div className="pt-4 flex flex-col items-start select-none">
-                <span className="text-emerald-400 text-4xl font-signature leading-none" style={{ fontFamily: "'Caveat', cursive" }}>
-                  Huân Trần
+                <span className="text-emerald-400 text-3xl font-signature leading-none" style={{ fontFamily: "'Caveat', cursive" }}>
+                  Đội ngũ QuanLiHoCau.com
                 </span>
                 <span className="text-slate-500 text-[9px] font-extrabold uppercase tracking-widest mt-1">
-                  Founder QuanLyHoCau.com
+                  ĐỒNG HÀNH CÙNG SỰ PHÁT TRIỂN BỀN VỮNG
                 </span>
               </div>
             </div>
 
-            {/* Founder Image Block (Right Column) */}
+            {/* Team Image Block (Right Column) */}
             <div className="lg:col-span-5 flex flex-col items-center justify-center relative">
               <div className="relative group w-full max-w-[380px]">
                 
-                {/* Decorative border frame matching the original screenshot style */}
+                {/* Decorative border frame */}
                 <div className="absolute -inset-4 bg-emerald-500/5 rounded-3xl blur-2xl group-hover:opacity-100 opacity-70 transition duration-500" />
                 
                 {/* The main picture container */}
                 <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-3 shadow-2xl overflow-hidden">
                   <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative bg-slate-950">
                     <img 
-                      src="/founder_dark.jpg" 
-                      alt="Huân Trần - Founder & Developer" 
+                      src="/fishing_bg.png" 
+                      alt="Hệ thống Quản lý Hồ câu Cá Chuyên nghiệp" 
                       className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                      loading="lazy"
+                      decoding="async"
                     />
                   </div>
                 </div>
@@ -954,7 +959,7 @@ export default async function RootPage() {
                   
                   <span className="text-emerald-400 text-4xl font-serif leading-none block mb-0.5">“</span>
                   <p className="text-xs sm:text-sm font-semibold leading-relaxed text-slate-100 italic" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-                    Mục tiêu của tôi là đồng hành cùng chủ hồ câu để tối ưu doanh thu, giảm thất thoát và phát triển bền vững.
+                    Cam kết đồng hành cùng các chủ hồ câu trên cả nước, cung cấp giải pháp vận hành tối ưu và hỗ trợ kỹ thuật chuyên nghiệp 24/7.
                   </p>
                 </div>
 
@@ -1006,7 +1011,7 @@ export default async function RootPage() {
               },
               {
                 q: "Hồ câu dịch vụ của tôi có được hỗ trợ cài đặt và setup ban đầu không?",
-                a: "Chúng tôi cam kết đồng hành và hỗ trợ setup trọn gói ban đầu hoàn toàn miễn phí. Founder Huân Trần cùng đội ngũ kỹ thuật sẽ trực tiếp tư vấn cấu hình ô câu, chòi câu, biểu giá dịch vụ câu cá (ca 5h, 10h, giờ lẻ), danh mục mồi câu, nước uống và hướng dẫn nhân viên vận hành chi tiết tận nơi hoặc qua video gọi trực tiếp."
+                a: "Chúng tôi cam kết đồng hành và hỗ trợ setup trọn gói ban đầu hoàn toàn miễn phí. Đội ngũ kỹ thuật QuanLiHoCau sẽ trực tiếp tư vấn cấu hình ô câu, chòi câu, biểu giá dịch vụ câu cá (ca 5h, 10h, giờ lẻ), danh mục mồi câu, nước uống và hướng dẫn nhân viên vận hành chi tiết tận nơi hoặc qua video gọi trực tiếp."
               }
             ].map((item, idx) => (
               <div key={idx} className="border border-slate-200/80 rounded-2xl p-5 hover:border-emerald-500/30 transition-all duration-300 bg-slate-50/50 hover:bg-white hover:shadow-md group">
@@ -1099,7 +1104,7 @@ export default async function RootPage() {
               <span className="text-sm font-extrabold tracking-tight">QuanLiHoCau™</span>
             </div>
             <span className="hidden sm:inline text-slate-300">|</span>
-            <span className="text-slate-600 font-extrabold">Huân Trần • Founder & Chủ hồ câu</span>
+            <span className="text-slate-600 font-extrabold">Đội ngũ kỹ thuật QuanLiHoCau™</span>
           </div>
 
           <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2">
@@ -1120,7 +1125,7 @@ export default async function RootPage() {
         </div>
         
         <div suppressHydrationWarning className="max-w-7xl mx-auto px-6 text-center text-[10px] text-slate-400 mt-8 font-semibold uppercase tracking-widest">
-          © {new Date().getFullYear()} QuanLiHoCau. Phát triển bởi Huân Trần với tất cả tâm huyết.
+          © {new Date().getFullYear()} QuanLiHoCau. Phát triển bởi Đội ngũ QuanLiHoCau với tất cả tâm huyết.
         </div>
       </footer>
 

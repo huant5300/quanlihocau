@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { OpenSessionModal } from "@/modules/sessions/components/open-session";
 import { PaymentModal } from "@/modules/payment/components/payment-modal";
 import { PrinterManager } from "@/components/shared/printer-manager";
+import { OnboardingWizard } from "@/components/shared/onboarding-wizard";
 import { OfflineBanner } from "@/modules/offline/components/offline-banner";
 import { useNetworkStatus } from "@/hooks/use-network-status";
 import { OfflineQueueManager } from "@/modules/offline/components/offline-queue-manager";
@@ -92,6 +93,8 @@ export function MainLayout({ children }: MainLayoutProps) {
         <PrinterManager />
 
         {/* Modals */}
+        <OnboardingWizard />
+
         <OpenSessionModal 
           isOpen={isOpenSessionModalOpen} 
           onClose={() => setOpenSessionModalOpen(false)} 

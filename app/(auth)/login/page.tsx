@@ -47,6 +47,10 @@ export default function LoginPage() {
     signIn("google", { callbackUrl: "/dashboard" });
   };
 
+  const handleZaloLogin = () => {
+    toast.info("Đăng nhập Zalo sẽ được kích hoạt khi hoàn tất đăng ký Zalo App ID.");
+  };
+
   return (
     <div className="min-h-screen bg-[#030712] flex items-center justify-center p-4 selection:bg-primary/20 selection:text-primary relative overflow-hidden">
       {/* Background Decorative Elements (Ambient Glows) */}
@@ -80,7 +84,7 @@ export default function LoginPage() {
           <h1 className="text-2xl font-black text-white tracking-wider uppercase">Quản lý Hồ câu</h1>
           <p className="text-slate-400 text-xs font-semibold mt-2">Đăng nhập hệ thống quản lý ca câu</p>
           <div className="mt-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold uppercase tracking-widest text-[8px] px-3 py-1 rounded-full">
-            BẢN BETA DO FOUNDER HUANTRAN SÁNG LẬP
+            HỆ THỐNG QUẢN LÝ TIÊU CHUẨN CHUYÊN NGHIỆP
           </div>
         </div>
 
@@ -101,7 +105,7 @@ export default function LoginPage() {
 
           <div className="space-y-2">
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-550" size={18} />
               <input
                 type="password"
                 placeholder="Mật khẩu"
@@ -141,6 +145,16 @@ export default function LoginPage() {
             <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
           Tiếp tục với Google
+        </button>
+
+        <button
+          onClick={handleZaloLogin}
+          disabled={isLoading}
+          type="button"
+          className="w-full h-14 bg-[#0068ff]/10 border border-[#0068ff]/20 text-[#0068ff] hover:bg-[#0068ff]/25 font-bold text-xs uppercase tracking-wider rounded-2xl flex items-center justify-center gap-3 mt-3 transition-all disabled:opacity-50 active:scale-[0.98]"
+        >
+          <div className="w-6 h-6 rounded-lg bg-[#0068ff] text-white flex items-center justify-center font-black text-xs tracking-tighter">Z</div>
+          Tiếp tục với Zalo
         </button>
 
         {/* Footer */}

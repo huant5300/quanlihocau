@@ -2,7 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { setActiveLakeId } from "@/lib/lake-context";
+import { setActiveLakeId, getActiveLakeId } from "@/lib/lake-context";
 import { revalidatePath } from "next/cache";
 
 import { UserRole } from "@prisma/client";
@@ -198,6 +198,27 @@ export async function getLakeOwners() {
   } catch (error: any) {
     console.error("Error in getLakeOwners server action:", error);
     return { success: false, error: error.message || "Failed to fetch owners" };
+  }
+}
+
+export async function updateLakeDetails(data: { name: string; address: string; phone: string }) {
+  const session = await auth();
+  if (!session) return { success: false, error: "Unauthorized" };
+  
+  const lakeId = await getActiveLakeId();
+  
+  try {
+    const updated = await prisma.fishingLake.update({
+      where: { id: lakeId },
+      data: {
+        name: data.name,
+        address: data.address,
+        phone: data.phone,
+      }
+    });
+    return { success: true, data: updated };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to update lake details" };
   }
 }
 

@@ -144,6 +144,8 @@ export interface ActiveSession extends Session {
   fish_buybacks?: Array<{
     id: string;
     total_price: number;
+    weight?: number;
+    fish_name?: string;
   }>;
 }
 

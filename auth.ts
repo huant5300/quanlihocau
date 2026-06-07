@@ -142,10 +142,73 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
+    {
+      id: "zalo",
+      name: "Zalo",
+      type: "oauth",
+      authorization: {
+        url: "https://oauth.zaloapp.com/v4/permission",
+        params: {
+          app_id: process.env.ZALO_CLIENT_ID,
+          scope: "gems",
+        }
+      },
+      client: {
+        token_endpoint_auth_method: "none",
+      },
+      token: {
+        url: "https://oauth.zaloapp.com/v4/access_token",
+        async request(context: any) {
+          const body = new URLSearchParams({
+            code: (context.params.code as string) || "",
+            app_id: process.env.ZALO_CLIENT_ID || "",
+            grant_type: "authorization_code",
+          });
+          if (context.checks.code_verifier) {
+            body.append("code_verifier", context.checks.code_verifier);
+          }
+          
+          const response = await fetch("https://oauth.zaloapp.com/v4/access_token", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              "secret_key": process.env.ZALO_CLIENT_SECRET || "",
+            },
+            body,
+          });
+          
+          const tokens = await response.json();
+          if (!response.ok) {
+            throw new Error(`Zalo Token Error: ${JSON.stringify(tokens)}`);
+          }
+          return { tokens };
+        }
+      },
+      userinfo: {
+        url: "https://graph.zalo.me/v2.0/me",
+        async request(context: any) {
+          const response = await fetch("https://graph.zalo.me/v2.0/me?fields=id,name,picture", {
+            headers: {
+              access_token: (context.tokens.access_token as string) || "",
+            },
+          });
+          return await response.json();
+        }
+      },
+      profile(profile: any) {
+        return {
+          id: profile.id,
+          name: profile.name,
+          email: `${profile.id}@zalo.me`,
+          image: profile.picture?.data?.url || null,
+          role: UserRole.OWNER,
+        };
+      }
+    }
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google") {
+      if (account?.provider === "google" || account?.provider === "zalo") {
         const email = user.email;
         if (!email) return false;
 

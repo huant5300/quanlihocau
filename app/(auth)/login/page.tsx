@@ -48,7 +48,12 @@ export default function LoginPage() {
   };
 
   const handleZaloLogin = () => {
-    toast.info("Đăng nhập Zalo sẽ được kích hoạt khi hoàn tất đăng ký Zalo App ID.");
+    const zaloAppId = process.env.NEXT_PUBLIC_ZALO_APP_ID;
+    if (!zaloAppId) {
+      toast.info("Để đăng nhập bằng Zalo, vui lòng cấu hình ZALO_CLIENT_ID và ZALO_CLIENT_SECRET trong tệp .env của bạn.");
+      return;
+    }
+    signIn("zalo", { callbackUrl: "/dashboard" });
   };
 
   return (

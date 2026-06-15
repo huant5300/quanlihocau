@@ -71,7 +71,7 @@ export function ProductQuickAdd({ selectedProducts, onUpdate }: ProductQuickAddP
       const newProduct = await productService.createProduct({
         name: search,
         price,
-        categoryId: "cmp5ikhn00000w9ts0i0n76fh", // Default category created earlier
+        categoryId: "", // Triggers backend default category fallback
         stock: 100,
       } as any);
 

@@ -98,8 +98,8 @@ export default function LoginPage() {
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
               <input
-                type="email"
-                placeholder="Email tài khoản"
+                type="text"
+                placeholder="Email hoặc Tên đăng nhập"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full h-14 bg-white/[0.03] border border-white/10 rounded-2xl pl-12 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-primary/50 focus:ring-2 focus:ring-primary/20 transition-all font-medium text-sm"

@@ -57,6 +57,29 @@ export async function PATCH(req: NextRequest) {
         }
       });
 
+      // Sync manager phone number too
+      if (updatedLake.managerId && body.phone) {
+        await tx.user.update({
+          where: { id: updatedLake.managerId },
+          data: { phone: body.phone }
+        });
+      }
+
+      // Record activity log
+      if (session_auth?.user?.id) {
+        await tx.activityLog.create({
+          data: {
+            userId: session_auth.user.id,
+            action: "UPDATE_LAKE",
+            details: {
+              name: body.name,
+              phone: body.phone,
+              address: body.address
+            }
+          }
+        });
+      }
+
       // Sync FishingArea records if totalSpots is provided
       if (body.totalSpots) {
         const total = Number(body.totalSpots);

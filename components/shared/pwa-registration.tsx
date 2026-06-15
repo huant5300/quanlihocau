@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { SyncService } from "@/lib/offline/sync-service";
+import { requestNotificationPermission } from "@/utils/notification-helper";
 
 export function PWARegistration() {
   useEffect(() => {
@@ -11,6 +12,12 @@ export function PWARegistration() {
         navigator.serviceWorker.register("/sw.js").then(
           (registration) => {
             console.log("SW registered:", registration);
+            // Yêu cầu quyền thông báo sau khi đăng ký SW thành công
+            requestNotificationPermission().then((granted) => {
+              if (granted) {
+                console.log("SW: Quyền thông báo đã được cấp.");
+              }
+            });
           },
           (err) => {
             console.log("SW registration failed:", err);

@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
+import { recordActivityLog } from "@/lib/activity-log";
 
 export async function getSessionsAction() {
   try {
@@ -64,6 +65,14 @@ export async function startFishingAction(areaId: string, customerId?: string, pa
       }
     });
 
+    if (session_auth?.user?.id) {
+      await recordActivityLog(session_auth.user.id, "START_SESSION", {
+        sessionId: session.id,
+        areaName: area.name,
+        packageId: packageId || "Giờ lẻ",
+      });
+    }
+
     // Update area status to OCCUPIED
     await prisma.fishingArea.update({
       where: { id: areaId },
@@ -94,6 +103,13 @@ export async function completeFishingAction(sessionId: string) {
       where: { id: session.areaId },
       data: { status: "AVAILABLE" }
     });
+
+    const session_auth = await auth();
+    if (session_auth?.user?.id) {
+      await recordActivityLog(session_auth.user.id, "COMPLETE_SESSION", {
+        sessionId: session.id,
+      });
+    }
 
     revalidatePath("/dashboard/sessions");
     return { success: true, data: session };

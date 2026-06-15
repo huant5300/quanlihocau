@@ -36,6 +36,7 @@ interface LakeOwner {
   phone: string | null;
   isActive: boolean;
   createdAt: string;
+  appUsageTime: number;
   lakes: {
     id: string;
     name: string;
@@ -63,6 +64,21 @@ interface LakeOwner {
       createdAt: string;
     }[];
   }[];
+}
+
+function formatUsageTime(seconds: number): string {
+  if (!seconds || seconds <= 0) return "Chưa có tương tác";
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 1) return `${seconds} giây`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 1) return `${minutes} phút`;
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  if (days < 1) {
+    return `${hours} giờ ${remainingMinutes} phút`;
+  }
+  return `${days} ngày ${remainingHours} giờ`;
 }
 
 export default function OwnersPage() {
@@ -221,12 +237,23 @@ export default function OwnersPage() {
                   <Mail size={14} className="text-primary/70" />
                   <span className="font-bold truncate">{owner.email}</span>
                 </div>
-                {owner.phone && (
+                {!owner.phone ? (
+                  <div className="flex items-center gap-3 text-xs text-red-500 font-bold bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-xl w-fit">
+                    <Phone size={14} className="animate-pulse" />
+                    <span>⚠️ Thiếu SĐT liên lạc</span>
+                  </div>
+                ) : (
                   <div className="flex items-center gap-3 text-xs text-muted-foreground">
                     <Phone size={14} className="text-primary/70" />
                     <span className="font-bold">{owner.phone}</span>
                   </div>
                 )}
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <Clock size={14} className="text-primary/70" />
+                  <span className="font-bold">
+                    Sử dụng app: <span className="text-white bg-white/5 border border-white/5 px-2 py-0.5 rounded-lg text-[10px]">{formatUsageTime(owner.appUsageTime)}</span>
+                  </span>
+                </div>
                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
                   <Building2 size={14} className="text-primary/70" />
                   <span className="font-bold text-white bg-white/5 border border-white/5 px-2 py-0.5 rounded-lg text-[10px]">
@@ -318,6 +345,8 @@ function OwnerDetailModal({ owner, onClose }: OwnerDetailModalProps) {
         <div className="p-6 md:p-8 bg-gradient-to-r from-primary/10 via-blue-500/5 to-transparent border-b border-white/5 relative">
           <button 
             onClick={onClose}
+            aria-label="Đóng cửa sổ"
+            title="Đóng cửa sổ"
             className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center rounded-full bg-white/5 hover:bg-white/10 text-white/70 hover:text-white border border-white/10 transition-colors"
           >
             <X size={18} />
@@ -344,11 +373,18 @@ function OwnerDetailModal({ owner, onClose }: OwnerDetailModalProps) {
                 <span className="flex items-center gap-1.5">
                   <Mail size={13} className="text-primary" /> {owner.email}
                 </span>
-                {owner.phone && (
+                {owner.phone ? (
                   <span className="flex items-center gap-1.5">
                     <Phone size={13} className="text-primary" /> {owner.phone}
                   </span>
+                ) : (
+                  <span className="flex items-center gap-1.5 text-red-500 animate-pulse">
+                    <Phone size={13} /> ⚠️ Thiếu SĐT liên lạc
+                  </span>
                 )}
+                <span className="flex items-center gap-1.5">
+                  <Clock size={13} className="text-primary" /> Thời gian sử dụng: {formatUsageTime(owner.appUsageTime)}
+                </span>
                 <span className="flex items-center gap-1.5">
                   <Calendar size={13} className="text-primary" /> Tham gia: {format(new Date(owner.createdAt), "dd MMMM yyyy", { locale: vi })}
                 </span>

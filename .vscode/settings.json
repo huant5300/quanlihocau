@@ -17,5 +17,6 @@
         "backend"
     ],
     "css.lint.unknownAtRules": "ignore",
-    "scss.lint.unknownAtRules": "ignore"
+    "scss.lint.unknownAtRules": "ignore",
+    "vscode-edge-devtools.webhint": false
 }

@@ -1,10 +1,31 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Plus_Jakarta_Sans, Be_Vietnam_Pro, Caveat } from "next/font/google";
 import "./globals.css";
 import AppProviders from "./providers";
 import { PWARegistration } from "@/components/shared/pwa-registration";
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ 
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-inter"
+});
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-plus-jakarta-sans"
+});
+
+const beVietnamPro = Be_Vietnam_Pro({
+  subsets: ["latin", "vietnamese"],
+  weight: ["400", "500", "600", "700", "800", "900"],
+  variable: "--font-be-vietnam-pro"
+});
+
+const caveat = Caveat({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+  variable: "--font-caveat"
+});
 
 export const metadata: Metadata = {
   title: {
@@ -69,7 +90,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning className="light">
-      <body className={`${inter.className} antialiased`} suppressHydrationWarning>
+      <body className={`${inter.className} ${plusJakartaSans.variable} ${beVietnamPro.variable} ${caveat.variable} antialiased`} suppressHydrationWarning>
         <AppProviders>
           <PWARegistration />
           {children}

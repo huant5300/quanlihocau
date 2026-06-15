@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { auth } from "@/auth";
+import { getVnStartOfToday } from "@/utils/datetime";
 
 export async function GET(req: NextRequest) {
   try {
@@ -21,8 +22,7 @@ export async function GET(req: NextRequest) {
     });
 
     // 2. Today's revenue (from completed invoices today)
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = getVnStartOfToday();
 
     const payments = await prisma.payment.findMany({
       where: {

@@ -8,6 +8,7 @@ import { HutSettings } from "@/modules/settings/components/hut-settings";
 import { EmployeeSettings } from "@/modules/settings/components/employee-settings";
 import { FishSettings } from "@/modules/settings/components/fish-settings";
 import { PrinterSettings } from "@/modules/settings/components/printer-settings";
+import { ProductSettings } from "@/modules/settings/components/product-settings";
 import { 
   Settings as SettingsIcon, 
   Building2, 
@@ -20,7 +21,8 @@ import {
   Moon,
   Sun,
   Fish,
-  Printer
+  Printer,
+  ShoppingBag
 } from "lucide-react";
 import { cn } from "@/utils/utils";
 import { useTheme } from "next-themes";
@@ -30,6 +32,7 @@ const SETTINGS_SECTIONS = [
   { id: "packages", label: "Gói dịch vụ", icon: Package },
   { id: "huts", label: "Ô Câu", icon: MapPin },
   { id: "fish", label: "Cá & Giá thu hồi", icon: Fish },
+  { id: "products", label: "Sản phẩm", icon: ShoppingBag },
   { id: "staff", label: "Nhân sự", icon: Users },
   { id: "printer", label: "Máy in", icon: Printer },
   { id: "appearance", label: "Giao diện", icon: Palette },
@@ -80,6 +83,7 @@ export default function SettingsPage() {
           {activeSection === "fish" && <FishSettings />}
           {activeSection === "staff" && <EmployeeSettings />}
           {activeSection === "printer" && <PrinterSettings />}
+          {activeSection === "products" && <ProductSettings />}
           
           {activeSection === "appearance" && (
             <div className="glass-card p-8 rounded-[2.5rem] space-y-8">

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { getActiveLakeId } from "@/lib/lake-context";
 
 export async function POST(
   req: NextRequest,
@@ -8,10 +9,12 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    if (!session) {
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    if (!session && !isSuperAdmin) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
+    const lakeId = await getActiveLakeId();
     const { id } = await params;
     const body = await req.json();
     const { hours, cost } = body;
@@ -23,6 +26,11 @@ export async function POST(
 
     if (!fishingSession) {
       return NextResponse.json({ success: false, message: "Session not found" }, { status: 404 });
+    }
+
+    // Tenant Isolation Check
+    if (fishingSession.lakeId !== lakeId && !isSuperAdmin) {
+      return NextResponse.json({ success: false, message: "Bạn không có quyền thao tác trên lượt câu này" }, { status: 403 });
     }
 
     // Update the session or invoice

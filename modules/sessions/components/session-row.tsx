@@ -178,12 +178,13 @@ export function SessionRow({ session }: SessionRowProps) {
         <div className="flex items-center gap-6 shrink-0">
           {/* Realtime Countdown Timer */}
           <div className="flex flex-col items-end">
-            <span className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Thời gian</span>
             <CountdownTimer 
               endTime={session.endTime ?? new Date().toISOString()} 
+              startTime={session.startTime}
               sessionId={session.id} 
               onWarning={onWarning}
               onExpire={onExpire}
+              showTimes
             />
           </div>
 
@@ -283,23 +284,23 @@ export function SessionRow({ session }: SessionRowProps) {
 
             {/* Quick action buttons & Checkout inside Dialog */}
             <div className="flex flex-col gap-3">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-3 gap-3">
                 <AddProductModal 
                   sessionId={session.id} 
                   hutNumber={formattedHutNumber} 
-                  className="h-12 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center gap-1 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-emerald-500/20"
+                  className="h-14 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl flex items-center justify-center gap-1 font-black text-xs uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-emerald-500/20"
                 />
                 
                 <ExtendSessionModal 
                   sessionId={session.id} 
                   hutNumber={formattedHutNumber} 
-                  className="h-12 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center gap-1 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-blue-500/20"
+                  className="h-14 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center gap-1 font-black text-xs uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-blue-500/20"
                 />
                 
                 <FishBuybackModal 
                   sessionId={session.id} 
                   hutNumber={formattedHutNumber} 
-                  className="h-12 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center gap-1 font-black text-[10px] uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-amber-500/20"
+                  className="h-14 bg-amber-500/10 hover:bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded-xl flex items-center justify-center gap-1 font-black text-xs uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-amber-500/20"
                 />
               </div>
 

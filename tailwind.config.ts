@@ -56,6 +56,11 @@ const config: Config = {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
   			sm: 'calc(var(--radius) - 4px)'
+  		},
+  		fontFamily: {
+  			sans: ["var(--font-plus-jakarta-sans)", "var(--font-inter)", "sans-serif"],
+  			display: ["var(--font-be-vietnam-pro)", "sans-serif"],
+  			caveat: ["var(--font-caveat)", "cursive"],
   		}
   	}
   },

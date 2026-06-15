@@ -10,6 +10,7 @@ import { useRouter } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
 import { FishingPackage } from "@prisma/client";
 import { printerService } from "@/services/printer/printer-service";
+import { showNativeNotification } from "@/utils/notification-helper";
 
 export function useOpenSession() {
   const [isLoading, setIsLoading] = useState(false);
@@ -21,11 +22,17 @@ export function useOpenSession() {
     sessionService.getPackages().then(setPackages);
   }, []);
 
+  // Default start_time to current time
+  const now = new Date();
+  const defaultStartTime = `${now.getHours().toString().padStart(2, "0")}:${now.getMinutes().toString().padStart(2, "0")}`;
+
   const form = useForm<OpenSessionInput>({
     resolver: zodResolver(openSessionSchema),
     defaultValues: {
+      start_time: defaultStartTime,
       phone_number: "",
       customer_name: "",
+      customer_id: "",
       hut_id: "",
       package_id: "",
       products: [],
@@ -34,7 +41,7 @@ export function useOpenSession() {
     },
   });
 
-  // Tự động điền số tiền tạm thu bằng tổng cộng khi gói câu hoặc sản phẩm thay đổi
+  // Auto-fill prepaid amount when package or products change
   const watchedPackageId = form.watch("package_id");
   const watchedProducts = form.watch("products");
   const watchedIsCustom = form.watch("is_custom_package");
@@ -53,7 +60,7 @@ export function useOpenSession() {
     form.setValue("prepaid_amount", packagePrice + productsPrice);
   }, [watchedPackageId, watchedProducts, watchedIsCustom, watchedCustomPrice, packages, form]);
 
-  const onSubmit = async (data: OpenSessionInput) => {
+  const onSubmit = async (data: OpenSessionInput, managerOverride?: { username: string; password?: string }) => {
     setIsLoading(true);
     try {
       let durationHours = 0;
@@ -75,51 +82,65 @@ export function useOpenSession() {
         selectedPkgName = selectedPkg.name;
       }
 
-      const productsPrice = data.products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
+      // Calculate startTime from the form's start_time (HH:mm)
+      const [startHH, startMM] = (data.start_time || defaultStartTime).split(":").map(Number);
+      const startDate = new Date();
+      startDate.setHours(startHH, startMM, 0, 0);
+
+      const productsList = data.products || [];
+      const productsPrice = productsList.reduce((sum, p) => sum + (p.price * p.quantity), 0);
       const totalAmount = sessionPrice + productsPrice;
 
       const result = await sessionService.createSession({
         areaId: data.hut_id,
-        startTime: new Date().toISOString(),
-        customerId: undefined, // Will handle customer creation/selection in API if needed
+        startTime: startDate.toISOString(),
+        customerId: data.customer_id || undefined,
         customer_name: data.customer_name,
         phone: data.phone_number,
-        hourlyRate: sessionPrice / durationHours, // Approximate hourly rate for overtime
+        hourlyRate: sessionPrice / durationHours,
         packageId: data.package_id === "custom" ? undefined : data.package_id,
-        prepaidAmount: data.prepaid_amount,
+        prepaidAmount: data.prepaid_amount || 0,
         customPrice: sessionPrice,
         customDuration: durationHours,
-        products: data.products.map(p => ({
+        products: productsList.map(p => ({
           productId: p.id,
           quantity: p.quantity,
           unitPrice: p.price
         })),
+        managerOverride,
       });
 
       if (result) {
         toast.success("Đã mở lượt câu mới thành công");
         
-        // In hóa đơn nếu được chọn
+        showNativeNotification("🎫 Mở lượt câu mới thành công", {
+          body: `Ô số ${result.area?.name || "N/A"} - Khách: ${data.customer_name || "Khách lẻ"} - Gói: ${selectedPkgName}`,
+          url: "/dashboard/sessions",
+          tag: `open-session-${result.id}`
+        });
+        
+        // Print bill if selected
         if (data.should_print) {
           printerService.printBill({
             sessionId: result.id,
             hutNumber: result.area?.name || "N/A",
             customerName: result.customer?.fullName || "Khách lẻ",
             sessionFee: sessionPrice,
-            products: data.products.map(p => ({
+            products: productsList.map(p => ({
               name: p.name,
               quantity: p.quantity,
               price: p.price
             })),
             buybackDeduction: 0,
             totalAmount: totalAmount,
-            prepaidAmount: data.prepaid_amount
+            prepaidAmount: data.prepaid_amount || 0
           });
         }
 
-        // Refresh data and redirect
+        // Refresh data and redirect directly to sessions (no intermediate step)
         await queryClient.invalidateQueries({ queryKey: ["sessions"] });
         await queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
+        await queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
         
         router.push("/dashboard/sessions");
         return true;

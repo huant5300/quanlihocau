@@ -25,11 +25,15 @@ export function SessionsClient({ initialSessions }: SessionsClientProps) {
     refetchInterval: 30000, // Refresh every 30 seconds for "real-time" feel
   });
 
-  const filteredSessions = sessions.filter((s: any) => 
-    s.area?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.customer?.fullName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    s.hut_number?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredSessions = sessions.filter((s: any) => {
+    const areaName = s.area?.name || "";
+    const customerName = s.customer?.fullName || "Khách lẻ";
+    const query = searchQuery.toLowerCase();
+    return (
+      areaName.toLowerCase().includes(query) ||
+      customerName.toLowerCase().includes(query)
+    );
+  });
 
   return (
     <div className="space-y-8">

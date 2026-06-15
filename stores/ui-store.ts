@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { FishingSession } from "@/modules/sessions/types/session.types";
+import { showNativeNotification } from "@/utils/notification-helper";
 
 export type ConnectionStatus = "stable" | "reconnecting" | "offline";
 
@@ -99,6 +100,15 @@ export const useUIStore = create<UIState>((set) => ({
       message,
       timestamp: new Date().toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' })
     };
+
+    // Hiển thị thông báo đẩy (native notification)
+    const title = type === "warning" ? `⚠️ Sắp hết giờ - Ô ${hutNumber}` : `✅ Tự động thanh toán - Ô ${hutNumber}`;
+    showNativeNotification(title, {
+      body: message,
+      tag: `${type}-${hutNumber}`,
+      url: "/dashboard/sessions"
+    });
+
     return { notifications: [newNotification, ...state.notifications] };
   }),
   removeNotificationByHut: (hutNumber, type) => set((state) => ({

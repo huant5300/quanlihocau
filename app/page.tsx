@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   Fish, 
   Clock, 
@@ -191,12 +192,6 @@ export default async function RootPage() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans overflow-x-hidden selection:bg-emerald-500/30 selection:text-emerald-950 relative smooth-scroll">
       
-      {/* Dynamic Google Fonts Stylesheet Injection */}
-      <link 
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700;800;900&family=Caveat:wght@400;700&display=swap" 
-        rel="stylesheet" 
-      />
-
       {/* Inject Structured Data for Google SEO */}
       <script
         type="application/ld+json"
@@ -942,12 +937,13 @@ export default async function RootPage() {
                 {/* The main picture container */}
                 <div className="relative bg-slate-900 border border-slate-800 rounded-3xl p-3 shadow-2xl overflow-hidden">
                   <div className="aspect-[4/3] w-full rounded-2xl overflow-hidden relative bg-slate-950">
-                    <img 
+                    <Image 
                       src="/fishing_bg.png" 
                       alt="Hệ thống Quản lý Hồ câu Cá Chuyên nghiệp" 
-                      className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-700"
-                      loading="lazy"
-                      decoding="async"
+                      fill
+                      sizes="(max-width: 380px) 100vw, 380px"
+                      className="object-cover group-hover:scale-[1.02] transition-transform duration-700"
+                      priority={false}
                     />
                   </div>
                 </div>

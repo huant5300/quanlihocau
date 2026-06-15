@@ -4,6 +4,7 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { setActiveLakeId, getActiveLakeId } from "@/lib/lake-context";
 import { revalidatePath } from "next/cache";
+import { recordActivityLog } from "@/lib/activity-log";
 
 import { UserRole } from "@prisma/client";
 
@@ -187,6 +188,7 @@ export async function getLakeOwners() {
           name: owner.name,
           email: owner.email,
           phone: owner.phone,
+          appUsageTime: owner.appUsageTime || 0,
           isActive: owner.isActive,
           createdAt: owner.createdAt.toISOString(),
           lakes: lakesData
@@ -216,6 +218,20 @@ export async function updateLakeDetails(data: { name: string; address: string; p
         phone: data.phone,
       }
     });
+
+    // Sync user phone number too
+    await prisma.user.update({
+      where: { id: session.user.id },
+      data: { phone: data.phone }
+    });
+
+    // Record activity log
+    await recordActivityLog(session.user.id, "UPDATE_LAKE", {
+      name: data.name,
+      phone: data.phone,
+      context: "onboarding"
+    });
+
     return { success: true, data: updated };
   } catch (error: any) {
     return { success: false, error: error.message || "Failed to update lake details" };

@@ -79,6 +79,7 @@ export interface SessionInsert {
   customPrice?: number;
   customDuration?: number;
   products?: any[];
+  managerOverride?: { username: string; password?: string };
 }
 
 export type SessionUpdate = Partial<SessionInsert> & { status?: SessionStatus };

@@ -154,36 +154,42 @@ export function PackageSettings() {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 pt-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên gói</label>
+                <label htmlFor="package-name-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên gói</label>
                 <input 
+                  id="package-name-input"
                   name="name"
                   required
                   defaultValue={editingPackage?.name || ""}
                   className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                   placeholder="Gói 5 giờ"
+                  title="Tên gói"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Thời gian (phút)</label>
+                  <label htmlFor="package-duration-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Thời gian (phút)</label>
                   <input 
+                    id="package-duration-input"
                     name="duration"
                     type="number"
                     required
                     defaultValue={editingPackage ? (editingPackage.duration_hours * 60) : ""}
                     className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                     placeholder="300"
+                    title="Thời gian (phút)"
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Giá (đ)</label>
+                  <label htmlFor="package-price-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Giá (đ)</label>
                   <input 
+                    id="package-price-input"
                     name="price"
                     type="number"
                     required
                     defaultValue={editingPackage?.price || ""}
                     className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                     placeholder="250000"
+                    title="Giá (đ)"
                   />
                 </div>
               </div>

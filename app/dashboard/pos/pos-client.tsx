@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Search, ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote, User, ShoppingBag } from "lucide-react";
+import { Search, ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote, User, ShoppingBag, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { posService } from "@/services/api/pos-service";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { getActiveShiftSession } from "@/actions/shift-actions";
 
 export function POSClient({ products, categories }: any) {
   const [cart, setCart] = useState<any[]>([]);
@@ -17,6 +19,16 @@ export function POSClient({ products, categories }: any) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<"CASH" | "TRANSFER">("CASH");
   const router = useRouter();
+
+  // Query active shift
+  const { data: activeShift, isLoading: isLoadingShift } = useQuery({
+    queryKey: ["active-shift"],
+    queryFn: async () => {
+      const res = await getActiveShiftSession();
+      if (res.success) return res.data;
+      throw new Error(res.error);
+    }
+  });
 
   const filteredProducts = useMemo(() => {
     return products.filter((p: any) => {
@@ -156,7 +168,33 @@ export function POSClient({ products, categories }: any) {
           <Badge className="bg-primary text-white rounded-full px-3 py-1 font-black">{cart.length}</Badge>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
+        {!isLoadingShift && !activeShift && (
+          <div className="bg-amber-500/10 border-b border-amber-500/20 px-8 py-3 flex items-center gap-2 text-amber-500">
+            <AlertTriangle size={16} />
+            <span className="text-[10px] font-black uppercase tracking-wider">Chưa mở ca trực! Vui lòng bắt đầu ca trực.</span>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar relative">
+          {!isLoadingShift && !activeShift && (
+            <div className="absolute inset-0 bg-background/60 backdrop-blur-[2px] z-30 flex flex-col items-center justify-center p-6 text-center">
+              <div className="bg-amber-500/10 p-3 rounded-2xl text-amber-500 mb-2">
+                <AlertTriangle size={24} />
+              </div>
+              <p className="font-black text-xs uppercase tracking-wider text-foreground mb-1">Ca trực chưa mở</p>
+              <p className="text-[9px] text-muted-foreground max-w-[200px] leading-relaxed mb-4">
+                Bạn cần mở ca trực để có thể thực hiện thanh toán hóa đơn POS.
+              </p>
+              <Button 
+                onClick={() => router.push("/dashboard/shifts")}
+                size="sm"
+                className="font-black text-[9px] uppercase tracking-widest px-4 h-9 bg-primary text-white"
+              >
+                Mở ca trực ngay
+              </Button>
+            </div>
+          )}
+
           <AnimatePresence initial={false}>
             {cart.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-muted-foreground opacity-30 gap-4">
@@ -225,7 +263,7 @@ export function POSClient({ products, categories }: any) {
           </div>
           
           <Button 
-            disabled={cart.length === 0 || isSubmitting}
+            disabled={cart.length === 0 || isSubmitting || !activeShift}
             onClick={handleCheckout}
             className="w-full h-16 bg-primary text-white rounded-3xl font-black uppercase tracking-widest shadow-xl shadow-primary/20"
           >

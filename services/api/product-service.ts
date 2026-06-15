@@ -43,4 +43,11 @@ export const productService = {
     if (!response.success) throw new Error(response.error?.message);
     return true;
   },
+
+  getCategories: async () => {
+    const response = await axiosApiClient.get<any[]>("/api/v1/products/categories");
+    if (!response.success) throw new Error(response.error?.message);
+    return response.data || [];
+  },
 };
+

@@ -110,12 +110,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        console.log("Authorize attempt for:", credentials?.email);
-        if (!credentials?.email || !credentials?.password) return null;
+        const loginId = credentials?.email as string;
+        console.log("Authorize attempt for:", loginId);
+        if (!loginId || !credentials?.password) return null;
 
         try {
-          const user = await prisma.user.findUnique({
-            where: { email: credentials.email as string },
+          const user = await prisma.user.findFirst({
+            where: {
+              OR: [
+                { email: loginId },
+                { username: loginId }
+              ]
+            },
           });
 
           console.log("User found:", user ? "YES" : "NO");
@@ -128,6 +134,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           console.log("Password valid:", isPasswordValid);
           if (!isPasswordValid) return null;
+
+          // Check if user account is locked/inactive
+          if (!user.isActive) {
+            console.log("User account is locked");
+            return null;
+          }
 
           return {
             id: user.id,
@@ -208,10 +220,12 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      if (account?.provider === "google" || account?.provider === "zalo") {
-        const email = user.email;
-        if (!email) return false;
+      const email = user.email;
+      if (!email) return false;
 
+      let currentUserId = user.id;
+
+      if (account?.provider === "google" || account?.provider === "zalo") {
         const existingUser = await prisma.user.findUnique({
           where: { email },
         });
@@ -229,6 +243,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.role = UserRole.OWNER;
           user.id = newUser.id;
           (user as any).lakeId = lakeId;
+          currentUserId = newUser.id;
         } else {
           if (existingUser.role === UserRole.OWNER) {
             const hasLake = await prisma.fishingLake.findFirst({
@@ -242,7 +257,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           user.role = existingUser.role;
           user.id = existingUser.id;
           (user as any).lakeId = existingUser.lakeId;
+          currentUserId = existingUser.id;
         }
+      }
+
+      if (currentUserId) {
+        await prisma.activityLog.create({
+          data: {
+            userId: currentUserId,
+            action: "LOGIN",
+            details: { provider: account?.provider || "credentials" },
+          },
+        });
       }
       return true;
     },
@@ -251,16 +277,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.role = user.role;
         token.id = user.id;
         token.lakeId = (user as any).lakeId;
+        token.phone = (user as any).phone;
+        token.appUsageTime = (user as any).appUsageTime || 0;
       } else if (token.email && token.role === undefined) {
-        // Chỉ truy vấn khi token chưa có thông tin role (giảm hàng trăm truy vấn db dư thừa)
-        const dbUser = await prisma.user.findUnique({
-          where: { email: token.email },
-          select: { role: true, id: true, lakeId: true },
+        const dbUser = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { email: token.email },
+              { username: token.email }
+            ]
+          },
+          select: { role: true, id: true, lakeId: true, phone: true, appUsageTime: true },
         });
         if (dbUser) {
           token.role = dbUser.role;
           token.id = dbUser.id;
           token.lakeId = dbUser.lakeId;
+          token.phone = dbUser.phone;
+          token.appUsageTime = dbUser.appUsageTime;
         }
       }
       if (token.email === "huant5300@gmail.com") {
@@ -273,6 +307,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.role = token.role as UserRole;
         session.user.id = token.id as string;
         session.user.lakeId = token.lakeId as string;
+        (session.user as any).phone = token.phone as string;
+        (session.user as any).appUsageTime = token.appUsageTime as number;
       }
       if (session.user?.email === "huant5300@gmail.com") {
         session.user.role = UserRole.SUPER_ADMIN;

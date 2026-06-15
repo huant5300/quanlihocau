@@ -15,7 +15,8 @@ import {
   ChevronLeft,
   Bell,
   Home,
-  PlusCircle
+  PlusCircle,
+  Clock
 } from "lucide-react";
 import { LakeSettingsModal } from "../shared/lake-settings-modal";
 import { useState } from "react";
@@ -25,12 +26,13 @@ import { UserRole } from "@prisma/client";
 import { useUIStore } from "@/stores/ui-store";
 
 const menuItems = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF, UserRole.CASHIER] },
+  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Chủ Hồ", href: "/dashboard/owners", icon: Users, roles: [UserRole.SUPER_ADMIN] },
-  { label: "Hồ Câu", href: "/dashboard/sessions", icon: Fish, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF] },
-  { label: "Khách Hàng", href: "/dashboard/customers", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF] },
-  { label: "Tạo Vé Câu", href: "#", action: "create-ticket", icon: PlusCircle, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.STAFF, UserRole.CASHIER] },
-  { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
+  { label: "Hồ Câu", href: "/dashboard/sessions", icon: Fish, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF] },
+  { label: "Khách Hàng", href: "/dashboard/customers", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF] },
+  { label: "Tạo Vé Câu", href: "#", action: "create-ticket", icon: PlusCircle, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
+  { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER] },
+  { label: "Ca Làm Việc", href: "/dashboard/shifts", icon: Clock, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Báo Cáo", href: "/dashboard/reports", icon: History, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
   { label: "Nhân Viên", href: "/dashboard/staff", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
   { label: "Cài Đặt", href: "/dashboard/settings", icon: Settings, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },

@@ -2,19 +2,19 @@ import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { DashboardClient } from "./dashboard-client";
-import { eachDayOfInterval, format, subDays } from "date-fns";
+import { eachDayOfInterval, format } from "date-fns";
+import { getVnStartOfToday, getVnSubDays } from "@/utils/datetime";
 
 export default async function DashboardPage() {
   const session = await auth();
   const lakeId = await getActiveLakeId();
 
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  const today = getVnStartOfToday();
 
-  const startOf7Days = subDays(today, 6);
+  const startOf7Days = getVnSubDays(today, 6);
 
   const [
-    activeSessions,
+    activeSessionsList,
     todayRevenueAgg,
     totalCustomers,
     todayCatches,
@@ -22,12 +22,22 @@ export default async function DashboardPage() {
     sevenDaysTransactions,
     spotsCount
   ] = await Promise.all([
-    // 1. Active sessions
-    prisma.fishingSession.count({
+    // 1. Active sessions list
+    prisma.fishingSession.findMany({
       where: {
         lakeId,
         status: "ACTIVE"
-      }
+      },
+      include: {
+        area: true,
+        customer: true,
+        fishCatches: { include: { fishType: true } },
+        invoices: {
+          where: { status: "UNPAID" },
+          include: { items: true }
+        }
+      },
+      orderBy: { startTime: "desc" }
     }),
     // 2. Today's revenue
     prisma.transaction.aggregate({
@@ -112,7 +122,8 @@ export default async function DashboardPage() {
   });
 
   const initialData = {
-    activeSessions,
+    activeSessions: activeSessionsList.length,
+    activeSessionsList: JSON.parse(JSON.stringify(activeSessionsList)),
     todayRevenue,
     totalCustomers,
     todayCatchesCount,

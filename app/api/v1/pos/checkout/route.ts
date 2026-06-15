@@ -110,6 +110,21 @@ export async function POST(req: NextRequest) {
         }
       });
 
+      // 7. Record in ActivityLog table
+      if (session?.user?.id) {
+        await tx.activityLog.create({
+          data: {
+            userId: session.user.id,
+            action: "POS_CHECKOUT",
+            details: {
+              invoiceId: invoice.id,
+              invoiceNumber: invoice.invoiceNumber,
+              totalAmount: subtotal
+            }
+          }
+        });
+      }
+
       return invoice;
     }, {
       maxWait: 15000,

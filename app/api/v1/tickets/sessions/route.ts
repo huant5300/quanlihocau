@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import bcrypt from "bcryptjs";
 
 export async function GET(req: NextRequest) {
   try {
@@ -96,6 +97,21 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const lakeId = await getActiveLakeId();
 
+    // 1. Chặn tạo vé nếu chưa có ca làm việc hoạt động
+    const activeShift = await prisma.shiftSession.findFirst({
+      where: {
+        lakeId,
+        status: "RUNNING",
+      },
+    });
+
+    if (!activeShift) {
+      return NextResponse.json({
+        success: false,
+        message: "Không có ca làm việc nào đang hoạt động. Vui lòng mở ca trực trước khi tạo vé câu cho khách."
+      }, { status: 400 });
+    }
+
     const areaId = body.areaId || body.hut_id;
     const customerName = body.customer_name;
     const phone = body.phone;
@@ -106,16 +122,52 @@ export async function POST(req: NextRequest) {
     const customPrice = body.customPrice !== undefined && body.customPrice !== null ? Number(body.customPrice) : null;
     const customDuration = body.customDuration !== undefined && body.customDuration !== null ? Number(body.customDuration) : null;
 
-    // Chống thất thoát: Chỉ OWNER hoặc SUPER_ADMIN mới được đặt giá tùy chỉnh hoặc thời lượng tùy chỉnh
+    // 2. Chống thất thoát & Manager Override
     const userRole = session_auth?.user?.role;
-    if ((customPrice !== null || customDuration !== null) && 
-        userRole !== "OWNER" && 
-        userRole !== "SUPER_ADMIN" && 
-        !isOwner) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Bạn không có quyền thiết lập giá tùy chỉnh hoặc thời lượng tùy chỉnh. Chỉ Chủ Hồ mới có quyền này." 
-      }, { status: 403 });
+    const isPrivileged = userRole === "OWNER" || userRole === "SUPER_ADMIN" || userRole === "MANAGER" || isOwner;
+
+    if ((customPrice !== null || customDuration !== null) && !isPrivileged) {
+      const override = body.managerOverride;
+      if (!override || !override.username || !override.password) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "Bạn không có quyền thiết lập giá hoặc thời lượng tùy chỉnh. Vui lòng yêu cầu Quản lý hoặc Chủ Hồ phê duyệt." 
+        }, { status: 403 });
+      }
+
+      // Xác thực tài khoản manager phê duyệt
+      const manager = await prisma.user.findFirst({
+        where: {
+          OR: [
+            { email: override.username },
+            { username: override.username }
+          ]
+        }
+      });
+
+      if (!manager || !manager.password || !manager.isActive) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "Tài khoản phê duyệt của Quản lý không tồn tại hoặc bị khóa." 
+        }, { status: 403 });
+      }
+
+      const isPasswordValid = await bcrypt.compare(override.password, manager.password);
+      if (!isPasswordValid) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "Mật khẩu Quản lý không chính xác." 
+        }, { status: 403 });
+      }
+
+      const managerRole = manager.role;
+      const isManagerPrivileged = managerRole === "OWNER" || managerRole === "SUPER_ADMIN" || managerRole === "MANAGER";
+      if (!isManagerPrivileged) {
+        return NextResponse.json({ 
+          success: false, 
+          message: "Tài khoản phê duyệt phải có vai trò là Quản lý hoặc Chủ Hồ." 
+        }, { status: 403 });
+      }
     }
 
     if (!areaId) {

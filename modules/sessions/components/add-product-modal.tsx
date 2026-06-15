@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { cn } from "@/utils/utils";
 import type { Product, SessionProductInput } from "@/types";
 import { useQueryClient } from "@tanstack/react-query";
+import { showNativeNotification } from "@/utils/notification-helper";
 
 interface AddProductModalProps {
   sessionId: string;
@@ -79,6 +80,14 @@ export function AddProductModal({ sessionId, hutNumber, className }: AddProductM
       const input = selectedProducts.map(({ name, price, ...rest }) => rest);
       await sessionService.addProducts(sessionId, input);
       toast.success("Đã thêm sản phẩm thành công");
+      
+      const productSummary = selectedProducts.map(p => `${p.name} (x${p.quantity})`).join(", ");
+      showNativeNotification(`🛒 Thêm đồ thành công - Ô ${hutNumber}`, {
+        body: `Món đã thêm: ${productSummary}`,
+        url: "/dashboard/sessions",
+        tag: `add-product-${sessionId}-${Date.now()}`
+      });
+
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
       setIsOpen(false);

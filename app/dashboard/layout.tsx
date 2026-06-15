@@ -1,6 +1,7 @@
 import { MainLayout } from "@/components/layouts/main-layout";
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
+import { HeartbeatProvider } from "@/providers/heartbeat-provider";
 
 export default async function DashboardLayout({
   children,
@@ -13,5 +14,9 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  return <MainLayout>{children}</MainLayout>;
+  return (
+    <HeartbeatProvider>
+      <MainLayout>{children}</MainLayout>
+    </HeartbeatProvider>
+  );
 }

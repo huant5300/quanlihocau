@@ -31,20 +31,20 @@ export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
 
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
         <motion.div 
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+          className="absolute inset-0 bg-background/80 backdrop-blur-md" 
         />
 
         <motion.div 
-          initial={{ y: "100%" }}
-          animate={{ y: 0 }}
-          exit={{ y: "100%" }}
-          className="relative w-full max-w-2xl bg-background rounded-t-[3rem] sm:rounded-[3rem] shadow-2xl overflow-hidden flex flex-col max-h-[95vh]"
+          initial={{ scale: 0.95, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.95, opacity: 0 }}
+          className="relative w-full max-w-2xl bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden flex flex-col max-h-[90vh] z-10"
         >
           {isSuccess ? (
             <div className="p-12 flex flex-col items-center justify-center text-center space-y-8 animate-in zoom-in">
@@ -119,7 +119,7 @@ export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
 
               {/* Footer */}
               <div className="p-8 pt-0 flex items-center gap-4">
-                <button onClick={onClose} className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-[10px] bg-accent/50 hover:bg-accent transition-all active:scale-95">
+                <button onClick={onClose} className="flex-1 h-16 rounded-2xl font-black uppercase tracking-widest text-xs bg-accent/50 hover:bg-accent transition-all active:scale-95">
                   Hủy
                 </button>
                 <button

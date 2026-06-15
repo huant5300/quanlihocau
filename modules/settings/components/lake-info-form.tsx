@@ -61,8 +61,12 @@ export function LakeInfoForm() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên Hồ câu</label>
+            <label htmlFor="lake-name-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên Hồ câu</label>
             <input 
+              id="lake-name-input"
+              type="text"
+              placeholder="Nhập tên hồ câu"
+              title="Tên Hồ câu"
               {...register("name")}
               className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
             />
@@ -70,24 +74,35 @@ export function LakeInfoForm() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số điện thoại</label>
+            <label htmlFor="lake-phone-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số điện thoại</label>
             <input 
+              id="lake-phone-input"
+              type="tel"
+              placeholder="Nhập số điện thoại"
+              title="Số điện thoại"
               {...register("phone")}
               className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
             />
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Địa chỉ</label>
+            <label htmlFor="lake-address-input" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Địa chỉ</label>
             <input 
+              id="lake-address-input"
+              type="text"
+              placeholder="Nhập địa chỉ hồ câu"
+              title="Địa chỉ"
               {...register("address")}
               className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
             />
           </div>
 
           <div className="space-y-2 md:col-span-2">
-            <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lời chào hóa đơn</label>
+            <label htmlFor="lake-receipt-footer-textarea" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Lời chào hóa đơn</label>
             <textarea 
+              id="lake-receipt-footer-textarea"
+              placeholder="Nhập lời chào hoặc thông tin in ở chân hóa đơn..."
+              title="Lời chào hóa đơn"
               {...register("receiptFooter")}
               className="w-full min-h-[100px] p-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold resize-none"
             />
@@ -95,6 +110,7 @@ export function LakeInfoForm() {
 
           <div className="md:col-span-2 pt-4">
             <button 
+              type="submit"
               disabled={mutation.isPending}
               className="h-14 px-8 bg-primary text-white rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:hover:scale-100"
             >

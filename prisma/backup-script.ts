@@ -4,11 +4,10 @@
  * 
  * Exports critical tables to JSON for rollback safety.
  */
-import { PrismaClient } from "@prisma/client";
+import prisma from "../lib/prisma";
 import * as fs from "fs";
 import * as path from "path";
 
-const prisma = new PrismaClient();
 
 async function backup() {
   const timestamp = new Date().toISOString().replace(/[:.]/g, "-");

@@ -39,7 +39,12 @@ export function SessionRow({ session }: SessionRowProps) {
   const [isWarning, setIsWarning] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { addNotification, removeNotificationByHut } = useUIStore();
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const formattedHutNumber = (session.hut_number || "")
     .replace("Chòi ", "")
@@ -51,40 +56,6 @@ export function SessionRow({ session }: SessionRowProps) {
     setIsPaymentOpen(true);
     removeNotificationByHut(formattedHutNumber, "warning");
     removeNotificationByHut(formattedHutNumber, "expired");
-  };
-
-  const handleAutoCheckout = async () => {
-    if (isPending) return;
-    
-    startTransition(async () => {
-      try {
-        const response = await fetch(`/api/v1/tickets/sessions/${session.id}/checkout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            paymentMethod: "CASH",
-            notes: "Tự động thanh toán khi hết giờ"
-          })
-        });
-        const data = await response.json();
-        if (data.id) {
-          // Trigger expired notification and clear warnings
-          addNotification("expired", formattedHutNumber, `Ô số ${formattedHutNumber} đã tự động thanh toán!`);
-          removeNotificationByHut(formattedHutNumber, "warning");
-          
-          toast.success(`HỆ THỐNG: Ô số ${formattedHutNumber} đã hết giờ và tự động thanh toán thành công!`, {
-            duration: 10000,
-          });
-          
-          // Triggers refetch/refresh to sync data
-          window.location.reload();
-        }
-      } catch (err) {
-        console.error("Auto checkout error:", err);
-      }
-    });
   };
 
   const onWarning = () => {
@@ -124,19 +95,49 @@ export function SessionRow({ session }: SessionRowProps) {
   };
 
   const onExpire = () => {
-    handleAutoCheckout();
+    addNotification("expired", formattedHutNumber, `Ô số ${formattedHutNumber} đã hết giờ câu!`);
+    removeNotificationByHut(formattedHutNumber, "warning");
+    
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        const playNote = (freq: number, start: number, duration: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(0.1, start + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + duration);
+        };
+        const now = ctx.currentTime;
+        playNote(440, now, 0.4);
+        playNote(440, now + 0.5, 0.4);
+      }
+    } catch (e) {
+      console.log("Audio play blocked or failed:", e);
+    }
+
+    toast.error(`HẾT GIỜ: Ô số ${formattedHutNumber} đã hết thời gian câu! Vui lòng chuẩn bị thanh toán.`, {
+      duration: 15000,
+      position: "top-center",
+    });
   };
 
   return (
     <>
       {/* Redesigned thin horizontal row layout */}
       <motion.div
-        layout
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         onClick={() => setIsDetailsOpen(true)}
         className={cn(
-          "w-full h-20 sm:h-24 bg-card/95 dark:bg-card/45 backdrop-blur-xl border rounded-2xl px-6 sm:px-8 flex items-center justify-between cursor-pointer transition-all hover:border-primary/30 relative overflow-hidden shadow-md hover:shadow-lg select-none",
+          "w-full min-h-[5.5rem] py-3 sm:py-0 sm:h-24 bg-card/95 dark:bg-card/45 backdrop-blur-xl border rounded-2xl px-4 sm:px-8 flex items-center justify-between cursor-pointer transition-all hover:border-primary/30 relative overflow-hidden shadow-md hover:shadow-lg select-none",
           isWarning 
             ? "border-red-500/80 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.06)]" 
             : "border-black/5 dark:border-white/5",
@@ -150,32 +151,37 @@ export function SessionRow({ session }: SessionRowProps) {
         )}
 
         {/* Left Section: Spot Number & Customer Info */}
-        <div className="flex items-center gap-4 min-w-0">
+        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <div className={cn(
-            "px-4 h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
+            "px-2.5 sm:px-4 h-9 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
             isWarning ? "bg-red-500 text-white" : "bg-primary text-white"
           )}>
             <span className="font-black text-[10px] sm:text-xs uppercase tracking-wider whitespace-nowrap">
               Ô {formattedHutNumber}
             </span>
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex flex-col justify-center">
             <div className="flex items-center gap-1.5">
               <User size={12} className="text-muted-foreground shrink-0" />
               <p className="font-black text-xs sm:text-sm uppercase tracking-tight text-foreground/90 truncate">
                 {session.customer_name || "Khách lẻ"}
               </p>
             </div>
-            {session.phone && (
-              <p className="text-[10px] font-bold text-muted-foreground truncate mt-0.5">
-                {session.phone}
-              </p>
-            )}
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                <Phone size={10} className="shrink-0" />
+                <span className="truncate">{session.phone || "Chưa có SĐT"}</span>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
+                <Clock size={10} className="shrink-0" />
+                <span>Vào: {isMounted ? new Date(session.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "--:--"}</span>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Right Section: Timer, Status, Price & Chevron */}
-        <div className="flex items-center gap-6 shrink-0">
+        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
           {/* Realtime Countdown Timer */}
           <div className="flex flex-col items-end">
             <CountdownTimer 
@@ -189,7 +195,9 @@ export function SessionRow({ session }: SessionRowProps) {
           </div>
 
           {/* Status Badge */}
-          <SessionStatusBadge status={isWarning ? "WARNING" : session.status} />
+          <div className="hidden sm:flex">
+            <SessionStatusBadge status={isWarning ? "WARNING" : session.status} />
+          </div>
 
           {/* Simple Chevron Click Indicator */}
           <ChevronRight size={18} className="text-muted-foreground/60 group-hover:text-primary transition-colors hidden sm:block" />
@@ -338,7 +346,7 @@ export function SessionRow({ session }: SessionRowProps) {
           sessionId: session.id,
           hutNumber: formattedHutNumber,
           customerName: session.customer_name || "Khách lẻ",
-          sessionFee: session.total_amount,
+          sessionFee: Number(session.sessionCost || 0),
           products: (session.session_products || []).map((p: any) => ({
             id: p.id,
             name: p.name || "Sản phẩm",
@@ -347,8 +355,8 @@ export function SessionRow({ session }: SessionRowProps) {
           })),
           buybackDeduction: (session.fish_buybacks || []).reduce((sum, b) => sum + Number(b.total_price), 0),
           prepaidAmount: Number(session.prepaidAmount || 0),
-          subtotal: session.total_amount,
-          totalAmount: session.total_amount
+          subtotal: Number(session.sessionCost || 0) + (session.session_products || []).reduce((sum, p) => sum + Number((p.price || p.price_at_time || 0) * p.quantity), 0),
+          totalAmount: Number(session.total_amount || 0)
         }}
       />
     </>

@@ -109,7 +109,8 @@ export async function getLakeOwners() {
               totalSessionsCount,
               revenueAgg,
               recentSessions,
-              recentTransactions
+              recentTransactions,
+              recentActivityLogs
             ] = await Promise.all([
               prisma.fishingSession.count({
                 where: {
@@ -150,6 +151,23 @@ export async function getLakeOwners() {
                 orderBy: {
                   createdAt: "desc"
                 }
+              }),
+              prisma.activityLog.findMany({
+                where: {
+                  OR: [
+                    { lakeId: lake.id },
+                    { userId: owner.id }
+                  ]
+                },
+                take: 10,
+                orderBy: {
+                  createdAt: "desc"
+                },
+                include: {
+                  user: {
+                    select: { name: true, email: true }
+                  }
+                }
               })
             ]);
 
@@ -178,6 +196,14 @@ export async function getLakeOwners() {
                 category: t.category,
                 description: t.description || "Giao dịch hệ thống",
                 createdAt: t.createdAt.toISOString()
+              })),
+              recentActivityLogs: recentActivityLogs.map(log => ({
+                id: log.id,
+                action: log.action,
+                details: log.details,
+                createdAt: log.createdAt.toISOString(),
+                userName: log.user?.name || "Hệ thống",
+                userEmail: log.user?.email || ""
               }))
             };
           })
@@ -207,7 +233,21 @@ export async function updateLakeDetails(data: { name: string; address: string; p
   const session = await auth();
   if (!session) return { success: false, error: "Unauthorized" };
   
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN || session.user.email === "huant5300@gmail.com";
+  if (session.user.role !== UserRole.OWNER && !isSuperAdmin) {
+    return { success: false, error: "Bạn không có quyền thực hiện hành động này" };
+  }
+
   const lakeId = await getActiveLakeId();
+  
+  const phoneTrimmed = data.phone?.trim();
+  if (!phoneTrimmed) {
+    return { success: false, error: "Số điện thoại liên hệ là bắt buộc." };
+  }
+  const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
+  if (!vnPhoneRegex.test(phoneTrimmed)) {
+    return { success: false, error: "Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (ví dụ: 0912345678)." };
+  }
   
   try {
     const updated = await prisma.fishingLake.update({
@@ -215,14 +255,14 @@ export async function updateLakeDetails(data: { name: string; address: string; p
       data: {
         name: data.name,
         address: data.address,
-        phone: data.phone,
+        phone: phoneTrimmed,
       }
     });
 
     // Sync user phone number too
     await prisma.user.update({
       where: { id: session.user.id },
-      data: { phone: data.phone }
+      data: { phone: phoneTrimmed }
     });
 
     // Record activity log

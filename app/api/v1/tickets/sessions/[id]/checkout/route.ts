@@ -53,21 +53,8 @@ export async function POST(
       let sessionCost = 0;
       if (fishingSession.customPrice) {
         sessionCost = Number(fishingSession.customPrice);
-        const customMins = (fishingSession.customDuration || 0) * 60;
-        if (customMins > 0 && totalMinutes > customMins) {
-          const overtimeMinutes = totalMinutes - customMins;
-          const overtimeHours = Math.ceil(overtimeMinutes / 60);
-          sessionCost += overtimeHours * Number(fishingSession.hourlyRate);
-        }
       } else if (fishingSession.FishingPackage) {
         sessionCost = Number(fishingSession.FishingPackage.price);
-        // Handle overtime if any (simplified: charge per hour extra)
-        const packageMinutes = fishingSession.FishingPackage.durationHours * 60;
-        if (totalMinutes > packageMinutes) {
-          const overtimeMinutes = totalMinutes - packageMinutes;
-          const overtimeHours = Math.ceil(overtimeMinutes / 60);
-          sessionCost += overtimeHours * Number(fishingSession.hourlyRate);
-        }
       } else {
         // Hourly rate
         const totalHours = Math.ceil(totalMinutes / 60);

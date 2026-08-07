@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Clock } from "lucide-react";
 import { cn } from "@/utils/utils";
 
@@ -20,6 +20,35 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [timerColor, setTimerColor] = useState<TimerColor>("green");
   const [currentEndTime, setCurrentEndTime] = useState(endTime);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Keep references to callbacks to avoid triggering recalculation/re-render loops
+  const onWarningRef = useRef(onWarning);
+  const onExpireRef = useRef(onExpire);
+
+  // Track if callbacks have already been fired to prevent duplicates/loops
+  const hasExpiredRef = useRef(false);
+  const hasWarnedRef = useRef(false);
+
+  // Update refs when props change
+  useEffect(() => {
+    onWarningRef.current = onWarning;
+  }, [onWarning]);
+
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Reset flags when the session ends, or when endTime changes (e.g. extension)
+  useEffect(() => {
+    setCurrentEndTime(endTime);
+    hasExpiredRef.current = false;
+    hasWarnedRef.current = false;
+  }, [endTime, sessionId]);
 
   const calculateTime = useCallback(() => {
     const now = new Date().getTime();
@@ -29,7 +58,10 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
     if (diff <= 0) {
       setTimeLeft("00:00:00");
       setTimerColor("red");
-      onExpire?.();
+      if (!hasExpiredRef.current) {
+        hasExpiredRef.current = true;
+        onExpireRef.current?.();
+      }
       return;
     }
 
@@ -41,8 +73,9 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
     // 3-tier color system
     if (totalMinutes < 15) {
       setTimerColor("red");
-      if (timerColor !== "red") {
-        onWarning?.();
+      if (!hasWarnedRef.current) {
+        hasWarnedRef.current = true;
+        onWarningRef.current?.();
       }
     } else if (totalMinutes < 60) {
       setTimerColor("orange");
@@ -53,12 +86,7 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
     setTimeLeft(
       `${hours.toString().padStart(2, "0")}:${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`
     );
-  }, [currentEndTime, onExpire, onWarning, timerColor]);
-
-  // Update currentEndTime when prop changes (from realtime updates)
-  useEffect(() => {
-    setCurrentEndTime(endTime);
-  }, [endTime]);
+  }, [currentEndTime]);
 
   useEffect(() => {
     calculateTime();
@@ -91,7 +119,7 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
   return (
     <div className="flex flex-col items-end gap-1">
       {/* Start/End time labels */}
-      {showTimes && (
+      {showTimes && isMounted && (
         <div className="flex items-center gap-2 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
           <span>{formatTime(startTime)}</span>
           <span>→</span>

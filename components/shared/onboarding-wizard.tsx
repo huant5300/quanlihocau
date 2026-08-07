@@ -31,21 +31,16 @@ export function OnboardingWizard() {
           const activeLake = result.data.find((l: any) => l.id === currentLakeId) || result.data[0];
           setLakeData(activeLake);
           
-          setLakeName(activeLake.name || "");
-          setAddress(activeLake.address || "");
-          setPhoneNumber(activeLake.phone || "");
+          const isDefaultNameVal = !activeLake.name || activeLake.name.startsWith("Hồ câu ") || activeLake.name === "Hồ câu giải trí" || activeLake.name === "Hồ Câu Đại Nam";
+          const isDefaultAddressVal = !activeLake.address || activeLake.address === "Chưa cập nhật" || activeLake.address === "Bình Dương, Việt Nam";
+          const isDefaultPhoneVal = !activeLake.phone || activeLake.phone === "Chưa cập nhật";
 
-          const isDefaultName = 
-            activeLake.name === "Hồ câu giải trí" || 
-            activeLake.name === "Hồ Câu Đại Nam" ||
-            !activeLake.name;
-          const isDefaultAddress = 
-            !activeLake.address || 
-            activeLake.address === "Bình Dương, Việt Nam";
-          const isDefaultPhone = !activeLake.phone;
+          setLakeName(isDefaultNameVal ? "" : (activeLake.name || ""));
+          setAddress(isDefaultAddressVal ? "" : (activeLake.address || ""));
+          setPhoneNumber(isDefaultPhoneVal ? "" : (activeLake.phone || ""));
 
           // If it's first login and lake is using defaults, enforce onboarding setup popup
-          if (isDefaultName || isDefaultAddress || isDefaultPhone) {
+          if (isDefaultNameVal || isDefaultAddressVal || isDefaultPhoneVal) {
             setShowSetup(true);
           } else {
             // Check if user has completed tour guide
@@ -67,6 +62,13 @@ export function OnboardingWizard() {
     e.preventDefault();
     if (!lakeName.trim() || !address.trim() || !phoneNumber.trim()) {
       toast.error("Vui lòng điền đầy đủ các thông tin bắt buộc!");
+      return;
+    }
+
+    const phoneTrimmed = phoneNumber.trim();
+    const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
+    if (!vnPhoneRegex.test(phoneTrimmed)) {
+      toast.error("Số điện thoại không hợp lệ. Vui lòng nhập số điện thoại Việt Nam gồm 10 chữ số (ví dụ: 0912345678)!");
       return;
     }
 

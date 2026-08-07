@@ -77,19 +77,35 @@
   }
 
   /* Mobile Optimizations */
-  /* Mobile Optimizations */
   @media (max-width: 640px) {
     html {
       font-size: 16px;
     }
     .glass-card {
-      @apply rounded-[1.5rem] p-4 bg-card dark:bg-zinc-900 backdrop-blur-none border-border/80;
+      @apply rounded-[1.5rem] p-4 bg-card dark:bg-zinc-900 border-border/80;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
     .glass {
-      @apply bg-background dark:bg-background backdrop-blur-none border-border/80;
+      @apply bg-background dark:bg-background border-border/80;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      box-shadow: none !important;
     }
     button, a {
       min-height: 48px;
+    }
+
+    /* Disable expensive GPU filters globally on mobile screens to maximize FPS on low-spec phones */
+    .glass, .glass-card, .backdrop-blur-md, .backdrop-blur-xl, .backdrop-blur-lg, [class*="backdrop-blur-"] {
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Simplify shadows globally on mobile to prevent paint delay / render lag */
+    .shadow-2xl, .shadow-xl, .shadow-lg, .shadow-md, .shadow, [class*="shadow-"] {
+      box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
     }
   }
 
@@ -99,12 +115,12 @@
   }
 
   /* Target transitions specifically to interactive components to avoid layout rendering bottleneck */
-  button, a, input, select, textarea, .glass-card, .motion-div, .transition-element {
-    @apply transition-all duration-200 ease-in-out;
+  button, a, input, select, textarea, .transition-element {
+    @apply transition-colors duration-150 ease-in-out;
   }
 
   button:active {
-    @apply scale-[0.97] opacity-80 duration-75;
+    @apply scale-[0.98] opacity-90 duration-75;
   }
 
   /* Contrast Notifications */
@@ -172,4 +188,21 @@
   .animate-attention-pulse {
     animation: attention-pulse 1.8s infinite ease-in-out;
   }
+
+  /* Thermal Printer Print Styles */
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .thermal-receipt, .thermal-receipt * {
+      visibility: visible;
+    }
+    .thermal-receipt {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100%;
+    }
+  }
 }
+

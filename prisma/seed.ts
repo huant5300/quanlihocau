@@ -1,10 +1,24 @@
+import "dotenv/config";
 import { PrismaClient, UserRole, AreaStatus, StockType } from "@prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import { hash } from "bcryptjs";
 
-const prisma = new PrismaClient();
+const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
+
 
 async function main() {
   // 1. Clear existing data
+  await prisma.activityLog.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.shiftClose.deleteMany();
+  await prisma.shiftSession.deleteMany();
+  await prisma.attendance.deleteMany();
+  await prisma.fishStock.deleteMany();
+  await prisma.expense.deleteMany();
+  await prisma.transaction.deleteMany();
   await prisma.payment.deleteMany();
   await prisma.invoiceItem.deleteMany();
   await prisma.invoice.deleteMany();
@@ -19,6 +33,7 @@ async function main() {
   await prisma.customer.deleteMany();
   await prisma.fishingLake.deleteMany();
   await prisma.user.deleteMany();
+
 
   // 2. Create default users
   const superAdminPassword = await hash("admin123", 12);

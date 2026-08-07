@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { 
   Users, 
+  User,
   Mail, 
   Phone, 
   MapPin, 
@@ -18,7 +19,12 @@ import {
   Building2,
   ChevronRight,
   Fish,
-  Grid
+  Grid,
+  ScrollText,
+  Ticket,
+  ShoppingBag,
+  CreditCard,
+  FileText
 } from "lucide-react";
 import { getLakeOwners } from "@/actions/lake-actions";
 import { cn } from "@/utils/utils";
@@ -28,6 +34,28 @@ import { redirect } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+
+const actionLabels: Record<string, { label: string; icon: any; color: string }> = {
+  START_SESSION: { label: "Tạo vé câu", icon: Ticket, color: "text-emerald-500 bg-emerald-500/10" },
+  COMPLETE_SESSION: { label: "Hoàn tất phiên", icon: Ticket, color: "text-blue-500 bg-blue-500/10" },
+  CANCEL_SESSION: { label: "Hủy phiên", icon: Ticket, color: "text-red-500 bg-red-500/10" },
+  EXTEND_SESSION: { label: "Gia hạn giờ", icon: Clock, color: "text-purple-500 bg-purple-500/10" },
+  ADD_PRODUCT: { label: "Thêm sản phẩm", icon: ShoppingBag, color: "text-orange-500 bg-orange-500/10" },
+  FISH_BUYBACK: { label: "Thu cá", icon: Fish, color: "text-cyan-500 bg-cyan-500/10" },
+  FISH_STOCK_ADD: { label: "Nhập cá", icon: Fish, color: "text-emerald-500 bg-emerald-500/10" },
+  FISH_STOCK_DEAD: { label: "Cá chết", icon: Fish, color: "text-red-500 bg-red-500/10" },
+  FISH_STOCK_ADD_MORE: { label: "Thả thêm cá", icon: Fish, color: "text-green-500 bg-green-500/10" },
+  CHECKOUT: { label: "Thanh toán", icon: CreditCard, color: "text-green-500 bg-green-500/10" },
+  PAYMENT: { label: "Thu tiền", icon: CreditCard, color: "text-emerald-500 bg-emerald-500/10" },
+  REFUND: { label: "Hoàn tiền", icon: CreditCard, color: "text-red-500 bg-red-500/10" },
+  CREATE_CUSTOMER: { label: "Tạo khách", icon: Users, color: "text-blue-500 bg-blue-500/10" },
+  UPDATE_CUSTOMER: { label: "Sửa khách", icon: Users, color: "text-amber-500 bg-amber-500/10" },
+  DELETE_CUSTOMER: { label: "Xóa khách", icon: Users, color: "text-red-500 bg-red-500/10" },
+  SHIFT_CLOSE: { label: "Kết ca", icon: FileText, color: "text-violet-500 bg-violet-500/10" },
+  SHIFT_CLOSE_FLAGGED: { label: "Kết ca - Lệch", icon: FileText, color: "text-red-500 bg-red-500/10" },
+  LOGIN: { label: "Đăng nhập", icon: User, color: "text-blue-400 bg-blue-500/10" },
+  UPDATE_LAKE: { label: "Thiết lập hồ", icon: Building2, color: "text-amber-500 bg-amber-500/10" },
+};
 
 interface LakeOwner {
   id: string;
@@ -62,6 +90,14 @@ interface LakeOwner {
       category: string | null;
       description: string;
       createdAt: string;
+    }[];
+    recentActivityLogs: {
+      id: string;
+      action: string;
+      details: any;
+      createdAt: string;
+      userName: string;
+      userEmail: string;
     }[];
   }[];
 }
@@ -515,82 +551,139 @@ function OwnerDetailModal({ owner, onClose }: OwnerDetailModalProps) {
                     </div>
                   </div>
 
-                  {/* Sessions & Transactions Detail Rows */}
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    {/* Recent Sessions (8 cols) */}
-                    <div className="lg:col-span-8 space-y-4">
-                      <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
-                        <Clock size={16} className="text-primary" />
-                        Lịch sử ca câu gần đây
-                      </h3>
+                  {/* Recent Sessions (Full width) */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+                      <Clock size={16} className="text-primary" />
+                      Lịch sử ca câu gần đây
+                    </h3>
 
-                      <div className="bg-card/20 border border-white/5 rounded-3xl overflow-hidden">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-left text-xs border-collapse">
-                            <thead>
-                              <tr className="border-b border-white/5 text-muted-foreground bg-white/[0.02] font-black uppercase tracking-widest text-[9px]">
-                                <th className="p-4">Khách hàng</th>
-                                <th className="p-4">Ô câu</th>
-                                <th className="p-4">Thời gian mở</th>
-                                <th className="p-4">Trạng thái</th>
-                                <th className="p-4 text-right">Tạm tính</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5 font-medium">
-                              {selectedLake.recentSessions.length > 0 ? (
-                                selectedLake.recentSessions.map((session) => (
-                                  <tr key={session.id} className="hover:bg-white/[0.01] transition-colors">
-                                    <td className="p-4 font-bold text-white">{session.customerName}</td>
-                                    <td className="p-4">
-                                      <span className="bg-primary/10 text-primary border border-primary/15 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
-                                        {session.areaName}
-                                      </span>
-                                    </td>
-                                    <td className="p-4 text-muted-foreground">
-                                      {format(new Date(session.startTime), "HH:mm - dd/MM")}
-                                    </td>
-                                    <td className="p-4">
-                                      <span className={cn(
-                                        "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
-                                        session.status === "ACTIVE" 
-                                          ? "bg-blue-500/10 text-blue-500 border-blue-500/20" 
-                                          : session.status === "COMPLETED"
-                                          ? "bg-green-500/10 text-green-500 border-green-500/20"
-                                          : "bg-red-500/10 text-red-500 border-red-500/20"
-                                      )}>
-                                        {session.status === "ACTIVE" 
-                                          ? "Đang câu" 
-                                          : session.status === "COMPLETED" 
-                                          ? "Hoàn thành" 
-                                          : session.status}
-                                      </span>
-                                    </td>
-                                    <td className="p-4 text-right text-white font-black">
-                                      {session.amount.toLocaleString()}đ
-                                    </td>
-                                  </tr>
-                                ))
-                              ) : (
-                                <tr>
-                                  <td colSpan={5} className="p-8 text-center text-muted-foreground italic text-xs">
-                                    Chưa ghi nhận ca câu nào ở hồ này.
+                    <div className="bg-card/20 border border-white/5 rounded-3xl overflow-hidden">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-left text-xs border-collapse">
+                          <thead>
+                            <tr className="border-b border-white/5 text-muted-foreground bg-white/[0.02] font-black uppercase tracking-widest text-[9px]">
+                              <th className="p-4">Khách hàng</th>
+                              <th className="p-4">Ô câu</th>
+                              <th className="p-4">Thời gian mở</th>
+                              <th className="p-4">Trạng thái</th>
+                              <th className="p-4 text-right">Tạm tính</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-white/5 font-medium">
+                            {selectedLake.recentSessions.length > 0 ? (
+                              selectedLake.recentSessions.map((session) => (
+                                <tr key={session.id} className="hover:bg-white/[0.01] transition-colors">
+                                  <td className="p-4 font-bold text-white">{session.customerName}</td>
+                                  <td className="p-4">
+                                    <span className="bg-primary/10 text-primary border border-primary/15 px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider">
+                                      {session.areaName}
+                                    </span>
+                                  </td>
+                                  <td className="p-4 text-muted-foreground">
+                                    {format(new Date(session.startTime), "HH:mm - dd/MM")}
+                                  </td>
+                                  <td className="p-4">
+                                    <span className={cn(
+                                      "text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border",
+                                      session.status === "ACTIVE" 
+                                        ? "bg-blue-500/10 text-blue-500 border-blue-500/20" 
+                                        : session.status === "COMPLETED"
+                                        ? "bg-green-500/10 text-green-500 border-green-500/20"
+                                        : "bg-red-500/10 text-red-500 border-red-500/20"
+                                    )}>
+                                      {session.status === "ACTIVE" 
+                                        ? "Đang câu" 
+                                        : session.status === "COMPLETED" 
+                                        ? "Hoàn thành" 
+                                        : session.status}
+                                    </span>
+                                  </td>
+                                  <td className="p-4 text-right text-white font-black">
+                                    {session.amount.toLocaleString()}đ
                                   </td>
                                 </tr>
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan={5} className="p-8 text-center text-muted-foreground italic text-xs">
+                                  Chưa ghi nhận ca câu nào ở hồ này.
+                                </td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Grid: Activity Log (8 cols) & Recent Transactions (4 cols) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    {/* Activity Logs */}
+                    <div className="lg:col-span-8 space-y-4">
+                      <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
+                        <ScrollText size={16} className="text-primary" />
+                        Nhật ký hoạt động (Mới nhất)
+                      </h3>
+
+                      <div className="bg-card/20 border border-white/5 rounded-3xl overflow-hidden max-h-[350px] overflow-y-auto custom-scrollbar">
+                        {selectedLake.recentActivityLogs && selectedLake.recentActivityLogs.length > 0 ? (
+                          <div className="divide-y divide-white/5">
+                            {selectedLake.recentActivityLogs.map((log: any) => {
+                              const actionInfo = actionLabels[log.action] || {
+                                label: log.action,
+                                icon: ScrollText,
+                                color: "text-slate-400 bg-slate-500/10"
+                              };
+                              const IconComp = actionInfo.icon;
+                              const colorParts = actionInfo.color.split(" ");
+
+                              return (
+                                <div key={log.id} className="flex items-center gap-3.5 p-4 hover:bg-white/[0.01] transition-colors text-xs">
+                                  <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center shrink-0", colorParts[1])}>
+                                    <IconComp size={16} className={colorParts[0]} />
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-2 flex-wrap">
+                                      <span className={cn("font-black uppercase tracking-wider text-[10px]", colorParts[0])}>
+                                        {actionInfo.label}
+                                      </span>
+                                      <span className="text-[10px] font-bold text-slate-400">
+                                        bởi {log.userName}
+                                      </span>
+                                    </div>
+                                    {log.details && (
+                                      <p className="text-[10px] text-muted-foreground mt-0.5 truncate max-w-[400px]">
+                                        {typeof log.details === "string" ? log.details : JSON.stringify(log.details)}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="text-right shrink-0 font-bold text-muted-foreground text-[10px]">
+                                    <p>{format(new Date(log.createdAt), "HH:mm")}</p>
+                                    <p className="text-[8px] text-slate-500">{format(new Date(log.createdAt), "dd/MM/yyyy")}</p>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        ) : (
+                          <div className="p-8 text-center text-muted-foreground italic text-xs">
+                            Chưa ghi nhận hoạt động nào của chủ hồ.
+                          </div>
+                        )}
                       </div>
                     </div>
 
-                    {/* Recent Transactions (4 cols) */}
+                    {/* Recent Transactions */}
                     <div className="lg:col-span-4 space-y-4">
                       <h3 className="text-sm font-black uppercase tracking-wider text-white flex items-center gap-2">
                         <TrendingUp size={16} className="text-primary" />
                         Giao dịch phát sinh
                       </h3>
 
-                      <div className="space-y-3">
+                      <div className="space-y-3 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
                         {selectedLake.recentTransactions.length > 0 ? (
                           selectedLake.recentTransactions.map((tx) => (
                             <div 

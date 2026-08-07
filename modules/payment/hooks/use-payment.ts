@@ -39,6 +39,7 @@ export function usePayment(totalAmount: number, sessionId: string) {
       });
       setIsSuccess(true);
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     } catch (error: any) {
       toast.error(error.message || "Thanh toán thất bại");

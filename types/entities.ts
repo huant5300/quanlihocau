@@ -135,6 +135,7 @@ export interface ActiveSession extends Session {
   phone?: string;
   total_amount: number;
   prepaidAmount?: number;
+  sessionCost?: number;
   session_products?: Array<{
     id: string;
     name: string;

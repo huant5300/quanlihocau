@@ -36,10 +36,11 @@ export async function GET(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const session_auth = await auth();
-    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+    const isSuperAdmin = session_auth?.user?.role === "SUPER_ADMIN" || session_auth?.user?.email === "huant5300@gmail.com";
+    const isOwner = session_auth?.user?.role === "OWNER";
 
-    if (!session_auth && !isOwner) {
-      return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
+    if (!session_auth || (!isOwner && !isSuperAdmin)) {
+      return NextResponse.json({ success: false, message: "Bạn không có quyền thực hiện hành động này" }, { status: 403 });
     }
 
     const lakeId = await getActiveLakeId();

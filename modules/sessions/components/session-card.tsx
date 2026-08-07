@@ -31,7 +31,12 @@ export function SessionCard({ session }: SessionCardProps) {
   const [isPending, startTransition] = useTransition();
   const [isWarning, setIsWarning] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
   const { addNotification, removeNotificationByHut } = useUIStore();
+
+  React.useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const formattedHutNumber = (session.hut_number || "")
     .replace("Chòi ", "")
@@ -43,40 +48,6 @@ export function SessionCard({ session }: SessionCardProps) {
     setIsPaymentOpen(true);
     removeNotificationByHut(formattedHutNumber, "warning");
     removeNotificationByHut(formattedHutNumber, "expired");
-  };
-
-  const handleAutoCheckout = async () => {
-    if (isPending) return;
-    
-    startTransition(async () => {
-      try {
-        const response = await fetch(`/api/v1/tickets/sessions/${session.id}/checkout`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            paymentMethod: "CASH",
-            notes: "Tự động thanh toán khi hết giờ"
-          })
-        });
-        const data = await response.json();
-        if (data.id) {
-          // Trigger expired notification and clear warnings
-          addNotification("expired", formattedHutNumber, `Ô số ${formattedHutNumber} đã tự động thanh toán!`);
-          removeNotificationByHut(formattedHutNumber, "warning");
-          
-          toast.success(`HỆ THỐNG: Ô số ${formattedHutNumber} đã hết giờ và tự động thanh toán thành công!`, {
-            duration: 10000,
-          });
-          
-          // Triggers refetch/refresh to sync data
-          window.location.reload();
-        }
-      } catch (err) {
-        console.error("Auto checkout error:", err);
-      }
-    });
   };
 
   const onWarning = () => {
@@ -116,13 +87,43 @@ export function SessionCard({ session }: SessionCardProps) {
   };
 
   const onExpire = () => {
-    handleAutoCheckout();
+    addNotification("expired", formattedHutNumber, `Ô số ${formattedHutNumber} đã hết giờ câu!`);
+    removeNotificationByHut(formattedHutNumber, "warning");
+    
+    try {
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioContext) {
+        const ctx = new AudioContext();
+        const playNote = (freq: number, start: number, duration: number) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = "sawtooth";
+          osc.frequency.setValueAtTime(freq, start);
+          gain.gain.setValueAtTime(0, start);
+          gain.gain.linearRampToValueAtTime(0.1, start + 0.05);
+          gain.gain.exponentialRampToValueAtTime(0.0001, start + duration);
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start(start);
+          osc.stop(start + duration);
+        };
+        const now = ctx.currentTime;
+        playNote(440, now, 0.4);
+        playNote(440, now + 0.5, 0.4);
+      }
+    } catch (e) {
+      console.log("Audio play blocked or failed:", e);
+    }
+
+    toast.error(`HẾT GIỜ: Ô số ${formattedHutNumber} đã hết thời gian câu! Vui lòng chuẩn bị thanh toán.`, {
+      duration: 15000,
+      position: "top-center",
+    });
   };
 
   return (
     <>
       <motion.div
-        layout
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ y: -5 }}
@@ -162,7 +163,13 @@ export function SessionCard({ session }: SessionCardProps) {
               </div>
               <div className="flex items-center gap-2 mt-1">
                 <Phone size={12} className="text-muted-foreground" />
-                <p className="text-[11px] font-bold text-muted-foreground">{session.phone || "N/A"}</p>
+                <p className="text-[11px] font-bold text-muted-foreground">{session.phone || "Chưa có SĐT"}</p>
+              </div>
+              <div className="flex items-center gap-2 mt-1">
+                <Clock size={12} className="text-muted-foreground" />
+                <p className="text-[11px] font-bold text-muted-foreground">
+                  Vào: {isMounted ? new Date(session.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "--:--"}
+                </p>
               </div>
             </div>
           </div>
@@ -247,7 +254,7 @@ export function SessionCard({ session }: SessionCardProps) {
           sessionId: session.id,
           hutNumber: formattedHutNumber,
           customerName: session.customer_name || "Khách lẻ",
-          sessionFee: session.total_amount,
+          sessionFee: Number(session.sessionCost || 0),
           products: (session.session_products || []).map((p: any) => ({
             id: p.id,
             name: p.name || "Sản phẩm",
@@ -256,8 +263,8 @@ export function SessionCard({ session }: SessionCardProps) {
           })),
           buybackDeduction: (session.fish_buybacks || []).reduce((sum, b) => sum + Number(b.total_price), 0),
           prepaidAmount: Number(session.prepaidAmount || 0),
-          subtotal: session.total_amount,
-          totalAmount: session.total_amount
+          subtotal: Number(session.sessionCost || 0) + (session.session_products || []).reduce((sum, p) => sum + Number((p.price || p.price_at_time || 0) * p.quantity), 0),
+          totalAmount: Number(session.total_amount || 0)
         }}
       />
     </>

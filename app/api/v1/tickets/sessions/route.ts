@@ -50,19 +50,8 @@ export async function GET(req: NextRequest) {
 
       if (session.customPrice) {
         sessionCost = Number(session.customPrice);
-        const customMins = (session.customDuration || 0) * 60;
-        if (customMins > 0 && diffMins > customMins) {
-          const overtimeHours = Math.ceil((diffMins - customMins) / 60);
-          sessionCost += overtimeHours * Number(session.hourlyRate);
-        }
       } else if (session.FishingPackage) {
         sessionCost = Number(session.FishingPackage.price);
-        // Basic overtime logic: if over package duration, add hourly rate for extra hours
-        const packageMins = session.FishingPackage.durationHours * 60;
-        if (diffMins > packageMins) {
-          const overtimeHours = Math.ceil((diffMins - packageMins) / 60);
-          sessionCost += overtimeHours * Number(session.hourlyRate);
-        }
       } else {
         const hours = Math.ceil(diffMins / 60) || 1;
         sessionCost = hours * Number(session.hourlyRate);
@@ -75,6 +64,7 @@ export async function GET(req: NextRequest) {
 
       return {
         ...session,
+        sessionCost,
         sessionAmount: currentTotal
       };
     });

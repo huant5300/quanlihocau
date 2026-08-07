@@ -75,7 +75,10 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    if (!session) {
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    const isOwner = session?.user?.role === "OWNER";
+
+    if (!session || (!isOwner && !isSuperAdmin)) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 

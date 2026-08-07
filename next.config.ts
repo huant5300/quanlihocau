@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  compress: true,
   images: {
     remotePatterns: [
       {
@@ -21,14 +21,23 @@ const nextConfig: NextConfig = {
   compiler: {
     removeConsole: process.env.NODE_ENV === "production",
   },
-  // Cho phép HMR hoạt động ổn định trên mạng LAN
   allowedDevOrigins: ["*", "localhost", "localhost:3000", "local-origin.dev", "*.local-origin.dev"],
   experimental: {
+    optimizePackageImports: [
+      "lucide-react",
+      "@radix-ui/react-dialog",
+      "@radix-ui/react-dropdown-menu",
+      "@radix-ui/react-select",
+      "@radix-ui/react-popover",
+      "@radix-ui/react-avatar",
+      "date-fns",
+      "recharts",
+      "framer-motion"
+    ],
     serverActions: {
       allowedOrigins: ["*.vercel.app", "localhost:3000"],
     },
   },
-  // Đảm bảo không bỏ qua lỗi để code luôn sạch
   typescript: {
     ignoreBuildErrors: false,
   },

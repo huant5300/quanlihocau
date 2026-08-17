@@ -9,29 +9,27 @@ datasource db {
 model User {
   id            String         @id @default(cuid())
   name          String?
-  email         String?        @unique
   username      String?        @unique
+  email         String?        @unique
   phone         String?
   emailVerified DateTime?
   password      String?
   image         String?
   role          UserRole       @default(STAFF)
   isActive      Boolean        @default(true)
-  appUsageTime  Int            @default(0)
+  lakeId        String?
+  appUsageTime  Int?           @default(0)
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   accounts      Account[]
   activityLogs  ActivityLog[]
   attendances   Attendance[]
   managedLake   FishingLake[]  @relation("LakeManager")
+  lake          FishingLake?   @relation("LakeUsers", fields: [lakeId], references: [id])
   notifications Notification[]
   sessions      Session[]
-  shiftCloses   ShiftClose[]   @relation("ShiftCloseUser")
-  shiftSessions ShiftSession[] @relation("UserShiftSession")
-  lakeId        String?
-  lake          FishingLake?   @relation("LakeStaff", fields: [lakeId], references: [id])
-
-  @@index([lakeId])
+  shiftSessions ShiftSession[]
+  shiftCloses   ShiftClose[]
 }
 
 model Account {
@@ -50,7 +48,6 @@ model Account {
   user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@index([userId])
 }
 
 model Session {
@@ -59,8 +56,6 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([userId])
 }
 
 model Customer {
@@ -79,35 +74,31 @@ model Customer {
   lake        FishingLake?     @relation(fields: [lakeId], references: [id])
   sessions    FishingSession[]
   invoices    Invoice[]
-
-  @@index([lakeId])
 }
 
 model FishingLake {
-  id          String           @id @default(cuid())
-  name        String
-  description String?
-  address     String?
-  phone       String?
-  managerId   String?
-  totalSpots  Int              @default(10)
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  customers    Customer[]
-  areas        FishingArea[]
-  manager      User?            @relation("LakeManager", fields: [managerId], references: [id])
-  sessions     FishingSession[]
-  products     Product[]
-  invoices     Invoice[]
-  expenses     Expense[]
-  transactions Transaction[]
-  staff        User[]           @relation("LakeStaff")
-  fishStocks   FishStock[]
-  shiftCloses  ShiftClose[]
-  shiftSessions ShiftSession[] @relation("LakeShiftSession")
-  activityLogs ActivityLog[]
-
-  @@index([managerId])
+  id            String           @id @default(cuid())
+  name          String
+  description   String?
+  address       String?
+  phone         String?
+  managerId     String?
+  totalSpots    Int              @default(10)
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+  customers     Customer[]
+  areas         FishingArea[]
+  manager       User?            @relation("LakeManager", fields: [managerId], references: [id])
+  users         User[]           @relation("LakeUsers")
+  sessions      FishingSession[]
+  products      Product[]
+  invoices      Invoice[]
+  expenses      Expense[]
+  transactions  Transaction[]
+  activityLogs  ActivityLog[]
+  fishStocks    FishStock[]
+  shiftSessions ShiftSession[]
+  shiftCloses   ShiftClose[]
 }
 
 model FishingArea {
@@ -122,8 +113,6 @@ model FishingArea {
   updatedAt   DateTime         @updatedAt
   lake        FishingLake      @relation(fields: [lakeId], references: [id], onDelete: Cascade)
   sessions    FishingSession[]
-
-  @@index([lakeId])
 }
 
 model FishingSession {
@@ -142,21 +131,12 @@ model FishingSession {
   updatedAt      DateTime        @updatedAt
   packageId      String?
   prepaidAmount  Decimal         @default(0) @db.Decimal(12, 2)
-  customPrice    Decimal?        @db.Decimal(12, 2)
-  customDuration Float?
   fishCatches    FishCatch[]
   area           FishingArea     @relation(fields: [areaId], references: [id])
   customer       Customer?       @relation(fields: [customerId], references: [id])
   lake           FishingLake     @relation(fields: [lakeId], references: [id])
   FishingPackage FishingPackage? @relation(fields: [packageId], references: [id])
   invoices       Invoice[]
-
-  @@index([lakeId])
-  @@index([areaId])
-  @@index([customerId])
-  @@index([packageId])
-  @@index([status])
-  @@index([lakeId, status])
 }
 
 model FishType {
@@ -182,10 +162,26 @@ model FishCatch {
   updatedAt    DateTime       @updatedAt
   fishType     FishType       @relation(fields: [fishTypeId], references: [id])
   session      FishingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+}
 
-  @@index([sessionId])
-  @@index([fishTypeId])
-  @@index([createdAt])
+model FishStock {
+  id              String       @id @default(cuid())
+  lakeId          String
+  fishTypeId      String
+  initialWeight   Decimal      @db.Decimal(10, 2)
+  initialQuantity Int
+  currentWeight   Decimal      @db.Decimal(10, 2)
+  currentQuantity Int
+  deadCount       Int          @default(0)
+  addedCount      Int          @default(0)
+  addedWeight     Decimal      @default(0) @db.Decimal(10, 2)
+  notes           String?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  lake            FishingLake  @relation(fields: [lakeId], references: [id])
+  fishType        FishType     @relation(fields: [fishTypeId], references: [id])
+
+  @@unique([lakeId, fishTypeId])
 }
 
 model ProductCategory {
@@ -217,9 +213,6 @@ model Product {
   invoiceItems InvoiceItem[]
   category     ProductCategory        @relation(fields: [categoryId], references: [id])
   lake         FishingLake?           @relation(fields: [lakeId], references: [id])
-
-  @@index([lakeId])
-  @@index([categoryId])
 }
 
 model InventoryTransaction {
@@ -231,8 +224,6 @@ model InventoryTransaction {
   performedBy String?
   createdAt   DateTime  @default(now())
   product     Product   @relation(fields: [productId], references: [id])
-
-  @@index([productId])
 }
 
 model Invoice {
@@ -253,11 +244,6 @@ model Invoice {
   session       FishingSession? @relation(fields: [sessionId], references: [id])
   items         InvoiceItem[]
   payments      Payment[]
-
-  @@index([lakeId])
-  @@index([customerId])
-  @@index([sessionId])
-  @@index([status])
 }
 
 model InvoiceItem {
@@ -270,9 +256,6 @@ model InvoiceItem {
   totalPrice  Decimal  @db.Decimal(12, 2)
   invoice     Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
   product     Product? @relation(fields: [productId], references: [id])
-
-  @@index([invoiceId])
-  @@index([productId])
 }
 
 model Payment {
@@ -284,8 +267,6 @@ model Payment {
   note          String?
   createdAt     DateTime      @default(now())
   invoice       Invoice       @relation(fields: [invoiceId], references: [id])
-
-  @@index([invoiceId])
 }
 
 model Expense {
@@ -298,8 +279,6 @@ model Expense {
   performedBy String?
   createdAt   DateTime @default(now())
   lake        FishingLake? @relation(fields: [lakeId], references: [id])
-
-  @@index([lakeId])
 }
 
 model Attendance {
@@ -311,8 +290,6 @@ model Attendance {
   status   String    @default("PRESENT")
   note     String?
   user     User      @relation(fields: [userId], references: [id])
-
-  @@index([userId])
 }
 
 model Shift {
@@ -321,6 +298,43 @@ model Shift {
   startTime String
   endTime   String
   notes     String?
+}
+
+model ShiftSession {
+  id             String      @id @default(cuid())
+  lakeId         String
+  userId         String
+  startTime      DateTime    @default(now())
+  endTime        DateTime?
+  status         String      @default("RUNNING") // RUNNING, CLOSED
+  ticketRevenue  Decimal     @default(0) @db.Decimal(12, 2)
+  productRevenue Decimal     @default(0) @db.Decimal(12, 2)
+  totalRevenue   Decimal     @default(0) @db.Decimal(12, 2)
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  user           User        @relation(fields: [userId], references: [id])
+  lake           FishingLake @relation(fields: [lakeId], references: [id])
+}
+
+model ShiftClose {
+  id             String      @id @default(cuid())
+  lakeId         String
+  userId         String
+  shiftDate      DateTime    @default(now())
+  ticketRevenue  Decimal     @default(0) @db.Decimal(12, 2)
+  productRevenue Decimal     @default(0) @db.Decimal(12, 2)
+  totalCash      Decimal     @default(0) @db.Decimal(12, 2)
+  totalTransfer  Decimal     @default(0) @db.Decimal(12, 2)
+  expectedCash   Decimal     @default(0) @db.Decimal(12, 2)
+  actualCash     Decimal     @default(0) @db.Decimal(12, 2)
+  discrepancy    Decimal     @default(0) @db.Decimal(12, 2)
+  status         String      @default("CLOSED") // CLOSED, FLAGGED
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  user           User        @relation(fields: [userId], references: [id])
+  lake           FishingLake @relation(fields: [lakeId], references: [id])
 }
 
 model Notification {
@@ -332,26 +346,19 @@ model Notification {
   type      String   @default("INFO")
   createdAt DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
-
-  @@index([userId])
 }
 
 model ActivityLog {
   id         String       @id @default(cuid())
   userId     String
+  lakeId     String?
+  entityType String?
+  entityId   String?
   action     String
   details    Json?
-  lakeId     String?
-  entityType String?      // SESSION, PRODUCT, FISH, PAYMENT, CUSTOMER, INVOICE
-  entityId   String?
   createdAt  DateTime     @default(now())
   user       User         @relation(fields: [userId], references: [id])
   lake       FishingLake? @relation(fields: [lakeId], references: [id])
-
-  @@index([userId])
-  @@index([lakeId])
-  @@index([entityType])
-  @@index([createdAt])
 }
 
 model Settings {
@@ -374,66 +381,16 @@ model FishingPackage {
 }
 
 model Transaction {
-  id            String        @id @default(cuid())
+  id            String   @id @default(cuid())
   lakeId        String
-  type          String        // INCOME, EXPENSE
-  amount        Decimal       @db.Decimal(12, 2)
+  type          String   // INCOME, EXPENSE
+  amount        Decimal  @db.Decimal(12, 2)
   description   String?
-  category      String?       // SESSION, PRODUCT, BUYBACK, OTHER
-  referenceId   String?       // ID of session, invoice, etc.
-  paymentMethod PaymentMethod @default(CASH)
-  createdAt     DateTime      @default(now())
-  lake          FishingLake   @relation(fields: [lakeId], references: [id])
-
-  @@index([lakeId])
-  @@index([type])
-  @@index([createdAt])
-  @@index([lakeId, type, createdAt])
-}
-
-model FishStock {
-  id              String      @id @default(cuid())
-  lakeId          String
-  fishTypeId      String
-  initialWeight   Decimal     @db.Decimal(10, 2)
-  initialQuantity Int
-  currentWeight   Decimal     @db.Decimal(10, 2)
-  currentQuantity Int
-  deadCount       Int         @default(0)
-  addedCount      Int         @default(0)
-  addedWeight     Decimal     @default(0) @db.Decimal(10, 2)
-  notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
-  lake            FishingLake @relation(fields: [lakeId], references: [id])
-  fishType        FishType    @relation(fields: [fishTypeId], references: [id])
-
-  @@unique([lakeId, fishTypeId])
-  @@index([lakeId])
-  @@index([fishTypeId])
-}
-
-model ShiftClose {
-  id             String      @id @default(cuid())
-  lakeId         String
-  userId         String
-  shiftDate      DateTime    @default(now())
-  ticketRevenue  Decimal     @db.Decimal(12, 2)
-  productRevenue Decimal     @db.Decimal(12, 2)
-  totalCash      Decimal     @db.Decimal(12, 2)
-  totalTransfer  Decimal     @db.Decimal(12, 2)
-  expectedCash   Decimal     @db.Decimal(12, 2)
-  actualCash     Decimal     @db.Decimal(12, 2)
-  discrepancy    Decimal     @db.Decimal(12, 2)
-  notes          String?
-  status         String      @default("CLOSED") // CLOSED, FLAGGED
-  createdAt      DateTime    @default(now())
-  lake           FishingLake @relation(fields: [lakeId], references: [id])
-  user           User        @relation("ShiftCloseUser", fields: [userId], references: [id])
-
-  @@index([lakeId])
-  @@index([userId])
-  @@index([shiftDate])
+  category      String?  // SESSION, PRODUCT, BUYBACK, OTHER
+  referenceId   String?  // ID of session, invoice, etc.
+  paymentMethod String?
+  createdAt     DateTime @default(now())
+  lake          FishingLake @relation(fields: [lakeId], references: [id])
 }
 
 enum UserRole {
@@ -480,24 +437,3 @@ enum PaymentMethod {
   CARD
   DEBT
 }
-
-model ShiftSession {
-  id             String      @id @default(cuid())
-  lakeId         String
-  userId         String
-  startTime      DateTime    @default(now())
-  endTime        DateTime?
-  ticketRevenue  Decimal     @default(0) @db.Decimal(12, 2)
-  productRevenue Decimal     @default(0) @db.Decimal(12, 2)
-  totalRevenue   Decimal     @default(0) @db.Decimal(12, 2)
-  status         String      @default("RUNNING") // RUNNING, CLOSED
-  notes          String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  user           User        @relation("UserShiftSession", fields: [userId], references: [id])
-  lake           FishingLake @relation("LakeShiftSession", fields: [lakeId], references: [id])
-
-  @@index([lakeId])
-  @@index([userId])
-}
-

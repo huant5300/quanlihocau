@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import bcrypt from "bcryptjs";
 
 export async function GET(req: NextRequest) {
   try {
@@ -48,10 +47,14 @@ export async function GET(req: NextRequest) {
       const diffMs = now.getTime() - startTime.getTime();
       const diffMins = Math.max(0, Math.floor(diffMs / 60000));
 
-      if (session.customPrice) {
-        sessionCost = Number(session.customPrice);
-      } else if (session.FishingPackage) {
+      if (session.FishingPackage) {
         sessionCost = Number(session.FishingPackage.price);
+        // Basic overtime logic: if over package duration, add hourly rate for extra hours
+        const packageMins = session.FishingPackage.durationHours * 60;
+        if (diffMins > packageMins) {
+          const overtimeHours = Math.ceil((diffMins - packageMins) / 60);
+          sessionCost += overtimeHours * Number(session.hourlyRate);
+        }
       } else {
         const hours = Math.ceil(diffMins / 60) || 1;
         sessionCost = hours * Number(session.hourlyRate);
@@ -64,7 +67,6 @@ export async function GET(req: NextRequest) {
 
       return {
         ...session,
-        sessionCost,
         sessionAmount: currentTotal
       };
     });
@@ -87,21 +89,6 @@ export async function POST(req: NextRequest) {
     const body = await req.json();
     const lakeId = await getActiveLakeId();
 
-    // 1. Chặn tạo vé nếu chưa có ca làm việc hoạt động
-    const activeShift = await prisma.shiftSession.findFirst({
-      where: {
-        lakeId,
-        status: "RUNNING",
-      },
-    });
-
-    if (!activeShift) {
-      return NextResponse.json({
-        success: false,
-        message: "Không có ca làm việc nào đang hoạt động. Vui lòng mở ca trực trước khi tạo vé câu cho khách."
-      }, { status: 400 });
-    }
-
     const areaId = body.areaId || body.hut_id;
     const customerName = body.customer_name;
     const phone = body.phone;
@@ -109,56 +96,6 @@ export async function POST(req: NextRequest) {
     const hourlyRate = body.hourlyRate || 50000;
     const packageId = body.packageId;
     const prepaidAmount = Number(body.prepaidAmount || 0);
-    const customPrice = body.customPrice !== undefined && body.customPrice !== null ? Number(body.customPrice) : null;
-    const customDuration = body.customDuration !== undefined && body.customDuration !== null ? Number(body.customDuration) : null;
-
-    // 2. Chống thất thoát & Manager Override
-    const userRole = session_auth?.user?.role;
-    const isPrivileged = userRole === "OWNER" || userRole === "SUPER_ADMIN" || userRole === "MANAGER" || isOwner;
-
-    if ((customPrice !== null || customDuration !== null) && !isPrivileged) {
-      const override = body.managerOverride;
-      if (!override || !override.username || !override.password) {
-        return NextResponse.json({ 
-          success: false, 
-          message: "Bạn không có quyền thiết lập giá hoặc thời lượng tùy chỉnh. Vui lòng yêu cầu Quản lý hoặc Chủ Hồ phê duyệt." 
-        }, { status: 403 });
-      }
-
-      // Xác thực tài khoản manager phê duyệt
-      const manager = await prisma.user.findFirst({
-        where: {
-          OR: [
-            { email: override.username },
-            { username: override.username }
-          ]
-        }
-      });
-
-      if (!manager || !manager.password || !manager.isActive) {
-        return NextResponse.json({ 
-          success: false, 
-          message: "Tài khoản phê duyệt của Quản lý không tồn tại hoặc bị khóa." 
-        }, { status: 403 });
-      }
-
-      const isPasswordValid = await bcrypt.compare(override.password, manager.password);
-      if (!isPasswordValid) {
-        return NextResponse.json({ 
-          success: false, 
-          message: "Mật khẩu Quản lý không chính xác." 
-        }, { status: 403 });
-      }
-
-      const managerRole = manager.role;
-      const isManagerPrivileged = managerRole === "OWNER" || managerRole === "SUPER_ADMIN" || managerRole === "MANAGER";
-      if (!isManagerPrivileged) {
-        return NextResponse.json({ 
-          success: false, 
-          message: "Tài khoản phê duyệt phải có vai trò là Quản lý hoặc Chủ Hồ." 
-        }, { status: 403 });
-      }
-    }
 
     if (!areaId) {
       return NextResponse.json({ success: false, message: "Thiếu thông tin vị trí (khu vực/chòi)" }, { status: 400 });
@@ -168,20 +105,19 @@ export async function POST(req: NextRequest) {
       // 1. Find or Create Customer if phone exists
       let customerId = body.customerId;
       if (!customerId && phone) {
-        // Find customer globally by phone number to prevent duplicate key database crashes
-        const existingCustomer = await tx.customer.findUnique({ 
-          where: { phone } 
+        // Try to find customer by phone in this lake
+        const existingCustomer = await tx.customer.findFirst({ 
+          where: { 
+            phone,
+            OR: [
+              { lakeId },
+              { lakeId: null }
+            ]
+          } 
         });
         
         if (existingCustomer) {
           customerId = existingCustomer.id;
-          // Optionally update lakeId connection if customer is visiting this lake for the first time
-          if (!existingCustomer.lakeId) {
-            await tx.customer.update({
-              where: { id: existingCustomer.id },
-              data: { lakeId }
-            });
-          }
         } else {
           const newCustomer = await tx.customer.create({
             data: {
@@ -194,15 +130,13 @@ export async function POST(req: NextRequest) {
         }
       }
 
-      // 2. Calculate endTime if package or custom duration exists
+      // 2. Calculate endTime if package exists
       let endTime = null;
       if (packageId) {
         const pkg = await tx.fishingPackage.findUnique({ where: { id: packageId } });
         if (pkg) {
           endTime = new Date(new Date(startTime).getTime() + Number(pkg.durationHours) * 60 * 60 * 1000);
         }
-      } else if (customDuration) {
-        endTime = new Date(new Date(startTime).getTime() + customDuration * 60 * 60 * 1000);
       }
 
       // 3. Create the session
@@ -218,8 +152,6 @@ export async function POST(req: NextRequest) {
           status: "ACTIVE",
           prepaidAmount,
           sessionAmount: 0,
-          customPrice,
-          customDuration,
         },
         include: {
           area: true,

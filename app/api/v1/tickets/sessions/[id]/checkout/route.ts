@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { differenceInMinutes } from "date-fns";
-import { getActiveLakeId } from "@/lib/lake-context";
 
 export async function POST(
   req: NextRequest,
@@ -10,12 +9,10 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
-    if (!session && !isSuperAdmin) {
+    if (!session) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const lakeId = await getActiveLakeId();
     const { id } = await params;
     const body = await req.json();
     const { paymentMethod, notes } = body;
@@ -40,21 +37,21 @@ export async function POST(
         throw new Error("Lượt câu không khả dụng hoặc đã thanh toán");
       }
 
-      // Tenant Isolation Check
-      if (fishingSession.lakeId !== lakeId && !isSuperAdmin) {
-        throw new Error("Bạn không có quyền thanh toán lượt câu này");
-      }
-
       const endTime = new Date();
       const startTime = new Date(fishingSession.startTime);
       const totalMinutes = differenceInMinutes(endTime, startTime);
       
       // 2. Calculate Session Cost
       let sessionCost = 0;
-      if (fishingSession.customPrice) {
-        sessionCost = Number(fishingSession.customPrice);
-      } else if (fishingSession.FishingPackage) {
+      if (fishingSession.FishingPackage) {
         sessionCost = Number(fishingSession.FishingPackage.price);
+        // Handle overtime if any (simplified: charge per hour extra)
+        const packageMinutes = fishingSession.FishingPackage.durationHours * 60;
+        if (totalMinutes > packageMinutes) {
+          const overtimeMinutes = totalMinutes - packageMinutes;
+          const overtimeHours = Math.ceil(overtimeMinutes / 60);
+          sessionCost += overtimeHours * Number(fishingSession.hourlyRate);
+        }
       } else {
         // Hourly rate
         const totalHours = Math.ceil(totalMinutes / 60);
@@ -144,17 +141,6 @@ export async function POST(
             category: "SESSION",
             referenceId: updatedSession.id,
             description: `Thanh toán lượt câu - Ô số ${fishingSession.area.name} - ${fishingSession.customer?.fullName || "Khách lẻ"}`
-          }
-        });
-      }
-
-      // 10. Update Customer Stats if applicable
-      if (fishingSession.customerId) {
-        await tx.customer.update({
-          where: { id: fishingSession.customerId },
-          data: {
-            totalSpent: { increment: totalAmount },
-            visitCount: { increment: 1 }
           }
         });
       }

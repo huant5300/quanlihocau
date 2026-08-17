@@ -76,10 +76,7 @@ export interface SessionInsert {
   packageId?: string;
   prepaidAmount?: number;
   total_amount?: number;
-  customPrice?: number;
-  customDuration?: number;
   products?: any[];
-  managerOverride?: { username: string; password?: string };
 }
 
 export type SessionUpdate = Partial<SessionInsert> & { status?: SessionStatus };
@@ -135,7 +132,8 @@ export interface ActiveSession extends Session {
   phone?: string;
   total_amount: number;
   prepaidAmount?: number;
-  sessionCost?: number;
+  sessionAmount?: number;
+  buybackValue?: number;
   session_products?: Array<{
     id: string;
     name: string;
@@ -146,8 +144,6 @@ export interface ActiveSession extends Session {
   fish_buybacks?: Array<{
     id: string;
     total_price: number;
-    weight?: number;
-    fish_name?: string;
   }>;
 }
 

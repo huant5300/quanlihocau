@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
-import { getActiveLakeId } from "@/lib/lake-context";
 
 export async function POST(
   req: NextRequest,
@@ -9,12 +8,10 @@ export async function POST(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
-    if (!session && !isSuperAdmin) {
+    if (!session) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const lakeId = await getActiveLakeId();
     const { id } = await params;
     const body = await req.json();
     const { hours, cost } = body;
@@ -26,11 +23,6 @@ export async function POST(
 
     if (!fishingSession) {
       return NextResponse.json({ success: false, message: "Session not found" }, { status: 404 });
-    }
-
-    // Tenant Isolation Check
-    if (fishingSession.lakeId !== lakeId && !isSuperAdmin) {
-      return NextResponse.json({ success: false, message: "Bạn không có quyền thao tác trên lượt câu này" }, { status: 403 });
     }
 
     // Update the session or invoice
@@ -57,15 +49,10 @@ export async function POST(
         });
       }
 
-      const newEndTime = fishingSession.endTime 
-        ? new Date(new Date(fishingSession.endTime).getTime() + hours * 60 * 60 * 1000)
-        : null;
-
-      // 2. Note the extension in the session and update endTime
+      // 2. Note the extension in the session (optional)
       return await tx.fishingSession.update({
         where: { id },
         data: {
-          endTime: newEndTime,
           notes: fishingSession.notes 
             ? `${fishingSession.notes}\nGia hạn +${hours}h (${cost}đ)` 
             : `Gia hạn +${hours}h (${cost}đ)`

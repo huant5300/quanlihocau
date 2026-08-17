@@ -346,16 +346,16 @@ export function SessionRow({ session }: SessionRowProps) {
           sessionId: session.id,
           hutNumber: formattedHutNumber,
           customerName: session.customer_name || "Khách lẻ",
-          sessionFee: Number(session.sessionCost || 0),
+          sessionFee: Number(session.sessionAmount || 0),
           products: (session.session_products || []).map((p: any) => ({
             id: p.id,
             name: p.name || "Sản phẩm",
             quantity: p.quantity,
             price: p.price || p.price_at_time
           })),
-          buybackDeduction: (session.fish_buybacks || []).reduce((sum, b) => sum + Number(b.total_price), 0),
+          buybackDeduction: Number(session.buybackValue || 0),
           prepaidAmount: Number(session.prepaidAmount || 0),
-          subtotal: Number(session.sessionCost || 0) + (session.session_products || []).reduce((sum, p) => sum + Number((p.price || p.price_at_time || 0) * p.quantity), 0),
+          subtotal: Number(session.sessionAmount || 0) + (session.session_products || []).reduce((sum, p) => sum + Number((p.price || p.price_at_time || 0) * p.quantity), 0),
           totalAmount: Number(session.total_amount || 0)
         }}
       />

@@ -31,6 +31,7 @@ const menuItems = [
   { label: "Hồ Câu", href: "/dashboard/sessions", icon: Fish, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF] },
   { label: "Khách Hàng", href: "/dashboard/customers", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF] },
   { label: "Tạo Vé Câu", href: "#", action: "create-ticket", icon: PlusCircle, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
+  { label: "Đơn Hàng", href: "/dashboard/invoices", icon: ShoppingBag, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER] },
   { label: "Ca Làm Việc", href: "/dashboard/shifts", icon: Clock, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Báo Cáo", href: "/dashboard/reports", icon: History, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },

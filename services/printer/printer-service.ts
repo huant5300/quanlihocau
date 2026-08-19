@@ -157,7 +157,11 @@ export class PrinterService {
   async printBill(bill: any): Promise<boolean> {
     const { connectionType } = usePrinterStore.getState();
 
-    // Nếu chưa kết nối Bluetooth hoặc dùng iOS, hỗ trợ in Web Print tự động nếu Bluetooth lỗi
+    if (connectionType === "browser") {
+      this.printBrowser(bill);
+      return true;
+    }
+
     const data = this.buildEscPosData(bill);
     return this.print(data, bill);
   }
@@ -167,6 +171,12 @@ export class PrinterService {
    */
   async connect(): Promise<boolean> {
     const { connectionType, ipAddress, port, setConnectionStatus, setIsConnecting } = usePrinterStore.getState();
+
+    if (connectionType === "browser") {
+      setConnectionStatus(true);
+      toast.success("Đã chọn chế độ In Trình Duyệt (Web Print)");
+      return true;
+    }
 
     if (connectionType === "bluetooth") {
       setIsConnecting(true);
@@ -220,15 +230,18 @@ export class PrinterService {
 
         return success;
       } catch (error: any) {
-        console.error("Bluetooth Connection Error:", error);
         setConnectionStatus(false);
         setIsConnecting(false);
         if (error.name !== "NotFoundError") {
+          console.error("Bluetooth Connection Error:", error);
           toast.error(`Lỗi kết nối Bluetooth: ${error.message || "Huỷ hoặc thiết bị không phản hồi"}`);
+        } else {
+          // Chỉ log nhẹ hoặc bỏ qua nếu người dùng chủ động huỷ
+          console.log("Người dùng đã huỷ chọn máy in Bluetooth");
         }
         return false;
       }
-    } else {
+    } else if (connectionType === "lan") {
       // LAN Connection
       setIsConnecting(true);
       await new Promise(resolve => setTimeout(resolve, 500));
@@ -256,6 +269,8 @@ export class PrinterService {
         return true;
       }
     }
+
+    return false;
   }
 
   /**
@@ -436,6 +451,11 @@ export class PrinterService {
       }
       this.characteristic = null;
       this.device = null;
+    }
+    
+    if (connectionType === "browser") {
+      setConnectionStatus(false);
+      return;
     }
 
     setConnectionStatus(false);

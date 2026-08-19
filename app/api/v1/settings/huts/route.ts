@@ -3,6 +3,8 @@ import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { getActiveLakeId } from "@/lib/lake-context";
 
+import { checkResourceLimit } from "@/utils/saas-helpers";
+
 export async function GET(req: NextRequest) {
   try {
     const session = await auth();
@@ -33,6 +35,16 @@ export async function POST(req: NextRequest) {
     }
 
     const lakeId = await getActiveLakeId();
+    if (!lakeId) {
+      return NextResponse.json({ success: false, message: "Không tìm thấy hồ câu hoạt động" }, { status: 400 });
+    }
+
+    // Check SaaS Resource Limit
+    const limitCheck = await checkResourceLimit(lakeId, "huts");
+    if (!limitCheck.allowed) {
+      return NextResponse.json({ success: false, message: limitCheck.message }, { status: 403 });
+    }
+
     const body = await req.json();
 
     const hut = await prisma.fishingArea.create({

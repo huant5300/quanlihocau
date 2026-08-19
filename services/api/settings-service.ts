@@ -6,6 +6,10 @@ export interface LakeInfo {
   totalSpots: number;
   receipt_footer: string;
   phone?: string;
+  bankName?: string;
+  bankAccount?: string;
+  bankHolder?: string;
+  bankBin?: string;
 }
 
 export const settingsService = {

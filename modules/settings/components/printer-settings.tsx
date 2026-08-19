@@ -70,7 +70,7 @@ export function PrinterSettings() {
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">
               Kiểu kết nối máy in
             </label>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <button
                 type="button"
                 onClick={() => {
@@ -85,7 +85,7 @@ export function PrinterSettings() {
                 )}
               >
                 <Bluetooth size={24} />
-                <span className="font-black text-[10px] uppercase tracking-widest">Bluetooth</span>
+                <span className="font-black text-[10px] uppercase tracking-widest text-center">Bluetooth</span>
               </button>
               <button
                 type="button"
@@ -101,7 +101,23 @@ export function PrinterSettings() {
                 )}
               >
                 <Wifi size={24} />
-                <span className="font-black text-[10px] uppercase tracking-widest">Mạng LAN / Wi-Fi</span>
+                <span className="font-black text-[10px] uppercase tracking-widest text-center">LAN / Wi-Fi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  handleDisconnect();
+                  setConnectionSettings({ connectionType: "browser" });
+                }}
+                className={cn(
+                  "p-5 rounded-2xl border-2 flex flex-col items-center gap-2 transition-all cursor-pointer outline-none",
+                  connectionType === "browser"
+                    ? "border-primary bg-primary/5 text-primary"
+                    : "border-border/50 bg-accent/30 text-muted-foreground hover:bg-accent/50"
+                )}
+              >
+                <FileText size={24} />
+                <span className="font-black text-[10px] uppercase tracking-widest text-center">In Trình Duyệt</span>
               </button>
             </div>
           </div>

@@ -89,7 +89,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning className="light">
+    <html lang="vi" suppressHydrationWarning className="dark">
       <body className={`${inter.className} ${plusJakartaSans.variable} ${beVietnamPro.variable} ${caveat.variable} antialiased`} suppressHydrationWarning>
         <AppProviders>
           <PWARegistration />

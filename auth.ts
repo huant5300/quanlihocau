@@ -15,8 +15,11 @@ async function setupOnboardingData(userId: string, userName: string) {
   try {
     console.log(`Setting up onboarding data for user: ${userId} (${userName})`);
 
-    // 1. Create a default lake
+    // 1. Create a default lake with a 14-day TRIAL plan
     const lakeName = `Hồ câu ${userName}`;
+    const trialExpiry = new Date();
+    trialExpiry.setDate(trialExpiry.getDate() + 14); // 14 days trial
+
     const lake = await prisma.fishingLake.create({
       data: {
         name: lakeName,
@@ -25,6 +28,9 @@ async function setupOnboardingData(userId: string, userName: string) {
         phone: "Chưa cập nhật",
         managerId: userId,
         totalSpots: 10,
+        subscriptionPlan: "FREE",
+        subscriptionStatus: "ACTIVE",
+        subscriptionExpiresAt: trialExpiry,
       },
     });
 

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 import { differenceInMinutes } from "date-fns";
+import { earnPointsAction } from "@/actions/loyalty-actions";
 
 export async function POST(
   req: NextRequest,
@@ -150,6 +151,18 @@ export async function POST(
       maxWait: 15000, // 15 seconds
       timeout: 30000  // 30 seconds
     });
+
+    // 10. Tích điểm Loyalty (nếu có khách hàng)
+    if (result.customerId) {
+      // Find the final invoice for this session
+      const finalInvoice = await prisma.invoice.findFirst({
+        where: { sessionId: result.id },
+        orderBy: { createdAt: 'desc' }
+      });
+      if (finalInvoice) {
+        await earnPointsAction(result.customerId, finalInvoice.id, Number(finalInvoice.totalAmount));
+      }
+    }
 
     return NextResponse.json(result);
   } catch (error: any) {

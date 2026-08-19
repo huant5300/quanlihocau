@@ -15,6 +15,7 @@ import { Customer } from "@prisma/client";
 import { updateCustomerAction, deleteCustomerAction } from "@/actions/customer-actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface CustomerDetailDrawerProps {
   customer: Customer | null;
@@ -192,21 +193,30 @@ export function CustomerDetailDrawer({ customer, isOpen, onClose }: CustomerDeta
                   </button>
                 </div>
               ) : (
-                <div className="flex items-center gap-4">
-                  <button 
-                    onClick={() => setIsEditing(true)}
-                    className="flex-1 h-14 rounded-2xl bg-accent font-black uppercase tracking-widest text-[10px] hover:bg-muted transition-all flex items-center justify-center gap-2"
+                <div className="flex flex-col gap-3">
+                  <Link
+                    href={`/dashboard/customers/${customer.id}`}
+                    className="w-full h-12 rounded-2xl bg-primary/10 text-primary font-black uppercase tracking-widest text-[10px] hover:bg-primary/20 transition-all flex items-center justify-center gap-2 border border-primary/20"
+                    onClick={onClose}
                   >
-                    <Edit2 size={16} /> Chỉnh sửa
-                  </button>
-                  <button 
-                    onClick={handleDelete}
-                    disabled={isSubmitting}
-                    className="flex-1 h-14 rounded-2xl bg-red-500/10 text-red-500 font-black uppercase tracking-widest text-[10px] hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />} 
-                    Xóa
-                  </button>
+                    Xem chi tiết đầy đủ →
+                  </Link>
+                  <div className="flex items-center gap-4">
+                    <button 
+                      onClick={() => setIsEditing(true)}
+                      className="flex-1 h-14 rounded-2xl bg-accent font-black uppercase tracking-widest text-[10px] hover:bg-muted transition-all flex items-center justify-center gap-2"
+                    >
+                      <Edit2 size={16} /> Chỉnh sửa
+                    </button>
+                    <button 
+                      onClick={handleDelete}
+                      disabled={isSubmitting}
+                      className="flex-1 h-14 rounded-2xl bg-red-500/10 text-red-500 font-black uppercase tracking-widest text-[10px] hover:bg-red-500/20 transition-all flex items-center justify-center gap-2"
+                    >
+                      {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : <Trash2 size={16} />} 
+                      Xóa
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

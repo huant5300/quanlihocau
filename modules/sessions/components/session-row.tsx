@@ -23,6 +23,7 @@ import { ExtendSessionModal } from "./extend-session-modal";
 import { FishBuybackModal } from "./fish-buyback-modal";
 import { PaymentModal } from "@/modules/payment/components/payment-modal";
 import { useUIStore } from "@/stores/ui-store";
+import Link from "next/link";
 import {
   Dialog,
   DialogContent,
@@ -131,76 +132,110 @@ export function SessionRow({ session }: SessionRowProps) {
 
   return (
     <>
-      {/* Redesigned thin horizontal row layout */}
+      {/* Clean Light Mode Horizontal Row */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
+        initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         onClick={() => setIsDetailsOpen(true)}
         className={cn(
-          "w-full min-h-[5.5rem] py-3 sm:py-0 sm:h-24 bg-card/95 dark:bg-card/45 backdrop-blur-xl border rounded-2xl px-4 sm:px-8 flex items-center justify-between cursor-pointer transition-all hover:border-primary/30 relative overflow-hidden shadow-md hover:shadow-lg select-none",
-          isWarning 
-            ? "border-red-500/80 bg-red-500/5 shadow-[0_0_20px_rgba(239,68,68,0.06)]" 
-            : "border-black/5 dark:border-white/5",
-          isPending && "opacity-75"
+          "w-full bg-white border rounded-2xl px-4 py-3 flex items-center justify-between cursor-pointer transition-all hover:shadow-md select-none",
+          isWarning
+            ? "border-red-200 ring-2 ring-red-100"
+            : "border-gray-200 hover:border-blue-200",
+          isPending && "opacity-60"
         )}
       >
         {isPending && (
-          <div className="absolute inset-0 bg-background/50 rounded-2xl flex items-center justify-center z-10">
-            <Loader2 className="animate-spin text-primary" size={20} />
+          <div className="absolute inset-0 bg-white/70 rounded-2xl flex items-center justify-center z-10">
+            <Loader2 className="animate-spin text-blue-500" size={20} />
           </div>
         )}
 
-        {/* Left Section: Spot Number & Customer Info */}
-        <div className="flex items-center gap-2 sm:gap-4 min-w-0">
-          <div className={cn(
-            "px-2.5 sm:px-4 h-9 sm:h-10 rounded-xl flex items-center justify-center shrink-0 shadow-sm",
-            isWarning ? "bg-red-500 text-white" : "bg-primary text-white"
-          )}>
-            <span className="font-black text-[10px] sm:text-xs uppercase tracking-wider whitespace-nowrap">
-              Ô {formattedHutNumber}
+        {/* Left Section: Hut badge + Customer Info */}
+        <div className="flex items-center gap-3 min-w-0">
+          {/* Hut Number */}
+          <div
+            className={cn(
+              "w-11 h-11 rounded-xl flex flex-col items-center justify-center flex-shrink-0 border-2",
+              isWarning
+                ? "bg-red-50 border-red-200"
+                : "bg-blue-50 border-blue-100"
+            )}
+          >
+            <span className="text-[8px] font-bold text-gray-400">Ô</span>
+            <span
+              className={cn(
+                "font-black text-base leading-none",
+                isWarning ? "text-red-600" : "text-blue-700"
+              )}
+            >
+              {formattedHutNumber}
             </span>
           </div>
-          <div className="min-w-0 flex flex-col justify-center">
-            <div className="flex items-center gap-1.5">
-              <User size={12} className="text-muted-foreground shrink-0" />
-              <p className="font-black text-xs sm:text-sm uppercase tracking-tight text-foreground/90 truncate">
-                {session.customer_name || "Khách lẻ"}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
-              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
-                <Phone size={10} className="shrink-0" />
-                <span className="truncate">{session.phone || "Chưa có SĐT"}</span>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] font-bold text-muted-foreground">
-                <Clock size={10} className="shrink-0" />
-                <span>Vào: {isMounted ? new Date(session.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit", hour12: false }) : "--:--"}</span>
+
+          {/* Customer Info */}
+          <div className="min-w-0">
+            <p className="font-bold text-sm text-gray-900 truncate">
+              {session.customer_name || "Khách lẻ"}
+            </p>
+            <div className="flex items-center gap-3 mt-0.5">
+              {session.phone && (
+                <div className="flex items-center gap-1">
+                  <Phone size={10} className="text-gray-400" />
+                  <span className="text-xs text-gray-500">{session.phone}</span>
+                </div>
+              )}
+              <div className="flex items-center gap-1">
+                <Clock size={10} className="text-gray-400" />
+                <span className="text-xs text-gray-500">
+                  {isMounted
+                    ? new Date(session.startTime).toLocaleTimeString("vi-VN", {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      })
+                    : "--:--"}
+                </span>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Right Section: Timer, Status, Price & Chevron */}
-        <div className="flex items-center gap-3 sm:gap-6 shrink-0">
-          {/* Realtime Countdown Timer */}
-          <div className="flex flex-col items-end">
-            <CountdownTimer 
-              endTime={session.endTime ?? new Date().toISOString()} 
+        {/* Right Section: Timer + Amount + Chevron */}
+        <div className="flex items-center gap-4 flex-shrink-0">
+          <div className="text-right hidden sm:block">
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+              Còn lại
+            </p>
+            <CountdownTimer
+              endTime={session.endTime ?? new Date().toISOString()}
               startTime={session.startTime}
-              sessionId={session.id} 
+              sessionId={session.id}
               onWarning={onWarning}
               onExpire={onExpire}
               showTimes
             />
           </div>
 
-          {/* Status Badge */}
-          <div className="hidden sm:flex">
+          <div className="text-right">
+            <p className="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+              Tạm tính
+            </p>
+            <p
+              className={cn(
+                "font-black text-base",
+                isWarning ? "text-red-600" : "text-blue-700"
+              )}
+            >
+              {Number(session.total_amount || 0).toLocaleString("vi-VN")}đ
+            </p>
+          </div>
+
+          <div className="hidden sm:block">
             <SessionStatusBadge status={isWarning ? "WARNING" : session.status} />
           </div>
 
-          {/* Simple Chevron Click Indicator */}
-          <ChevronRight size={18} className="text-muted-foreground/60 group-hover:text-primary transition-colors hidden sm:block" />
+          <ChevronRight size={18} className="text-gray-300" />
         </div>
       </motion.div>
 
@@ -222,7 +257,13 @@ export function SessionRow({ session }: SessionRowProps) {
                 <div>
                   <h3 className="font-black text-base uppercase tracking-tight text-white flex items-center gap-1.5">
                     <User size={14} className="text-emerald-400 shrink-0" />
-                    {session.customer_name || "Khách lẻ"}
+                    {session.customerId ? (
+                      <Link href={`/dashboard/customers/${session.customerId}`} className="hover:text-emerald-400 transition-colors" onClick={() => setIsDetailsOpen(false)}>
+                        {session.customer_name || "Khách lẻ"}
+                      </Link>
+                    ) : (
+                      session.customer_name || "Khách lẻ"
+                    )}
                   </h3>
                   {session.phone && (
                     <p className="text-[11px] font-bold text-slate-400 flex items-center gap-1 mt-0.5">

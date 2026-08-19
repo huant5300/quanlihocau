@@ -1,7 +1,7 @@
 import { create } from "zustand";
 
 export interface PrinterState {
-  connectionType: "bluetooth" | "lan";
+  connectionType: "bluetooth" | "lan" | "browser";
   ipAddress: string;
   port: number;
   paperSize: "58mm" | "80mm";
@@ -14,14 +14,14 @@ export interface PrinterState {
 
 export const usePrinterStore = create<PrinterState>((set) => {
   // Giá trị mặc định ban đầu
-  let initialType: "bluetooth" | "lan" = "bluetooth";
+  let initialType: "bluetooth" | "lan" | "browser" = "bluetooth";
   let initialIP = "192.168.1.100";
   let initialPort = 9100;
   let initialPaper: "58mm" | "80mm" = "58mm";
 
   // Đọc từ localStorage nếu đang ở môi trường client
   if (typeof window !== "undefined") {
-    initialType = (localStorage.getItem("printer_type") as "bluetooth" | "lan") || "bluetooth";
+    initialType = (localStorage.getItem("printer_type") as "bluetooth" | "lan" | "browser") || "bluetooth";
     initialIP = localStorage.getItem("printer_ip") || "192.168.1.100";
     initialPort = Number(localStorage.getItem("printer_port")) || 9100;
     initialPaper = (localStorage.getItem("printer_paper_size") as "58mm" | "80mm") || "58mm";

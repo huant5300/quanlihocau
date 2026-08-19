@@ -28,6 +28,10 @@ export function LakeInfoForm() {
         address: lakeInfo.address,
         phone: lakeInfo.phone,
         receiptFooter: lakeInfo.receipt_footer,
+        bankName: lakeInfo.bankName || "",
+        bankAccount: lakeInfo.bankAccount || "",
+        bankHolder: lakeInfo.bankHolder || "",
+        bankBin: lakeInfo.bankBin || "",
       });
     }
   }, [lakeInfo, reset]);
@@ -39,6 +43,10 @@ export function LakeInfoForm() {
         address: data.address,
         phone: data.phone,
         receipt_footer: data.receiptFooter,
+        bankName: data.bankName,
+        bankAccount: data.bankAccount,
+        bankHolder: data.bankHolder,
+        bankBin: data.bankBin,
       }),
     onSuccess: () => {
       toast.success("Đã cập nhật thông tin hồ câu");
@@ -105,6 +113,54 @@ export function LakeInfoForm() {
               title="Lời chào hóa đơn"
               {...register("receiptFooter")}
               className="w-full min-h-[100px] p-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold resize-none"
+            />
+          </div>
+
+          <div className="md:col-span-2 pt-4 border-t border-white/5 mt-4">
+            <h4 className="text-sm font-black uppercase tracking-widest text-primary mb-4">Thông tin Ngân hàng (VietQR)</h4>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="bank-name" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên Ngân Hàng</label>
+            <input 
+              id="bank-name"
+              type="text"
+              placeholder="VD: MB Bank, Vietcombank..."
+              {...register("bankName")}
+              className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="bank-bin" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Mã BIN Ngân Hàng</label>
+            <input 
+              id="bank-bin"
+              type="text"
+              placeholder="VD: 970422 (Mã BIN của MB)"
+              {...register("bankBin")}
+              className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="bank-account" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số Tài Khoản</label>
+            <input 
+              id="bank-account"
+              type="text"
+              placeholder="Nhập số tài khoản"
+              {...register("bankAccount")}
+              className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="bank-holder" className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên Chủ Tài Khoản</label>
+            <input 
+              id="bank-holder"
+              type="text"
+              placeholder="VIẾT HOA KHÔNG DẤU"
+              {...register("bankHolder")}
+              className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
             />
           </div>
 

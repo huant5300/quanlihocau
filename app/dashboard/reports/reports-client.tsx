@@ -20,15 +20,56 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Crown, Trophy } from "lucide-react";
+import { Crown, Trophy, FileDown } from "lucide-react";
+import { exportToExcel } from "@/utils/export-excel";
+import { exportToPDF } from "@/utils/export-pdf";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 
 export function ReportsClient({ revenueChartData, topProducts, topCatcher, biggestCatch }: any) {
+  const handleExportExcel = () => {
+    if (!revenueChartData || revenueChartData.length === 0) return toast.error("Không có dữ liệu");
+    
+    // Xuất doanh thu
+    const revenueData = revenueChartData.map((r: any) => ({
+      "Ngày": r.date,
+      "Doanh thu (VNĐ)": r.amount
+    }));
+    exportToExcel(revenueData, `bao_cao_doanh_thu`);
+    toast.success("Xuất báo cáo doanh thu thành công");
+  };
+
+  const handleExportPDF = () => {
+    if (!revenueChartData || revenueChartData.length === 0) return toast.error("Không có dữ liệu");
+    const headers = ["Ngày", "Doanh thu"];
+    const rows = revenueChartData.map((r: any) => [
+      r.date, Number(r.amount).toLocaleString() + "đ"
+    ]);
+    exportToPDF({
+      title: "Báo Cáo Doanh Thu 30 Ngày Qua",
+      headers,
+      rows,
+      filename: "bao_cao_doanh_thu"
+    });
+    toast.success("Xuất PDF thành công");
+  };
+
   return (
     <div className="space-y-8">
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Revenue Chart */}
         <div className="glass-card p-8 rounded-[3rem]">
-          <h3 className="text-lg font-black uppercase tracking-tight mb-8">Doanh thu 30 ngày qua</h3>
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-lg font-black uppercase tracking-tight">Doanh thu 30 ngày qua</h3>
+            <div className="flex gap-2">
+              <Button onClick={handleExportExcel} variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5">
+                <FileDown size={14} className="mr-2" /> Excel
+              </Button>
+              <Button onClick={handleExportPDF} variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5 text-rose-400">
+                <FileDown size={14} className="mr-2" /> PDF
+              </Button>
+            </div>
+          </div>
           <div className="h-[400px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueChartData}>

@@ -1,6 +1,5 @@
 import prisma from "@/lib/prisma";
 import { SessionsClient } from "./sessions-client";
-import { DashboardHeader } from "@/components/shared/dashboard-header";
 import { getActiveLakeId } from "@/lib/lake-context";
 
 export default async function SessionsPage() {
@@ -24,15 +23,8 @@ export default async function SessionsPage() {
   });
 
   return (
-    <div className="space-y-8">
-      <DashboardHeader 
-        title="Quản lý Lượt câu" 
-        subtitle="Theo dõi và quản lý các ô đang hoạt động tại hồ."
-      />
-      
-      <SessionsClient 
-        initialSessions={JSON.parse(JSON.stringify(sessions))} 
-      />
-    </div>
+    <SessionsClient 
+      initialSessions={JSON.parse(JSON.stringify(sessions))} 
+    />
   );
 }

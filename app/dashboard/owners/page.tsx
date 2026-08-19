@@ -24,7 +24,8 @@ import {
   Ticket,
   ShoppingBag,
   CreditCard,
-  FileText
+  FileText,
+  CheckCircle2
 } from "lucide-react";
 import { getLakeOwners } from "@/actions/lake-actions";
 import { cn } from "@/utils/utils";
@@ -34,6 +35,12 @@ import { redirect } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
+import { 
+  getAllPendingOrders, 
+  approveSubscriptionOrder, 
+  rejectSubscriptionOrder, 
+  updateLakeSubscriptionDirect 
+} from "@/actions/subscription-actions";
 
 const actionLabels: Record<string, { label: string; icon: any; color: string }> = {
   START_SESSION: { label: "Tạo vé câu", icon: Ticket, color: "text-emerald-500 bg-emerald-500/10" },
@@ -124,6 +131,70 @@ export default function OwnersPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "locked">("all");
   const [selectedOwner, setSelectedOwner] = useState<LakeOwner | null>(null);
+  
+  // SaaS Subscription tab & states
+  const [activeTab, setActiveTab] = useState<"owners" | "orders">("owners");
+  const [pendingOrders, setPendingOrders] = useState<any[]>([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+
+  const fetchOrders = async () => {
+    setOrdersLoading(true);
+    try {
+      const res = await getAllPendingOrders();
+      if (res.success && res.data) {
+        setPendingOrders(res.data);
+      } else {
+        toast.error(res.error || "Không thể tải danh sách đơn hàng");
+      }
+    } catch (err) {
+      toast.error("Lỗi kết nối máy chủ");
+    } finally {
+      setOrdersLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (isSuperAdmin) {
+      fetchOrders();
+    }
+  }, [isSuperAdmin]);
+
+  const handleApproveOrder = async (id: string) => {
+    if (!confirm("Bạn có chắc chắn muốn phê duyệt đơn hàng này? Gói cước của hồ câu sẽ được gia hạn lập tức.")) return;
+    try {
+      const res = await approveSubscriptionOrder(id);
+      if (res.success) {
+        toast.success("Phê duyệt đơn hàng thành công!");
+        fetchOrders();
+        // Reload owners list
+        const result = await getLakeOwners();
+        if (result.success && result.data) {
+          setOwners(result.data as LakeOwner[]);
+        }
+      } else {
+        toast.error(res.error || "Phê duyệt thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi hệ thống");
+    }
+  };
+
+  const handleRejectOrder = async (id: string) => {
+    const reason = prompt("Nhập lý do từ chối đơn hàng (hoặc để trống):");
+    if (reason === null) return;
+    
+    try {
+      const res = await rejectSubscriptionOrder(id, reason);
+      if (res.success) {
+        toast.success("Đã từ chối đơn hàng!");
+        fetchOrders();
+      } else {
+        toast.error(res.error || "Thao tác thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi hệ thống");
+    }
+  };
 
   useEffect(() => {
     if (isAuthLoading) return;
@@ -179,58 +250,90 @@ export default function OwnersPage() {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-black tracking-tight uppercase">Quản lý chủ hồ</h1>
+          <h1 className="text-3xl font-black tracking-tight uppercase">Quản lý chủ hồ & SaaS</h1>
           <p className="text-muted-foreground mt-1 flex items-center gap-2">
             <Users size={14} />
-            {owners.length} chủ hồ đã đăng ký trong hệ thống
+            Hệ thống quản lý chủ hồ và duyệt thanh toán gói cước
           </p>
         </div>
       </div>
 
-      {/* Filters & Search */}
-      <div className="flex flex-col md:flex-row gap-4 items-center">
-        <div className="relative flex-1 group w-full">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm chủ hồ theo tên, email hoặc SĐT..."
-            className="w-full h-14 pl-12 pr-4 bg-card/30 backdrop-blur-xl border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-sm"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-        </div>
-        <div className="flex gap-2 w-full md:w-auto">
-          <div className="bg-card/30 backdrop-blur-xl border border-white/5 rounded-2xl p-1 flex gap-1 w-full md:w-auto">
-            <button 
-              onClick={() => setStatusFilter("all")}
-              className={cn(
-                "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
-                statusFilter === "all" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
-              )}
-            >
-              Tất cả
-            </button>
-            <button 
-              onClick={() => setStatusFilter("active")}
-              className={cn(
-                "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
-                statusFilter === "active" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
-              )}
-            >
-              Hoạt động
-            </button>
-            <button 
-              onClick={() => setStatusFilter("locked")}
-              className={cn(
-                "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
-                statusFilter === "locked" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
-              )}
-            >
-              Đã khóa
-            </button>
-          </div>
-        </div>
+      {/* Tab Switcher */}
+      <div className="flex gap-2 bg-card/30 backdrop-blur-xl border border-white/5 rounded-2xl p-1 w-fit">
+        <button
+          onClick={() => setActiveTab("owners")}
+          className={cn(
+            "h-12 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+            activeTab === "owners" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+          )}
+        >
+          Danh sách Chủ Hồ
+        </button>
+        <button
+          onClick={() => {
+            setActiveTab("orders");
+            fetchOrders();
+          }}
+          className={cn(
+            "h-12 px-6 rounded-xl text-xs font-black uppercase tracking-wider transition-all flex items-center gap-2",
+            activeTab === "orders" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+          )}
+        >
+          Yêu cầu nâng cấp
+          {pendingOrders.length > 0 && (
+            <span className="bg-red-500 text-white text-[9px] font-black rounded-full px-2 py-0.5 animate-pulse">
+              {pendingOrders.length}
+            </span>
+          )}
+        </button>
       </div>
+
+      {activeTab === "owners" ? (
+        <>
+          {/* Filters & Search */}
+          <div className="flex flex-col md:flex-row gap-4 items-center">
+            <div className="relative flex-1 group w-full">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm chủ hồ theo tên, email hoặc SĐT..."
+                className="w-full h-14 pl-12 pr-4 bg-card/30 backdrop-blur-xl border border-white/5 rounded-2xl outline-none focus:ring-2 focus:ring-primary/20 transition-all font-medium text-sm"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2 w-full md:w-auto">
+              <div className="bg-card/30 backdrop-blur-xl border border-white/5 rounded-2xl p-1 flex gap-1 w-full md:w-auto">
+                <button 
+                  onClick={() => setStatusFilter("all")}
+                  className={cn(
+                    "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+                    statusFilter === "all" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+                  )}
+                >
+                  Tất cả
+                </button>
+                <button 
+                  onClick={() => setStatusFilter("active")}
+                  className={cn(
+                    "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+                    statusFilter === "active" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+                  )}
+                >
+                  Hoạt động
+                </button>
+                <button 
+                  onClick={() => setStatusFilter("locked")}
+                  className={cn(
+                    "px-4 py-2.5 rounded-xl text-xs font-black uppercase tracking-wider transition-all",
+                    statusFilter === "locked" ? "bg-primary text-white shadow-lg" : "text-muted-foreground hover:text-white"
+                  )}
+                >
+                  Đã khóa
+                </button>
+              </div>
+            </div>
+          </div>
 
       {/* Grid Danh sách Chủ Hồ */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -332,13 +435,105 @@ export default function OwnersPage() {
           </div>
         )}
       </div>
+      </>
+      ) : (
+        /* Tab Duyệt Đơn hàng */
+        <div className="glass-card p-8 rounded-[2.5rem] border border-white/5">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <CreditCard size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-black uppercase tracking-tight">Yêu cầu nâng cấp chờ xử lý</h2>
+              <p className="text-xs text-muted-foreground uppercase font-black tracking-widest mt-0.5">
+                Đối soát tiền và duyệt gói cước thuê bao cho các chủ hồ câu
+              </p>
+            </div>
+          </div>
 
+          <div className="overflow-x-auto no-scrollbar pt-2">
+            {ordersLoading ? (
+              <div className="py-12 flex justify-center">
+                <Loader2 className="animate-spin text-primary" size={24} />
+              </div>
+            ) : pendingOrders.length === 0 ? (
+              <div className="text-center py-12 text-muted-foreground font-semibold uppercase text-[10px] tracking-widest bg-accent/5 rounded-2xl border border-dashed border-white/5">
+                Chưa có yêu cầu nâng cấp gói cước nào đang chờ duyệt
+              </div>
+            ) : (
+              <table className="w-full text-left border-collapse text-xs font-bold">
+                <thead>
+                  <tr className="border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
+                    <th className="pb-4 pl-4">Chủ hồ / Liên hệ</th>
+                    <th className="pb-4">Hồ câu</th>
+                    <th className="pb-4">Gói đăng ký</th>
+                    <th className="pb-4 text-center">Thời gian</th>
+                    <th className="pb-4 text-right">Số tiền</th>
+                    <th className="pb-4">Nội dung đối soát</th>
+                    <th className="pb-4 text-center pr-4">Hành động</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {pendingOrders.map((o) => (
+                    <tr key={o.id} className="border-b border-white/5 text-sm hover:bg-white/5 transition-all font-semibold">
+                      <td className="py-4 pl-4">
+                        <p className="font-black text-white">{o.ownerName}</p>
+                        <p className="text-[10px] text-muted-foreground">{o.ownerEmail} | {o.ownerPhone}</p>
+                      </td>
+                      <td className="py-4 font-bold text-white">
+                        {o.lakeName}
+                      </td>
+                      <td className="py-4 text-primary font-black uppercase">
+                        {o.plan}
+                      </td>
+                      <td className="py-4 text-center">
+                        {o.durationMonths} tháng
+                      </td>
+                      <td className="py-4 text-right font-black text-emerald-500">
+                        {o.amount.toLocaleString()}đ
+                      </td>
+                      <td className="py-4">
+                        <span className="bg-white/5 border border-white/10 px-2.5 py-1.5 rounded-xl font-mono font-black text-xs text-white">
+                          FISHING_SAAS_SUB_{o.id}
+                        </span>
+                      </td>
+                      <td className="py-4 text-center pr-4">
+                        <div className="flex items-center justify-center gap-2">
+                          <button
+                            onClick={() => handleRejectOrder(o.id)}
+                            className="px-3.5 h-10 bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white border border-red-500/20 rounded-xl text-[10px] font-black uppercase tracking-wider transition-all"
+                          >
+                            Từ chối
+                          </button>
+                          <button
+                            onClick={() => handleApproveOrder(o.id)}
+                            className="px-3.5 h-10 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-[10px] font-black uppercase tracking-wider transition-all shadow-md shadow-emerald-500/15"
+                          >
+                            Phê duyệt
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+        </div>
+      )}
+ 
       {/* Owner Detail Modal (Popup) */}
       <AnimatePresence>
         {selectedOwner && (
           <OwnerDetailModal 
             owner={selectedOwner} 
             onClose={() => setSelectedOwner(null)} 
+            onRefreshOwners={async () => {
+              const result = await getLakeOwners();
+              if (result.success && result.data) {
+                setOwners(result.data as LakeOwner[]);
+              }
+            }}
           />
         )}
       </AnimatePresence>
@@ -349,9 +544,10 @@ export default function OwnersPage() {
 interface OwnerDetailModalProps {
   owner: LakeOwner;
   onClose: () => void;
+  onRefreshOwners: () => void;
 }
 
-function OwnerDetailModal({ owner, onClose }: OwnerDetailModalProps) {
+function OwnerDetailModal({ owner, onClose, onRefreshOwners }: OwnerDetailModalProps) {
   const [activeLakeTab, setActiveLakeTab] = useState<string>(
     owner.lakes.length > 0 ? owner.lakes[0].id : ""
   );
@@ -458,6 +654,18 @@ function OwnerDetailModal({ owner, onClose }: OwnerDetailModalProps) {
 
               {selectedLake && (
                 <div className="space-y-8">
+                  {/* SaaS Subscription Editor for Admin */}
+                  <SubscriptionEditor 
+                    lake={selectedLake} 
+                    onUpdate={() => {
+                      onRefreshOwners();
+                      toast.success("Hệ thống đang đồng bộ lại giao diện...");
+                      setTimeout(() => {
+                        window.location.reload();
+                      }, 1000);
+                    }} 
+                  />
+
                   {/* Lake Address & Phone */}
                   <div className="p-5 rounded-3xl bg-white/5 border border-white/5 flex flex-col md:flex-row gap-y-4 md:items-center justify-between">
                     <div className="space-y-2">
@@ -721,6 +929,132 @@ function OwnerDetailModal({ owner, onClose }: OwnerDetailModalProps) {
           )}
         </div>
       </motion.div>
+    </div>
+  );
+}
+
+function SubscriptionEditor({ lake, onUpdate }: { lake: any; onUpdate: () => void }) {
+  const [plan, setPlan] = useState(lake.subscriptionPlan || "FREE");
+  const [status, setStatus] = useState(lake.subscriptionStatus || "ACTIVE");
+  const [expiresAt, setExpiresAt] = useState<string>(
+    lake.subscriptionExpiresAt ? lake.subscriptionExpiresAt.substring(0, 10) : ""
+  );
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSave = async () => {
+    setSubmitting(true);
+    try {
+      const res = await updateLakeSubscriptionDirect({
+        lakeId: lake.id,
+        plan,
+        status,
+        expiresAt: expiresAt ? new Date(expiresAt).toISOString() : null,
+      });
+
+      if (res.success) {
+        toast.success("Cập nhật gói cước thành công!");
+        onUpdate();
+      } else {
+        toast.error(res.error || "Cập nhật thất bại");
+      }
+    } catch (err) {
+      toast.error("Lỗi khi kết nối");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleAddDays = (days: number) => {
+    const base = expiresAt ? new Date(expiresAt) : new Date();
+    base.setDate(base.getDate() + days);
+    setExpiresAt(base.toISOString().substring(0, 10));
+  };
+
+  return (
+    <div className="p-6 rounded-3xl bg-white/5 border border-white/10 space-y-4">
+      <h4 className="text-xs font-black uppercase tracking-wider text-primary flex items-center gap-2">
+        <CreditCard size={14} />
+        Cấu hình Gói cước SaaS (Admin direct control)
+      </h4>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 font-bold text-xs">
+        {/* Chọn gói */}
+        <div className="space-y-1.5">
+          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Gói dịch vụ</label>
+          <select 
+            value={plan}
+            onChange={(e) => setPlan(e.target.value)}
+            className="w-full h-11 px-3 bg-slate-900 border border-white/10 rounded-xl text-white font-bold text-xs outline-none"
+          >
+            <option value="FREE">FREE / TRIAL</option>
+            <option value="BASIC">BASIC</option>
+            <option value="PREMIUM">PREMIUM</option>
+          </select>
+        </div>
+
+        {/* Trạng thái */}
+        <div className="space-y-1.5">
+          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Trạng thái</label>
+          <select 
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            className="w-full h-11 px-3 bg-slate-900 border border-white/10 rounded-xl text-white font-bold text-xs outline-none"
+          >
+            <option value="ACTIVE">ACTIVE</option>
+            <option value="EXPIRED">EXPIRED</option>
+            <option value="TRIAL">TRIAL</option>
+            <option value="CANCELLED">CANCELLED</option>
+          </select>
+        </div>
+
+        {/* Hạn dùng */}
+        <div className="space-y-1.5">
+          <label className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Ngày hết hạn</label>
+          <input 
+            type="date"
+            value={expiresAt}
+            onChange={(e) => setExpiresAt(e.target.value)}
+            className="w-full h-11 px-3 bg-slate-900 border border-white/10 rounded-xl text-white font-bold text-xs outline-none"
+          />
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center justify-between gap-4 pt-2 border-t border-white/5">
+        <div className="flex items-center gap-1.5">
+          <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground mr-1">Cộng nhanh:</span>
+          <button 
+            type="button"
+            onClick={() => handleAddDays(30)}
+            className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-white font-black text-[9px] rounded-lg transition-all"
+          >
+            +30 ngày
+          </button>
+          <button 
+            type="button"
+            onClick={() => handleAddDays(90)}
+            className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-white font-black text-[9px] rounded-lg transition-all"
+          >
+            +90 ngày
+          </button>
+          <button 
+            type="button"
+            onClick={() => handleAddDays(365)}
+            className="px-2.5 py-1 bg-white/5 hover:bg-white/10 text-white font-black text-[9px] rounded-lg transition-all"
+          >
+            +1 năm
+          </button>
+        </div>
+
+        <button 
+          type="button"
+          onClick={handleSave}
+          disabled={submitting}
+          className="h-11 px-6 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-black text-[10px] uppercase tracking-wider flex items-center justify-center gap-1.5 transition-all shadow-md shadow-emerald-500/10"
+        >
+          {submitting ? <Loader2 className="animate-spin" size={12} /> : <CheckCircle2 size={12} />}
+          Lưu cấu hình gói
+        </button>
+      </div>
     </div>
   );
 }

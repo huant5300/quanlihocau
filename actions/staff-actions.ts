@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs";
 import { revalidatePath } from "next/cache";
 import { recordActivityLog } from "@/lib/activity-log";
 import { getActiveLakeId } from "@/lib/lake-context";
+import { checkResourceLimit } from "@/utils/saas-helpers";
 
 export async function getStaffMembers(lakeId: string) {
   const session = await auth();
@@ -43,6 +44,12 @@ export async function createStaffMember(data: {
     const currentLakeId = await getActiveLakeId();
     if (!currentLakeId) {
       return { success: false, error: "Không tìm thấy hồ câu hoạt động để gán nhân viên" };
+    }
+
+    // Check SaaS Resource Limit
+    const limitCheck = await checkResourceLimit(currentLakeId, "staff");
+    if (!limitCheck.allowed) {
+      return { success: false, error: limitCheck.message };
     }
 
     const password = data.password || "123456";

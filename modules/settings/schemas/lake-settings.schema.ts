@@ -5,6 +5,10 @@ export const lakeSettingsSchema = z.object({
   address: z.string().min(5, "Địa chỉ không hợp lệ"),
   phone: z.string().min(10, "Số điện thoại không hợp lệ"),
   receiptFooter: z.string().optional(),
+  bankName: z.string().optional(),
+  bankAccount: z.string().optional(),
+  bankHolder: z.string().optional(),
+  bankBin: z.string().optional(),
 });
 
 export type LakeSettingsInput = z.infer<typeof lakeSettingsSchema>;

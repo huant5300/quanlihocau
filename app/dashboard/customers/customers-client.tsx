@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Plus, Search, UserPlus, Phone, MapPin, MoreHorizontal, User } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
@@ -15,6 +16,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { createCustomerAction } from "@/actions/customer-actions";
 import { toast } from "sonner";
+import { FileDown } from "lucide-react";
+import { exportToExcel } from "@/utils/export-excel";
+import { exportToPDF } from "@/utils/export-pdf";
 
 export function CustomersClient({ initialCustomers }: any) {
   const [customers, setCustomers] = useState(initialCustomers);
@@ -40,6 +44,37 @@ export function CustomersClient({ initialCustomers }: any) {
     }
   };
 
+  const handleExportExcel = () => {
+    if (customers.length === 0) return toast.error("Không có dữ liệu");
+    const data = customers.map((c: any, i: number) => ({
+      "STT": i + 1,
+      "Tên khách hàng": c.fullName,
+      "SĐT": c.phone,
+      "Số lần câu": c.visitCount,
+      "Tổng chi (VNĐ)": Number(c.totalSpent),
+      "Công nợ (VNĐ)": Number(c.debtBalance),
+      "Hạng": c.isVip ? "VIP" : c.loyaltyTier || "BRONZE",
+      "Điểm": c.loyaltyPoints || 0
+    }));
+    exportToExcel(data, `danh_sach_khach_hang`);
+    toast.success("Xuất Excel thành công");
+  };
+
+  const handleExportPDF = () => {
+    if (customers.length === 0) return toast.error("Không có dữ liệu");
+    const headers = ["STT", "Khách hàng", "SĐT", "Số lần câu", "Tổng chi", "Công nợ", "Hạng"];
+    const rows = customers.map((c: any, i: number) => [
+      i + 1, c.fullName, c.phone, c.visitCount, Number(c.totalSpent).toLocaleString() + "đ", Number(c.debtBalance).toLocaleString() + "đ", c.isVip ? "VIP" : (c.loyaltyTier || "BRONZE")
+    ]);
+    exportToPDF({
+      title: "Danh sách khách hàng",
+      headers,
+      rows,
+      filename: "danh_sach_khach_hang"
+    });
+    toast.success("Xuất PDF thành công");
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
@@ -52,13 +87,31 @@ export function CustomersClient({ initialCustomers }: any) {
             className="pl-12 h-12 rounded-2xl bg-white/5 border-white/10"
           />
         </div>
-        <Button 
-          onClick={() => setIsModalOpen(true)}
-          className="h-12 px-6 rounded-2xl bg-primary text-white font-bold flex items-center gap-2"
-        >
-          <UserPlus size={18} />
-          Thêm hội viên
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button 
+            onClick={handleExportExcel}
+            variant="outline"
+            className="h-12 px-4 rounded-2xl border-white/10 hover:bg-white/5 flex items-center gap-2 text-sm"
+          >
+            <FileDown size={18} />
+            Excel
+          </Button>
+          <Button 
+            onClick={handleExportPDF}
+            variant="outline"
+            className="h-12 px-4 rounded-2xl border-white/10 hover:bg-white/5 flex items-center gap-2 text-sm"
+          >
+            <FileDown size={18} />
+            PDF
+          </Button>
+          <Button 
+            onClick={() => setIsModalOpen(true)}
+            className="h-12 px-6 rounded-2xl bg-primary text-white font-bold flex items-center gap-2"
+          >
+            <UserPlus size={18} />
+            Thêm hội viên
+          </Button>
+        </div>
       </div>
 
       <div className="glass-card rounded-[2.5rem] overflow-hidden">
@@ -82,7 +135,7 @@ export function CustomersClient({ initialCustomers }: any) {
                       {customer.fullName[0]}
                     </div>
                     <div>
-                      <p className="text-sm font-bold">{customer.fullName}</p>
+                      <Link href={`/dashboard/customers/${customer.id}`} className="text-sm font-bold hover:text-primary transition-colors">{customer.fullName}</Link>
                       {customer.isVip && <Badge className="bg-yellow-500/10 text-yellow-500 border-none text-[8px] h-4">VIP</Badge>}
                     </div>
                   </div>

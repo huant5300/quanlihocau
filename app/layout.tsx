@@ -3,6 +3,7 @@ import { Inter, Plus_Jakarta_Sans, Be_Vietnam_Pro, Caveat } from "next/font/goog
 import "./globals.css";
 import AppProviders from "./providers";
 import { PWARegistration } from "@/components/shared/pwa-registration";
+import { SpeedInsights } from '@vercel/speed-insights/next';
 
 const inter = Inter({ 
   subsets: ["latin", "vietnamese"],
@@ -95,6 +96,7 @@ export default function RootLayout({
           <PWARegistration />
           {children}
         </AppProviders>
+        <SpeedInsights />
       </body>
     </html>
   );

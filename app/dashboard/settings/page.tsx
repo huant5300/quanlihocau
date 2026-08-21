@@ -1,20 +1,17 @@
 "use client";
 
 import React, { useState } from "react";
-import { DashboardLayout, DashboardHeader } from "@/modules/dashboard/layout/dashboard-layout";
 import { LakeInfoForm } from "@/modules/settings/components/lake-info-form";
 import { PackageSettings } from "@/modules/settings/components/package-settings";
 import { HutSettings } from "@/modules/settings/components/hut-settings";
 import { EmployeeSettings } from "@/modules/settings/components/employee-settings";
 import { SaasBillingSettings } from "@/modules/settings/components/saas-billing-settings";
 import { 
-  Settings as SettingsIcon, 
   Building2, 
   Package, 
   MapPin, 
   Users, 
   Palette, 
-  Bell,
   Monitor,
   Moon,
   Sun,
@@ -37,40 +34,43 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <DashboardLayout
-      header={
-        <DashboardHeader 
-          title="Cài đặt hệ thống" 
-          subtitle="Quản lý cấu hình vận hành, giao diện và nhân sự của hồ câu."
-        />
-      }
-    >
-      <div className="flex flex-col lg:flex-row gap-8">
+    <div className="space-y-6 select-none">
+      
+      {/* ── HEADER CARD ── */}
+      <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs">
+        <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+          Cài đặt hệ thống
+        </h1>
+        <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+          Quản lý thông tin hồ câu, thiết lập giá vé, sơ đồ chòi và giao diện vận hành
+        </p>
+      </div>
+
+      <div className="flex flex-col lg:flex-row gap-6">
+        
         {/* Navigation Sidebar */}
-        <div className="w-full lg:w-72 shrink-0">
-          <div className="glass-card p-4 rounded-[2.5rem] sticky top-8">
-            <div className="space-y-2">
-              {SETTINGS_SECTIONS.map((section) => (
-                <button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  className={cn(
-                    "w-full h-14 px-5 rounded-2xl flex items-center gap-4 font-black text-xs uppercase tracking-widest transition-all",
-                    activeSection === section.id 
-                      ? "bg-primary text-white shadow-xl shadow-primary/20" 
-                      : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"
-                  )}
-                >
-                  <section.icon size={18} />
-                  {section.label}
-                </button>
-              ))}
-            </div>
+        <div className="w-full lg:w-64 shrink-0">
+          <div className="bg-white dark:bg-zinc-900 p-2 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs sticky top-20 space-y-1">
+            {SETTINGS_SECTIONS.map((section) => (
+              <button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                className={cn(
+                  "w-full h-11 px-3.5 rounded-xl flex items-center gap-3 font-bold text-xs transition-all text-left",
+                  activeSection === section.id 
+                    ? "bg-emerald-600 text-white shadow-2xs" 
+                    : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800 hover:text-slate-900 dark:hover:text-white"
+                )}
+              >
+                <section.icon size={16} />
+                <span>{section.label}</span>
+              </button>
+            ))}
           </div>
         </div>
 
         {/* Content Area */}
-        <div className="flex-1 space-y-10 max-w-4xl">
+        <div className="flex-1 space-y-6 max-w-4xl">
           {activeSection === "lake" && <LakeInfoForm />}
           {activeSection === "packages" && <PackageSettings />}
           {activeSection === "huts" && <HutSettings />}
@@ -78,14 +78,14 @@ export default function SettingsPage() {
           {activeSection === "saas" && <SaasBillingSettings />}
           
           {activeSection === "appearance" && (
-            <div className="glass-card p-8 rounded-[2.5rem] space-y-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                  <Monitor size={24} />
+            <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs space-y-6">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                  <Monitor size={20} />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight">Giao diện người dùng</h3>
-                  <p className="text-xs font-bold text-muted-foreground mt-1 uppercase tracking-widest">Tùy chỉnh chế độ hiển thị hệ thống.</p>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">Giao diện người dùng</h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">Tùy chỉnh chế độ hiển thị hệ thống sáng hoặc tối.</p>
                 </div>
               </div>
 
@@ -93,28 +93,32 @@ export default function SettingsPage() {
                 <button 
                   onClick={() => setTheme("light")}
                   className={cn(
-                    "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all",
-                    theme === "light" ? "border-primary bg-primary/5 text-primary" : "border-transparent bg-accent/50 text-muted-foreground"
+                    "p-5 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
+                    theme === "light" 
+                      ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-bold" 
+                      : "border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400"
                   )}
                 >
-                  <Sun size={32} />
-                  <span className="font-black text-[10px] uppercase tracking-widest">Sáng (Light)</span>
+                  <Sun size={28} />
+                  <span className="font-bold text-xs">Chế độ Sáng (Mặc định)</span>
                 </button>
                 <button 
                   onClick={() => setTheme("dark")}
                   className={cn(
-                    "p-6 rounded-2xl border-2 flex flex-col items-center gap-4 transition-all",
-                    theme === "dark" ? "border-primary bg-primary/5 text-primary" : "border-transparent bg-accent/50 text-muted-foreground"
+                    "p-5 rounded-2xl border-2 flex flex-col items-center gap-3 transition-all",
+                    theme === "dark" 
+                      ? "border-emerald-600 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-700 dark:text-emerald-300 font-bold" 
+                      : "border-slate-200 dark:border-zinc-800 bg-slate-50 dark:bg-zinc-800 text-slate-600 dark:text-zinc-400"
                   )}
                 >
-                  <Moon size={32} />
-                  <span className="font-black text-[10px] uppercase tracking-widest">Tối (Dark)</span>
+                  <Moon size={28} />
+                  <span className="font-bold text-xs">Chế độ Tối (Dark)</span>
                 </button>
               </div>
             </div>
           )}
         </div>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }

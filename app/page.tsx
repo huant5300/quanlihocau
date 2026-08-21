@@ -231,14 +231,17 @@ export default async function RootPage() {
             <a href="#tinh-nang" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
               Tính năng
             </a>
+            <a href="#bang-gia" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Bảng giá & Gói cước
+            </a>
             <a href="#giai-phap" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
               Giải pháp
             </a>
             <a href="#doi-ngu" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
               Đội ngũ hỗ trợ
             </a>
-            <a href="#lien-he" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
-              Liên hệ
+            <a href="#faq" className="text-sm font-semibold text-slate-655 hover:text-emerald-600 transition-colors">
+              Hỏi đáp
             </a>
           </nav>
 
@@ -760,6 +763,257 @@ export default async function RootPage() {
                 </div>
               </div>
             ))}
+          </div>
+
+        </div>
+      </section>
+
+      {/* ================= SECTION — PRICING / GÓI CƯỚC ================= */}
+      <section id="bang-gia" className="py-20 sm:py-24 bg-gradient-to-b from-slate-50 via-white to-slate-50 relative overflow-hidden scroll-mt-16 border-b border-slate-200/80">
+        
+        {/* Soft background glow */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 w-[600px] h-[300px] bg-emerald-500/5 blur-[120px] pointer-events-none -z-10" />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6">
+          
+          <div className="text-center max-w-3xl mx-auto mb-16 space-y-3">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 text-xs font-black uppercase tracking-wider">
+              <Gift size={13} className="text-emerald-600" />
+              <span>DÙNG THỬ 5 NGÀY MIỄN PHÍ 100%</span>
+            </div>
+            
+            <h2 className="text-2xl sm:text-4xl font-black text-slate-900 uppercase tracking-tight font-display" style={{ fontFamily: "'Be Vietnam Pro', sans-serif" }}>
+              Bảng giá dịch vụ phần mềm minh bạch
+            </h2>
+
+            <p className="text-slate-500 text-xs sm:text-base font-medium max-w-2xl mx-auto leading-relaxed" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+              Chi phí siêu rẻ chỉ từ <strong className="text-emerald-700 font-extrabold">99.000 đ/tháng</strong>, không phí ẩn, không phụ thu. Đăng ký nhận ngay 5 ngày trải nghiệm đầy đủ tính năng trước khi quyết định.
+            </p>
+            <div className="w-12 h-1 bg-emerald-500 mx-auto rounded-full mt-2" />
+          </div>
+
+          {/* 3 Pricing Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch max-w-6xl mx-auto">
+            
+            {/* Card 1: Gói Dùng Thử */}
+            <div className="bg-white rounded-3xl p-7 border border-slate-200/90 shadow-sm flex flex-col justify-between hover:border-slate-300 transition-all">
+              <div className="space-y-4">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Gói Dùng Thử</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">Trải nghiệm ban đầu</p>
+                  </div>
+                  <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-slate-100 text-slate-600">
+                    Free 5 Ngày
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-1 pt-1">
+                  <span className="text-4xl font-black text-slate-900">0 đ</span>
+                  <span className="text-xs text-slate-400 font-bold">/ 5 ngày</span>
+                </div>
+
+                <div className="py-2 text-xs font-bold text-slate-700 flex items-center gap-1.5 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                  <Building size={14} className="text-emerald-600" />
+                  <span>Quản lý tối đa: <strong>1 Hồ câu</strong></span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-600 font-medium">
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Miễn phí 5 ngày dùng thử trọn gói</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Tạo vé câu & đếm ngược realtime</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Bán mồi, nước ngọt & cân thu mua cá</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Tạo mã thanh toán VietQR tự động</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Hỗ trợ in hóa đơn Bluetooth 58mm</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 mt-6">
+                <Link
+                  href="/login"
+                  className="w-full h-12 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all"
+                >
+                  <span>Bắt đầu dùng thử 5 ngày</span>
+                  <ArrowRight size={14} />
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 2: Gói Bạc (Silver) - 99k */}
+            <div className="bg-white rounded-3xl p-7 border-2 border-emerald-500 shadow-xl shadow-emerald-600/10 flex flex-col justify-between relative ring-4 ring-emerald-500/10 scale-100 md:scale-105 z-10">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-emerald-600 text-white text-[10px] font-black uppercase px-4 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1">
+                <Sparkles size={11} /> Phổ biến nhất — 1 Hồ Full tính năng
+              </div>
+
+              <div className="space-y-4 pt-1">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Thành Viên Bạc</h3>
+                    <p className="text-xs text-emerald-700 font-semibold mt-0.5">Dành cho 1 hồ câu độc lập</p>
+                  </div>
+                  <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800">
+                    99k / Tháng
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-1 pt-1">
+                  <span className="text-4xl font-black text-slate-900">99.000 đ</span>
+                  <span className="text-xs text-slate-400 font-bold">/ tháng</span>
+                </div>
+
+                <div className="py-2 text-xs font-bold text-emerald-800 flex items-center gap-1.5 bg-emerald-50 p-2.5 rounded-xl border border-emerald-100">
+                  <Building size={14} className="text-emerald-600" />
+                  <span>Quản lý tối đa: <strong>1 Hồ câu độc lập</strong></span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-700 font-semibold">
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span><strong>FULL 100% tính năng</strong> không giới hạn</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Không giới hạn số ca câu & cần thủ</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Không giới hạn số nhân viên & thu ngân</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Đồng hồ đếm giờ & cảnh báo hết giờ realtime</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Cân thu mua cá & tự động trừ hóa đơn</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Cổng thanh toán VietQR tiền về thẳng tài khoản</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>In bill nhiệt Bluetooth 58mm/80mm</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Hỗ trợ kỹ thuật Zalo 24/7 tận tâm</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 mt-6">
+                <Link
+                  href="/login"
+                  className="w-full h-12 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/20 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Zap size={14} className="fill-white" />
+                  <span>Đăng ký Gói Bạc 99k ngay</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* Card 3: Gói Vàng (Gold VIP) - 199k */}
+            <div className="bg-white rounded-3xl p-7 border-2 border-amber-400/80 shadow-md flex flex-col justify-between relative bg-gradient-to-b from-amber-500/[0.03] to-white hover:border-amber-500 transition-all">
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase px-4 py-1 rounded-full shadow-md tracking-wider flex items-center gap-1">
+                <Crown size={11} /> Chuỗi 5 Hồ câu VIP
+              </div>
+
+              <div className="space-y-4 pt-1">
+                <div className="flex justify-between items-center pb-3 border-b border-slate-100">
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">Thành Viên Vàng</h3>
+                    <p className="text-xs text-amber-700 font-semibold mt-0.5">Dành cho chuỗi 2 - 5 hồ câu</p>
+                  </div>
+                  <span className="text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-amber-100 text-amber-800">
+                    199k / Tháng
+                  </span>
+                </div>
+
+                <div className="flex items-baseline gap-1 pt-1">
+                  <span className="text-4xl font-black text-slate-900">199.000 đ</span>
+                  <span className="text-xs text-slate-400 font-bold">/ tháng</span>
+                </div>
+
+                <div className="py-2 text-xs font-bold text-amber-800 flex items-center gap-1.5 bg-amber-50 p-2.5 rounded-xl border border-amber-100">
+                  <Building size={14} className="text-amber-600" />
+                  <span>Quản lý chuỗi: <strong>Tối đa 5 Hồ câu</strong></span>
+                </div>
+
+                <ul className="space-y-2.5 text-xs text-slate-700 font-semibold">
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span><strong>Quản lý chuỗi tối đa 5 Hồ câu</strong> / Chi nhánh</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Chuyển đổi tức thì giữa các hồ trên 1 tài khoản</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>FULL 100% tính năng quản lý cao cấp</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Báo cáo đối soát doanh thu tổng hợp toàn chuỗi</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Đồng bộ dữ liệu đa thiết bị & Offline-first</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Sao lưu dữ liệu tự động hàng ngày</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check size={14} className="text-emerald-600 shrink-0 stroke-[3]" />
+                    <span>Ưu tiên hỗ trợ kỹ thuật VIP 1-kèm-1 24/7</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="pt-6 border-t border-slate-100 mt-6">
+                <Link
+                  href="/login"
+                  className="w-full h-12 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-xl font-extrabold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all shadow-md shadow-amber-500/20 hover:scale-[1.02] active:scale-[0.98]"
+                >
+                  <Crown size={14} className="fill-white" />
+                  <span>Đăng ký Gói Vàng 199k ngay</span>
+                </Link>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Bottom Trust & Hotline Help */}
+          <div className="mt-12 text-center text-xs font-semibold text-slate-500 flex flex-col sm:flex-row items-center justify-center gap-4 bg-white p-5 rounded-2xl border border-slate-200/80 max-w-3xl mx-auto shadow-2xs">
+            <div className="flex items-center gap-2 text-slate-700 font-bold">
+              <PhoneCall size={16} className="text-emerald-600" />
+              <span>Cần tư vấn hoặc hỗ trợ thanh toán?</span>
+            </div>
+            <a
+              href="https://zalo.me/0855550813"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-emerald-700 hover:underline font-extrabold flex items-center gap-1"
+            >
+              <span>Hotline / Zalo CSKH: 0855550813</span>
+              <ChevronRight size={14} />
+            </a>
           </div>
 
         </div>

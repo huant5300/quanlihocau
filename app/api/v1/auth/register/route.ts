@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     const hashedPassword = await bcrypt.hash(password, 12);
     const trialExpiry = new Date();
-    trialExpiry.setDate(trialExpiry.getDate() + 7);
+    trialExpiry.setDate(trialExpiry.getDate() + 5);
 
     const displayName = name?.trim() || "Chủ Hồ";
 
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // 2. Create default lake with 7-day FREE trial
+    // 2. Create default lake with 5-day FREE trial
     const lake = await prisma.fishingLake.create({
       data: {
         name: `Hồ Câu ${displayName}`,
@@ -72,7 +72,7 @@ export async function POST(req: NextRequest) {
         phone: phone || email || "Chưa cập nhật",
         managerId: user.id,
         totalSpots: 10,
-        subscriptionPlan: "FREE",
+        subscriptionPlan: "TRIAL",
         subscriptionStatus: "ACTIVE",
         subscriptionExpiresAt: trialExpiry,
       },
@@ -103,7 +103,7 @@ export async function POST(req: NextRequest) {
         action: "REGISTER",
         details: {
           method: email ? "email" : "phone",
-          trialDays: 7,
+          trialDays: 5,
         },
       },
     });

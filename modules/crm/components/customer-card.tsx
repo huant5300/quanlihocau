@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Phone, Calendar, ArrowRight, Wallet } from "lucide-react";
+import { Phone, Calendar, ArrowRight, Wallet, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { Customer as PrismaCustomer } from "@prisma/client";
 
@@ -14,29 +14,29 @@ export function CustomerCard({ customer, onClick }: CustomerCardProps) {
   return (
     <motion.div
       layout
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -2 }}
       onClick={() => onClick?.(customer)}
-      className="glass-card p-6 rounded-[2.5rem] flex flex-col gap-6 cursor-pointer group transition-all"
+      className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs flex flex-col gap-4 cursor-pointer group transition-all"
     >
       {/* Header: Name & Phone */}
       <div className="flex items-start justify-between">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 bg-gradient-to-br from-primary to-blue-600 rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-lg shadow-primary/20">
-            {customer.fullName?.charAt(0)}
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-600 dark:text-emerald-400 font-extrabold text-base shrink-0">
+            {customer.fullName?.charAt(0)?.toUpperCase() || "K"}
           </div>
-          <div>
-            <h3 className="font-black text-lg tracking-tight uppercase group-hover:text-primary transition-colors">
+          <div className="min-w-0">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white truncate group-hover:text-emerald-600 transition-colors">
               {customer.fullName}
             </h3>
-            <div className="flex items-center gap-3 mt-1">
-              <div className="flex items-center gap-1.5 text-muted-foreground">
-                <Phone size={12} />
-                <p className="text-xs font-bold">{customer.phone || "---"}</p>
+            <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex items-center gap-1 text-slate-500 text-xs">
+                <Phone size={11} />
+                <span>{customer.phone || "---"}</span>
               </div>
               {Number(customer.debtBalance) > 0 && (
-                <div className="bg-red-500/10 text-red-500 px-2 py-0.5 rounded-md text-[9px] font-black uppercase tracking-widest border border-red-500/20">
-                  Nợ: {Number(customer.debtBalance).toLocaleString()}đ
-                </div>
+                <span className="bg-rose-50 text-rose-600 px-1.5 py-0.5 rounded text-[10px] font-bold border border-rose-200">
+                  Nợ: {Number(customer.debtBalance).toLocaleString()} đ
+                </span>
               )}
             </div>
           </div>
@@ -44,33 +44,36 @@ export function CustomerCard({ customer, onClick }: CustomerCardProps) {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-2 gap-3">
-        <div className="bg-accent/50 rounded-2xl p-4 border border-white/5">
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-xl p-3 border border-slate-100 dark:border-zinc-800">
+          <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
             <Wallet size={12} />
-            <p className="text-[10px] font-black uppercase tracking-widest">Tổng chi</p>
+            <span className="text-[10px] font-bold">Tổng chi tiêu</span>
           </div>
-          <p className="font-black text-sm">{Number(customer.totalSpent || 0).toLocaleString()}đ</p>
+          <p className="font-extrabold text-slate-900 dark:text-white">{Number(customer.totalSpent || 0).toLocaleString()} đ</p>
         </div>
-        <div className="bg-accent/50 rounded-2xl p-4 border border-white/5">
-          <div className="flex items-center gap-2 text-muted-foreground mb-1">
+        <div className="bg-slate-50 dark:bg-zinc-800/60 rounded-xl p-3 border border-slate-100 dark:border-zinc-800">
+          <div className="flex items-center gap-1.5 text-slate-400 mb-0.5">
             <Calendar size={12} />
-            <p className="text-[10px] font-black uppercase tracking-widest">Lượt câu</p>
+            <span className="text-[10px] font-bold">Lượt câu</span>
           </div>
-          <p className="font-black text-sm">{customer.visitCount || 0} Lần</p>
+          <p className="font-extrabold text-slate-900 dark:text-white">{customer.visitCount || 0} lần</p>
         </div>
       </div>
 
       {/* Footer Info */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-2 border-t border-slate-100 dark:border-zinc-800 text-xs">
         <div className="flex flex-col">
-          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Tham gia từ</span>
-          <span className="text-xs font-bold mt-0.5">{customer.createdAt ? new Date(customer.createdAt).toLocaleDateString("vi-VN") : "---"}</span>
+          <span className="text-[10px] text-slate-400 font-medium">Tham gia từ</span>
+          <span className="text-[11px] font-bold text-slate-700 dark:text-zinc-300">
+            {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString("vi-VN") : "---"}
+          </span>
         </div>
-        <div className="w-10 h-10 rounded-xl bg-accent flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white transition-all">
-          <ArrowRight size={18} />
+        <div className="w-8 h-8 rounded-lg bg-slate-100 dark:bg-zinc-800 flex items-center justify-center text-slate-500 group-hover:bg-emerald-600 group-hover:text-white transition-all">
+          <ArrowRight size={14} />
         </div>
       </div>
     </motion.div>
   );
 }
+

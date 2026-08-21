@@ -3,14 +3,16 @@
 import React, { useState, useEffect } from "react";
 import { 
   Bell, 
-  Wifi, 
-  WifiOff, 
-  User, 
   Search,
   Moon,
   Sun,
   ChevronDown,
-  Menu
+  Menu,
+  PlusCircle,
+  HelpCircle,
+  Settings,
+  Sparkles,
+  ShoppingBag
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useSession } from "next-auth/react";
@@ -27,12 +29,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import { UserRole } from "@prisma/client";
 
 export function Topbar() {
   const { theme, setTheme } = useTheme();
   const { data: session } = useSession();
   const user = session?.user;
-  const { currentLakeId, currentLakeName, setCurrentLake, setIsMobileNavOpen } = useUIStore();
+  const { 
+    currentLakeId, 
+    currentLakeName, 
+    setCurrentLake, 
+    setIsMobileNavOpen,
+    setOpenSessionModalOpen 
+  } = useUIStore();
   const [lakes, setLakes] = useState<any[]>([]);
 
   useEffect(() => {
@@ -56,103 +65,121 @@ export function Topbar() {
   };
 
   return (
-    <header className="sticky top-0 z-30 w-full p-2 sm:p-4 lg:p-6 pointer-events-none">
-      <div className="bg-card/80 backdrop-blur-xl border border-border/50 h-16 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] px-4 sm:px-6 flex items-center justify-between shadow-xl pointer-events-auto">
+    <header className="sticky top-0 z-30 w-full bg-white dark:bg-zinc-900 border-b border-slate-200/80 dark:border-zinc-800 h-14 sm:h-16 px-4 sm:px-6 flex items-center justify-between shadow-2xs">
+      
+      {/* Left: Mobile Toggle & Lake Switcher */}
+      <div className="flex items-center gap-3 sm:gap-6">
+        <button 
+          onClick={() => setIsMobileNavOpen(true)}
+          className="lg:hidden w-9 h-9 flex items-center justify-center rounded-lg bg-slate-100 dark:bg-zinc-800 text-slate-700 dark:text-zinc-300 hover:bg-slate-200 transition-all"
+        >
+          <Menu size={18} />
+        </button>
         
-        {/* Left Side: Tenant Info & Lake Switcher */}
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={() => setIsMobileNavOpen(true)}
-            className="lg:hidden w-11 h-11 flex items-center justify-center rounded-xl bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-all active:scale-95 shadow-lg shadow-primary/5"
-          >
-            <Menu size={22} />
-          </button>
-          
-          <div className="flex items-center gap-4">
-            <div className="hidden sm:flex flex-col">
-              <h2 className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] leading-none">Hồ đang quản lý</h2>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <div className="flex items-center gap-2 mt-1 cursor-pointer group">
-                    <p className="text-sm font-black tracking-tight">{currentLakeName || "Chưa chọn hồ"}</p>
-                    <ChevronDown size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
-                  </div>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56 bg-card/95 backdrop-blur-xl border-border/50 rounded-2xl shadow-2xl p-2">
-                  <DropdownMenuLabel className="text-[10px] font-black uppercase tracking-widest text-muted-foreground p-3">Chọn hồ câu</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border/50" />
-                  {lakes.map((lake) => (
-                    <DropdownMenuItem 
-                      key={lake.id}
-                      onClick={() => handleLakeSwitch(lake.id, lake.name)}
-                      className={cn(
-                        "rounded-xl p-3 cursor-pointer font-bold text-xs transition-all",
-                        currentLakeId === lake.id ? "bg-primary text-white" : "hover:bg-accent"
-                      )}
-                    >
-                      {lake.name}
-                    </DropdownMenuItem>
-                  ))}
-                  {lakes.length === 0 && (
-                    <div className="p-3 text-[10px] italic text-muted-foreground">Không tìm thấy hồ nào</div>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+        {/* Lake Selector Dropdown */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200/80 dark:border-zinc-700 bg-slate-50/80 dark:bg-zinc-800/80 hover:bg-slate-100 transition-colors text-left">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <div className="flex flex-col">
+                <span className="text-[11px] font-bold text-slate-800 dark:text-zinc-200 truncate max-w-[140px] sm:max-w-[200px]">
+                  {currentLakeName || "Hồ câu dịch vụ"}
+                </span>
+              </div>
+              <ChevronDown size={13} className="text-slate-400 shrink-0" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start" className="w-60 bg-white dark:bg-zinc-900 border border-slate-200 dark:border-zinc-800 rounded-xl shadow-lg p-1.5 text-xs">
+            <DropdownMenuLabel className="text-[10px] font-bold uppercase tracking-wider text-slate-400 p-2">
+              Danh sách hồ của bạn
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            {lakes.map((lake) => (
+              <DropdownMenuItem 
+                key={lake.id}
+                onClick={() => handleLakeSwitch(lake.id, lake.name)}
+                className={cn(
+                  "rounded-lg p-2.5 cursor-pointer font-semibold transition-all",
+                  currentLakeId === lake.id ? "bg-emerald-600 text-white" : "hover:bg-slate-100 dark:hover:bg-zinc-800"
+                )}
+              >
+                {lake.name}
+              </DropdownMenuItem>
+            ))}
+            {lakes.length === 0 && (
+              <div className="p-2 text-[11px] italic text-slate-400">Không tìm thấy hồ nào</div>
+            )}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Center: Search (POS Style) */}
+      <div className="hidden md:flex items-center flex-1 max-w-xs mx-6 relative">
+        <Search className="absolute left-3.5 text-slate-400" size={15} />
+        <input 
+          type="text" 
+          placeholder="Tìm cần thủ, số điện thoại, đơn hàng..."
+          className="w-full h-9 pl-9 pr-3 bg-slate-100/80 dark:bg-zinc-800/80 rounded-lg border border-transparent focus:border-emerald-500 focus:bg-white dark:focus:bg-zinc-900 outline-none text-xs transition-all text-slate-800 dark:text-zinc-200 placeholder:text-slate-400"
+        />
+      </div>
+
+      {/* Right: Quick Action POS Button + Settings & Profile */}
+      <div className="flex items-center gap-2 sm:gap-3">
+        
+        {/* Quick Open Session / POS Button (like "Bán hàng" in KiotViet) */}
+        <button
+          onClick={() => setOpenSessionModalOpen(true)}
+          className="h-9 px-3.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-lg font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/25 transition-all"
+        >
+          <PlusCircle size={15} />
+          <span className="hidden sm:inline">Vào ca / Bán vé</span>
+          <span className="sm:hidden">Bán vé</span>
+        </button>
+
+        {/* Connection Status Indicator */}
+        <SyncStatusIndicator />
+
+        {/* Theme Toggle */}
+        <button 
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors"
+          title="Chế độ sáng / tối"
+        >
+          {theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
+
+        {/* Notifications */}
+        <button 
+          className="w-8 h-8 flex items-center justify-center rounded-lg text-slate-500 hover:bg-slate-100 dark:hover:bg-zinc-800 transition-colors relative"
+          title="Thông báo"
+        >
+          <Bell size={17} />
+          <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-emerald-500 rounded-full ring-2 ring-white dark:ring-zinc-900" />
+        </button>
+
+        <div className="h-6 w-px bg-slate-200 dark:bg-zinc-800 mx-1 hidden sm:block" />
+
+        {/* User Info Capsule */}
+        <div className="flex items-center gap-2 pl-1">
+          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-zinc-700 text-slate-700 dark:text-zinc-200 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+            {user?.image ? (
+              <img src={user.image} alt="Avatar" className="w-full h-full object-cover" />
+            ) : (
+              (user?.name?.[0] || "U").toUpperCase()
+            )}
+          </div>
+          <div className="hidden xl:flex flex-col text-left">
+            <span className="text-xs font-bold text-slate-800 dark:text-zinc-200 leading-tight truncate max-w-[120px]">
+              {user?.name || "Chủ hồ"}
+            </span>
+            <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium leading-none mt-0.5">
+              {user?.role === UserRole.SUPER_ADMIN ? "Super Admin" : "Chủ sở hữu hồ"}
+            </span>
           </div>
         </div>
 
-        {/* Center: Search (POS Style) */}
-        <div className="hidden md:flex items-center flex-1 max-w-sm mx-8 relative group">
-          <Search className="absolute left-4 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-          <input 
-            type="text" 
-            placeholder="Tìm kiếm nhanh..."
-            className="w-full h-11 pl-11 pr-4 bg-background/50 rounded-2xl border-2 border-transparent focus:border-primary/20 focus:bg-background outline-none transition-all font-bold text-xs"
-          />
-        </div>
-
-        {/* Right Side: Actions */}
-        <div className="flex items-center gap-2 lg:gap-4">
-          {/* Connection Status & Sync */}
-          <SyncStatusIndicator />
-
-          {/* Theme Toggle */}
-          <button 
-            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors"
-          >
-            {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-
-          {/* Notifications */}
-          <button className="w-11 h-11 flex items-center justify-center rounded-xl hover:bg-accent transition-colors relative">
-            <Bell size={20} />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-primary rounded-full border-2 border-background" />
-          </button>
-
-          <div className="h-8 w-[1px] bg-border mx-1" />
-
-          {/* User Profile */}
-          <button className="flex items-center gap-3 p-1 rounded-2xl hover:bg-accent transition-all group">
-            <div className="w-10 h-10 bg-gradient-to-br from-primary to-blue-600 rounded-xl flex items-center justify-center text-white font-black shadow-lg shadow-primary/20 overflow-hidden">
-              {user?.image ? (
-                <img src={user.image} alt="User" className="w-full h-full object-cover" />
-              ) : (
-                <User size={20} />
-              )}
-            </div>
-            <div className="hidden lg:flex flex-col items-start">
-              <div className="flex items-center gap-1">
-                <span className="text-[13px] font-black leading-none">{user?.name || "Quản trị viên"}</span>
-                <ChevronDown size={12} className="text-muted-foreground group-hover:text-primary transition-colors" />
-              </div>
-              <span className="text-[10px] font-bold text-primary uppercase tracking-widest mt-1">{user?.role || "Chủ hồ"}</span>
-            </div>
-          </button>
-        </div>
       </div>
     </header>
   );
 }
+

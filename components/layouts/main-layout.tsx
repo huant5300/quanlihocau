@@ -35,7 +35,7 @@ export function MainLayout({ children }: MainLayoutProps) {
   useNetworkStatus();
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex overflow-hidden">
+    <div className="min-h-screen bg-slate-100/70 dark:bg-zinc-950 text-slate-900 dark:text-zinc-100 flex overflow-hidden">
       <OfflineBanner />
       <OfflineQueueManager isOpen={isQueueOpen} onClose={() => setIsQueueOpen(false)} />
       {/* Desktop Sidebar */}
@@ -61,7 +61,7 @@ export function MainLayout({ children }: MainLayoutProps) {
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 200 }}
-              className="relative w-80 h-full bg-background z-10 flex flex-col shadow-2xl"
+              className="relative w-72 h-full bg-white dark:bg-zinc-900 z-10 flex flex-col shadow-2xl"
             >
               {/* Close Button or click inside menu closes drawer */}
               <div 
@@ -79,7 +79,7 @@ export function MainLayout({ children }: MainLayoutProps) {
         <Topbar />
         
         <main className="flex-1 overflow-y-auto no-scrollbar pb-[45vh] lg:pb-8">
-          <div className="p-4 sm:p-6 lg:p-10 max-w-[1600px] mx-auto">
+          <div className="p-4 sm:p-5 lg:p-6 max-w-[1600px] mx-auto">
             {children}
           </div>
         </main>

@@ -8,9 +8,9 @@ import {
   YAxis, 
   CartesianGrid, 
   Tooltip, 
-  ResponsiveContainer,
-  AreaChart,
-  Area
+  ResponsiveContainer, 
+  AreaChart, 
+  Area 
 } from "recharts";
 import { 
   Table, 
@@ -20,17 +20,14 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Crown, Trophy, FileDown } from "lucide-react";
+import { Crown, Trophy, FileDown, TrendingUp } from "lucide-react";
 import { exportToExcel } from "@/utils/export-excel";
 import { exportToPDF } from "@/utils/export-pdf";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
 
 export function ReportsClient({ revenueChartData, topProducts, topCatcher, biggestCatch }: any) {
   const handleExportExcel = () => {
-    if (!revenueChartData || revenueChartData.length === 0) return toast.error("Không có dữ liệu");
-    
-    // Xuất doanh thu
+    if (!revenueChartData || revenueChartData.length === 0) return toast.error("Không có dữ liệu để xuất");
     const revenueData = revenueChartData.map((r: any) => ({
       "Ngày": r.date,
       "Doanh thu (VNĐ)": r.amount
@@ -40,7 +37,7 @@ export function ReportsClient({ revenueChartData, topProducts, topCatcher, bigge
   };
 
   const handleExportPDF = () => {
-    if (!revenueChartData || revenueChartData.length === 0) return toast.error("Không có dữ liệu");
+    if (!revenueChartData || revenueChartData.length === 0) return toast.error("Không có dữ liệu để xuất");
     const headers = ["Ngày", "Doanh thu"];
     const rows = revenueChartData.map((r: any) => [
       r.date, Number(r.amount).toLocaleString() + "đ"
@@ -55,143 +52,186 @@ export function ReportsClient({ revenueChartData, topProducts, topCatcher, bigge
   };
 
   return (
-    <div className="space-y-8">
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Revenue Chart */}
-        <div className="glass-card p-8 rounded-[3rem]">
-          <div className="flex items-center justify-between mb-8">
-            <h3 className="text-lg font-black uppercase tracking-tight">Doanh thu 30 ngày qua</h3>
-            <div className="flex gap-2">
-              <Button onClick={handleExportExcel} variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5">
-                <FileDown size={14} className="mr-2" /> Excel
-              </Button>
-              <Button onClick={handleExportPDF} variant="outline" size="sm" className="rounded-xl border-white/10 hover:bg-white/5 text-rose-400">
-                <FileDown size={14} className="mr-2" /> PDF
-              </Button>
-            </div>
+    <div className="space-y-6 select-none">
+      
+      {/* ── HEADER TITLE ── */}
+      <div className="bg-white dark:bg-zinc-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Báo cáo bán hàng & Doanh thu
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-zinc-400 mt-0.5">
+            Tổng hợp dữ liệu kinh doanh 30 ngày qua và xếp hạng kỷ lục cần thủ
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button 
+            onClick={handleExportExcel}
+            className="h-9 px-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+          >
+            <FileDown size={14} />
+            <span>Xuất Excel</span>
+          </button>
+          <button 
+            onClick={handleExportPDF}
+            className="h-9 px-3.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+          >
+            <FileDown size={14} />
+            <span>Xuất PDF</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ── CHARTS ROW: Revenue Area Chart & Top Products Table ── */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        
+        {/* Revenue Chart Card */}
+        <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Doanh thu 30 ngày qua
+            </h3>
+            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
+              Doanh thu thực tế
+            </span>
           </div>
-          <div className="h-[400px] w-full">
+
+          <div className="h-72 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueChartData}>
                 <defs>
-                  <linearGradient id="colorAmount" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                  <linearGradient id="colorAmountReport" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.3}/>
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.6} />
                 <XAxis 
                   dataKey="date" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 'bold' }} 
+                  tick={{ fill: '#64748B', fontSize: 11 }} 
                 />
                 <YAxis 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 10, fontWeight: 'bold' }}
-                  tickFormatter={(val) => `${(val / 1000000).toFixed(1)}M`}
+                  tick={{ fill: '#64748B', fontSize: 11 }}
+                  tickFormatter={(val) => `${(val / 1000000).toFixed(1)}tr`}
                 />
                 <Tooltip 
-                  contentStyle={{ backgroundColor: '#0f0f0f', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1rem' }}
-                  itemStyle={{ color: 'hsl(var(--primary))', fontWeight: 'black' }}
+                  formatter={(val: any) => [`${Number(val).toLocaleString()} đ`, "Doanh thu"]}
+                  contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #E2E8F0', borderRadius: '12px', fontSize: '12px', fontWeight: 'bold' }}
                 />
                 <Area 
                   type="monotone" 
                   dataKey="amount" 
-                  stroke="hsl(var(--primary))" 
-                  strokeWidth={3}
+                  stroke="#10B981" 
+                  strokeWidth={2.5}
                   fillOpacity={1} 
-                  fill="url(#colorAmount)" 
+                  fill="url(#colorAmountReport)" 
                 />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Top Products */}
-        <div className="glass-card p-8 rounded-[3rem]">
-          <h3 className="text-lg font-black uppercase tracking-tight mb-8">Sản phẩm bán chạy</h3>
-          <Table>
-            <TableHeader>
-              <TableRow className="hover:bg-transparent border-white/5">
-                <TableHead className="text-[10px] font-black uppercase tracking-widest h-12">Sản phẩm</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest h-12 text-center">Số lượng</TableHead>
-                <TableHead className="text-[10px] font-black uppercase tracking-widest h-12 text-right">Tổng thu</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {topProducts.map((p: any, i: number) => (
-                <TableRow key={i} className="hover:bg-white/5 border-white/5">
-                  <TableCell className="py-4 font-bold text-sm">{p.description}</TableCell>
-                  <TableCell className="text-center font-bold">{p._sum.quantity}</TableCell>
-                  <TableCell className="text-right font-black text-primary">{Number(p._sum.totalPrice).toLocaleString()}đ</TableCell>
+        {/* Top Products Card */}
+        <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+              Sản phẩm & Gói dịch vụ bán chạy
+            </h3>
+            <span className="text-xs text-slate-400 font-semibold">Theo tổng doanh thu</span>
+          </div>
+
+          <div className="overflow-hidden rounded-xl border border-slate-100 dark:border-zinc-800">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-slate-50/80 dark:bg-zinc-800/60 hover:bg-slate-50/80 border-b border-slate-100 dark:border-zinc-800">
+                  <TableHead className="text-xs font-bold text-slate-600 dark:text-zinc-400 h-10">Sản phẩm / Dịch vụ</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-600 dark:text-zinc-400 h-10 text-center">Số lượng</TableHead>
+                  <TableHead className="text-xs font-bold text-slate-600 dark:text-zinc-400 h-10 text-right">Tổng thu</TableHead>
                 </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {topProducts && topProducts.length > 0 ? (
+                  topProducts.map((p: any, i: number) => (
+                    <TableRow key={i} className="hover:bg-slate-50/80 dark:hover:bg-zinc-800/40 border-b border-slate-100 dark:border-zinc-800/60">
+                      <TableCell className="py-3 text-xs font-semibold text-slate-800 dark:text-zinc-200">{p.description}</TableCell>
+                      <TableCell className="text-center text-xs font-bold text-slate-900 dark:text-white">{p._sum.quantity}</TableCell>
+                      <TableCell className="text-right text-xs font-extrabold text-emerald-600 dark:text-emerald-400">{Number(p._sum.totalPrice).toLocaleString()} đ</TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-center py-8 text-xs text-slate-400">
+                      Chưa có dữ liệu bán hàng
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
         </div>
+
       </div>
 
-      {/* Cần thủ xuất sắc & Kỷ lục câu cá */}
-      <div className="glass-card p-8 rounded-[3rem]">
-        <h3 className="text-lg font-black uppercase tracking-tight mb-8">Kỷ lục câu cá & Cần thủ xuất sắc (30 ngày qua)</h3>
+      {/* ── RECORDS & AWARDS ROW ── */}
+      <div className="bg-white dark:bg-zinc-900 p-5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs space-y-4">
+        <h3 className="text-sm font-bold text-slate-900 dark:text-white">
+          Kỷ lục câu cá & Cần thủ xuất sắc (30 ngày qua)
+        </h3>
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Cần thủ câu nhiều nhất */}
-          <div className="bg-white/5 border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group hover:scale-[1.01] transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full bg-primary/5 -mr-8 -mt-8 opacity-50" />
-            <div className="flex items-start gap-4 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center shrink-0">
-                <Crown size={24} className="stroke-[2.5]" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Cần thủ câu nhiều cá nhất</p>
-                {topCatcher ? (
-                  <div>
-                    <h4 className="text-lg font-black text-white">{topCatcher.name}</h4>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{topCatcher.phone}</p>
-                    <div className="mt-3 inline-flex items-center gap-1.5 px-3 py-1 bg-amber-500/15 text-amber-400 border border-amber-500/20 rounded-full text-xs font-black uppercase tracking-wider">
-                      Đã câu: {topCatcher.count} con cá
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm font-medium text-muted-foreground italic mt-1">Chưa ghi nhận lượt thu mua cá nào trong tháng qua</p>
-                )}
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Top Catcher */}
+          <div className="bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/80 rounded-xl p-4 flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-950/50 text-amber-600 flex items-center justify-center shrink-0">
+              <Crown size={20} className="stroke-[2.5]" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Cần thủ câu nhiều cá nhất</p>
+              {topCatcher ? (
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{topCatcher.name}</h4>
+                  <p className="text-xs text-slate-500 font-mono">{topCatcher.phone}</p>
+                  <span className="mt-2 inline-block px-2.5 py-0.5 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-400 rounded-md text-[11px] font-bold">
+                    Đã câu: {topCatcher.count} con cá
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Chưa ghi nhận dữ liệu</p>
+              )}
             </div>
           </div>
 
-          {/* Kỷ lục cá lớn nhất */}
-          <div className="bg-white/5 border border-white/5 rounded-[2rem] p-6 relative overflow-hidden group hover:scale-[1.01] transition-all duration-300">
-            <div className="absolute top-0 right-0 w-32 h-32 rounded-bl-full bg-primary/5 -mr-8 -mt-8 opacity-50" />
-            <div className="flex items-start gap-4 relative z-10">
-              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0">
-                <Trophy size={24} className="stroke-[2.5]" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Kỷ lục cá lớn nhất câu được</p>
-                {biggestCatch ? (
-                  <div>
-                    <h4 className="text-lg font-black text-white">{biggestCatch.customerName}</h4>
-                    <p className="text-xs text-muted-foreground font-mono mt-0.5">{biggestCatch.customerPhone}</p>
-                    <div className="mt-3 flex flex-wrap gap-2">
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-black uppercase tracking-wider">
-                        {biggestCatch.fishName}: {biggestCatch.weight} kg
-                      </div>
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-500/15 text-blue-400 border border-blue-500/20 rounded-full text-xs font-black uppercase tracking-wider">
-                        Thu mua: {Number(biggestCatch.amount).toLocaleString()}đ
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-sm font-medium text-muted-foreground italic mt-1">Chưa ghi nhận kỷ lục câu cá nào trong tháng qua</p>
-                )}
-              </div>
+          {/* Biggest Catch */}
+          <div className="bg-slate-50 dark:bg-zinc-800/60 border border-slate-200/80 dark:border-zinc-700/80 rounded-xl p-4 flex items-start gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center shrink-0">
+              <Trophy size={20} className="stroke-[2.5]" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Kỷ lục cá to nhất</p>
+              {biggestCatch ? (
+                <div>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">
+                    {biggestCatch.fishName} - {biggestCatch.weight} kg
+                  </h4>
+                  <p className="text-xs text-slate-500">{biggestCatch.catcherName}</p>
+                  <span className="mt-2 inline-block px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-400 rounded-md text-[11px] font-bold">
+                    Cân nặng: {biggestCatch.weight} kg
+                  </span>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">Chưa ghi nhận kỷ lục cá khủng</p>
+              )}
             </div>
           </div>
+
         </div>
       </div>
+
     </div>
   );
 }

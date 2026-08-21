@@ -15,10 +15,10 @@ async function setupOnboardingData(userId: string, userName: string) {
   try {
     console.log(`Setting up onboarding data for user: ${userId} (${userName})`);
 
-    // 1. Create a default lake with a 7-day TRIAL plan
+    // 1. Create a default lake with a 5-day TRIAL plan
     const lakeName = `Hồ câu ${userName}`;
     const trialExpiry = new Date();
-    trialExpiry.setDate(trialExpiry.getDate() + 7); // 7 days trial
+    trialExpiry.setDate(trialExpiry.getDate() + 5); // 5 days trial
 
     const lake = await prisma.fishingLake.create({
       data: {
@@ -28,7 +28,7 @@ async function setupOnboardingData(userId: string, userName: string) {
         phone: "Chưa cập nhật",
         managerId: userId,
         totalSpots: 10,
-        subscriptionPlan: "FREE",
+        subscriptionPlan: "TRIAL",
         subscriptionStatus: "ACTIVE",
         subscriptionExpiresAt: trialExpiry,
       },
@@ -147,6 +147,22 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           if (!user.isActive) {
             console.log("User account is locked");
             return null;
+          }
+
+          if (user.role === UserRole.OWNER && !user.lakeId) {
+            const hasLake = await prisma.fishingLake.findFirst({
+              where: { managerId: user.id },
+            });
+            if (hasLake) {
+              user.lakeId = hasLake.id;
+              await prisma.user.update({
+                where: { id: user.id },
+                data: { lakeId: hasLake.id },
+              });
+            } else {
+              const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
+              user.lakeId = lakeId;
+            }
           }
 
           return {

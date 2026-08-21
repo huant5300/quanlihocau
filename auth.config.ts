@@ -2,6 +2,8 @@ import type { NextAuthConfig } from "next-auth";
 import NextAuth from "next-auth";
 
 export const authConfig = {
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau-secret-key-production-2025",
+  trustHost: true,
   pages: {
     signIn: "/login",
     error: "/login",
@@ -13,7 +15,7 @@ export const authConfig = {
       if (isDashboard) {
         if (isLoggedIn) return true;
         return false; // Redirect to login
-      } else if (isLoggedIn) {
+      } else if (isLoggedIn && nextUrl.pathname === "/login") {
         return Response.redirect(new URL("/dashboard", nextUrl));
       }
       return true;

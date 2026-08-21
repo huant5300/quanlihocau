@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Fish, Loader2, User, Lock, Phone, KeyRound, Eye, EyeOff, Mail } from "lucide-react";
+import { Fish, Loader2, User, Lock, Phone, KeyRound, Eye, EyeOff, Mail, Sparkles, AlertCircle } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
@@ -17,14 +17,14 @@ declare global {
 }
 
 type MainTab = "login" | "register";
-type LoginMethod = "phone" | "email";
+type LoginMethod = "password" | "otp";
 
 export default function LoginPage() {
   const router = useRouter();
   const [mainTab, setMainTab] = useState<MainTab>("login");
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>("phone");
+  const [loginMethod, setLoginMethod] = useState<LoginMethod>("password");
 
-  // Login states
+  // Login states (Password)
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
@@ -46,35 +46,35 @@ export default function LoginPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // Initialize reCAPTCHA lazily on first OTP request, not on mount
-  // (avoids Firebase prerender crash)
-
-  // ── LOGIN: Email / SĐT + mật khẩu ──
-  const handleEmailLogin = async (e: React.FormEvent) => {
+  // ── LOGIN: Số điện thoại / Email + Mật khẩu ──
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginId || !loginPassword) return;
+    if (!loginId || !loginPassword) {
+      toast.error("Vui lòng nhập số điện thoại (hoặc email) và mật khẩu");
+      return;
+    }
     setIsLoading(true);
     try {
       const result = await signIn("credentials", {
-        email: loginId,
+        email: loginId.trim(),
         password: loginPassword,
         redirect: false,
       });
       if (result?.error) {
-        toast.error("Sai số điện thoại / email hoặc mật khẩu");
+        toast.error("Sai số điện thoại / email hoặc mật khẩu. Vui lòng kiểm tra lại!");
       } else {
         toast.success("Đăng nhập thành công! 🎉");
         router.push("/dashboard");
         router.refresh();
       }
     } catch {
-      toast.error("Đã có lỗi xảy ra, thử lại sau.");
+      toast.error("Đã có lỗi xảy ra khi kết nối máy chủ.");
     } finally {
       setIsLoading(false);
     }
   };
 
-  // ── LOGIN: Gửi OTP ──
+  // ── LOGIN: Gửi SMS OTP ──
   const handleSendOtp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!phone) {
@@ -87,7 +87,6 @@ export default function LoginPage() {
 
     setIsLoading(true);
     try {
-      // Lazy-import Firebase only on client, only when needed
       const { auth } = await import("@/lib/firebase");
       const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
 
@@ -99,12 +98,11 @@ export default function LoginPage() {
       setOtpSent(true);
       toast.success("Mã OTP đã được gửi về điện thoại!");
     } catch (err: any) {
-      let msg = "Lỗi gửi SMS. ";
-      if (err?.code === "auth/unauthorized-domain") msg = "Domain chưa được phép trong Firebase. Thêm quanlihocau.com vào Authorized Domains.";
-      else if (err?.code === "auth/invalid-phone-number") msg = "Số điện thoại không hợp lệ.";
-      else if (err?.code === "auth/too-many-requests") msg = "Đã vượt giới hạn SMS. Thử lại sau.";
-      else if (err?.message) msg += err.message;
-      toast.error(msg, { duration: 6000 });
+      console.warn("Firebase Phone Auth error:", err);
+      // Fallback thân thiện chuyển sang đăng nhập bằng mật khẩu
+      setLoginId(phone);
+      setLoginMethod("password");
+      toast.info("Dịch vụ SMS OTP quốc tế đang bảo trì. Vui lòng nhập mật khẩu tài khoản để đăng nhập trực tiếp!", { duration: 5000 });
       try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = null; } catch {}
     } finally {
       setIsLoading(false);
@@ -134,11 +132,11 @@ export default function LoginPage() {
     }
   };
 
-  // ── REGISTER ──
+  // ── REGISTER: Tạo tài khoản mới ──
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName) {
-      toast.error("Vui lòng nhập họ và tên hoặc tên hồ câu");
+    if (!regName.trim()) {
+      toast.error("Vui lòng nhập họ tên hoặc tên hồ câu của bạn");
       return;
     }
     if (!regPassword || regPassword.length < 6) {
@@ -150,25 +148,25 @@ export default function LoginPage() {
       return;
     }
 
-    if (regMethod === "email" && !regEmail) {
+    if (regMethod === "email" && !regEmail.trim()) {
       toast.error("Vui lòng nhập địa chỉ email");
       return;
     }
-    if (regMethod === "phone" && !regPhone) {
-      toast.error("Vui lòng nhập số điện thoại");
+    if (regMethod === "phone" && !regPhone.trim()) {
+      toast.error("Vui lòng nhập số điện thoại liên hệ");
       return;
     }
 
     setIsLoading(true);
     try {
       const payload: any = {
-        name: regName,
+        name: regName.trim(),
         password: regPassword,
       };
       if (regMethod === "email") {
-        payload.email = regEmail;
+        payload.email = regEmail.trim();
       } else {
-        payload.phone = regPhone;
+        payload.phone = regPhone.trim();
       }
 
       const res = await fetch("/api/v1/auth/register", {
@@ -180,8 +178,8 @@ export default function LoginPage() {
       if (!res.ok) {
         toast.error(data.error || "Đăng ký thất bại");
       } else {
-        toast.success("Đăng ký thành công! Đang tự động đăng nhập...");
-        const loginIdentifier = regMethod === "email" ? regEmail : regPhone;
+        toast.success("Đăng ký thành công! Đang kích hoạt 5 ngày dùng thử...");
+        const loginIdentifier = regMethod === "email" ? regEmail.trim() : regPhone.trim();
         const result = await signIn("credentials", {
           email: loginIdentifier,
           password: regPassword,
@@ -192,6 +190,7 @@ export default function LoginPage() {
           router.refresh();
         } else {
           switchTab("login");
+          setLoginId(loginIdentifier);
           toast.info("Đã tạo tài khoản, vui lòng đăng nhập.");
         }
       }
@@ -209,8 +208,7 @@ export default function LoginPage() {
     setOtpSent(false);
     setOtp("");
     setPhone("");
-    setLoginId("");
-    setLoginPassword("");
+    setShowLoginPassword(false);
   };
 
   return (
@@ -221,39 +219,38 @@ export default function LoginPage() {
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/15 blur-[130px] rounded-full animate-pulse" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-500/10 blur-[130px] rounded-full animate-pulse" />
-        <div className="absolute top-[30%] right-[20%] w-[300px] h-[300px] bg-indigo-500/5 blur-[100px] rounded-full" />
       </div>
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="w-full max-w-[440px] bg-white/[0.02] backdrop-blur-2xl border border-white/8 rounded-[2.5rem] shadow-2xl shadow-emerald-900/10 relative z-10 overflow-hidden"
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="w-full max-w-[440px] bg-white/[0.03] backdrop-blur-2xl border border-white/10 rounded-[2.5rem] shadow-2xl shadow-emerald-950/20 relative z-10 overflow-hidden"
       >
         {/* Back link */}
         <div className="px-8 pt-7 pb-0">
-          <Link href="/" className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-500 hover:text-white transition-colors uppercase tracking-widest">
+          <Link href="/" className="inline-flex items-center gap-1.5 text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest">
             ← Quay lại trang chủ
           </Link>
         </div>
 
-        {/* Logo */}
-        <div className="flex flex-col items-center pt-5 pb-6 px-8">
+        {/* Logo Brand */}
+        <div className="flex flex-col items-center pt-4 pb-6 px-8">
           <div className="w-14 h-14 bg-emerald-500 rounded-2xl flex items-center justify-center text-white mb-3 shadow-xl shadow-emerald-500/25 hover:scale-105 transition-transform">
             <Fish size={28} />
           </div>
           <h1 className="text-xl font-black text-white tracking-wider uppercase">Quản lý Hồ câu</h1>
-          <p className="text-[11px] text-slate-500 mt-1">Hệ thống quản lý tiêu chuẩn chuyên nghiệp</p>
+          <p className="text-[11px] text-slate-400 mt-1">Phần mềm quản lý hồ câu chuyên nghiệp</p>
         </div>
 
         {/* ── MAIN TABS: Đăng nhập | Đăng ký ── */}
         <div className="px-8">
-          <div className="flex bg-white/[0.04] border border-white/8 p-1 rounded-2xl mb-6">
+          <div className="flex bg-white/[0.05] border border-white/10 p-1 rounded-2xl mb-6">
             {(["login", "register"] as MainTab[]).map((tab) => (
               <button
                 key={tab}
                 onClick={() => switchTab(tab)}
-                className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 ${
+                className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 cursor-pointer ${
                   mainTab === tab
                     ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
                     : "text-slate-400 hover:text-white"
@@ -273,176 +270,145 @@ export default function LoginPage() {
             {mainTab === "login" && (
               <motion.div
                 key="login-tab"
-                initial={{ opacity: 0, x: -15 }}
+                initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 15 }}
+                exit={{ opacity: 0, x: 10 }}
                 transition={{ duration: 0.2 }}
+                className="space-y-4"
               >
-                {/* Login method sub-tabs */}
-                <div className="flex gap-2 mb-5">
-                  <button
-                    onClick={() => { setLoginMethod("phone"); setOtpSent(false); setOtp(""); setPhone(""); }}
-                    className={`flex-1 py-2 text-[11px] font-bold rounded-xl border transition-all ${
-                      loginMethod === "phone"
-                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
-                        : "border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/20"
-                    }`}
-                  >
-                    📱 Số điện thoại
-                  </button>
-                  <button
-                    onClick={() => { setLoginMethod("email"); setOtpSent(false); }}
-                    className={`flex-1 py-2 text-[11px] font-bold rounded-xl border transition-all ${
-                      loginMethod === "email"
-                        ? "bg-blue-500/15 border-blue-500/40 text-blue-400"
-                        : "border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/20"
-                    }`}
-                  >
-                    ✉️ Email / Mật khẩu
-                  </button>
-                </div>
+                {loginMethod === "password" ? (
+                  /* ── Form Đăng nhập chính bằng SĐT/Email + Mật khẩu ── */
+                  <form onSubmit={handlePasswordLogin} className="space-y-3.5">
+                    {/* Identifier Input */}
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        type="text"
+                        placeholder="Số điện thoại (0855550813) hoặc Email"
+                        value={loginId}
+                        onChange={(e) => setLoginId(e.target.value)}
+                        className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                        required
+                      />
+                    </div>
 
-                <AnimatePresence mode="wait">
-                  {/* ── Phone OTP ── */}
-                  {loginMethod === "phone" && !otpSent && (
-                    <motion.form
-                      key="phone-input"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      onSubmit={handleSendOtp}
-                      className="space-y-4"
-                    >
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="tel"
-                          placeholder="Nhập SĐT (vd: 0912345678)"
-                          value={phone}
-                          onChange={(e) => setPhone(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
+                    {/* Password Input */}
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        type={showLoginPassword ? "text" : "password"}
+                        placeholder="Mật khẩu của bạn"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                        required
+                      />
                       <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                       >
-                        {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Gửi mã OTP →"}
+                        {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                       </button>
-                      <p className="text-[10px] text-slate-500 text-center pt-1">
-                        Chưa có tài khoản? Hệ thống sẽ{" "}
-                        <span className="text-emerald-400 font-bold">tự động tạo + tặng 7 ngày dùng thử</span>
-                      </p>
-                    </motion.form>
-                  )}
+                    </div>
 
-                  {/* ── OTP verify ── */}
-                  {loginMethod === "phone" && otpSent && (
-                    <motion.form
-                      key="otp-verify"
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      onSubmit={handleVerifyOtp}
-                      className="space-y-4"
+                    {/* Submit Button */}
+                    <button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/25 active:scale-[0.98] cursor-pointer"
                     >
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
-                        <p className="text-xs text-slate-400">Mã OTP đã gửi tới</p>
-                        <p className="text-white font-bold tracking-widest text-sm mt-0.5">{phone}</p>
-                        <button type="button" onClick={() => { setOtpSent(false); setOtp(""); }} className="text-[10px] text-emerald-400 hover:underline mt-1">
-                          Đổi số điện thoại
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="text"
-                          placeholder="Nhập mã OTP 6 số"
-                          value={otp}
-                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                          maxLength={6}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white text-center tracking-[0.5em] font-black text-lg placeholder:text-slate-600 placeholder:tracking-normal focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 transition-all"
-                          required
-                        />
-                      </div>
+                      {isLoading ? <Loader2 className="animate-spin" size={18} /> : "ĐĂNG NHẬP HỆ THỐNG →"}
+                    </button>
+
+                    {/* OTP Option Switch */}
+                    <div className="text-center pt-1">
                       <button
-                        type="submit"
-                        disabled={isLoading || otp.length < 6}
-                        className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
+                        type="button"
+                        onClick={() => { setLoginMethod("otp"); setPhone(loginId); }}
+                        className="text-[11px] text-slate-400 hover:text-emerald-400 transition-colors font-semibold"
                       >
-                        {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Xác nhận & Đăng nhập ✓"}
+                        📱 Hoặc đăng nhập bằng mã SMS OTP
                       </button>
-                    </motion.form>
-                  )}
-
-                  {/* ── Email + Password ── */}
-                  {loginMethod === "email" && (
-                    <motion.form
-                      key="email-login"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      onSubmit={handleEmailLogin}
-                      className="space-y-4"
-                    >
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="text"
-                          placeholder="Số điện thoại hoặc Email"
-                          value={loginId}
-                          onChange={(e) => setLoginId(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type={showLoginPassword ? "text" : "password"}
-                          placeholder="Mật khẩu"
-                          value={loginPassword}
-                          onChange={(e) => setLoginPassword(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-11 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 transition-all text-sm font-medium"
-                          required
-                        />
+                    </div>
+                  </form>
+                ) : (
+                  /* ── Form Đăng nhập phụ bằng SMS OTP ── */
+                  <div className="space-y-3.5">
+                    {!otpSent ? (
+                      <form onSubmit={handleSendOtp} className="space-y-3.5">
+                        <div className="relative">
+                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                          <input
+                            type="tel"
+                            placeholder="Nhập SĐT nhận mã OTP (vd: 0855550813)"
+                            value={phone}
+                            onChange={(e) => setPhone(e.target.value)}
+                            className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                            required
+                          />
+                        </div>
                         <button
-                          type="button"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                          type="submit"
+                          disabled={isLoading}
+                          className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
                         >
-                          {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          {isLoading ? <Loader2 className="animate-spin" size={18} /> : "GỬI MÃ OTP →"}
                         </button>
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 active:scale-[0.98]"
-                      >
-                        {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Đăng nhập ngay →"}
-                      </button>
-                      <p className="text-center text-[10px] text-slate-500 pt-1">
-                        Chưa có tài khoản?{" "}
-                        <button type="button" onClick={() => switchTab("register")} className="text-emerald-400 font-bold hover:underline">
-                          Đăng ký miễn phí
+                        <div className="text-center">
+                          <button
+                            type="button"
+                            onClick={() => setLoginMethod("password")}
+                            className="text-[11px] text-slate-400 hover:text-white transition-colors font-semibold"
+                          >
+                            ← Quay lại đăng nhập bằng Mật khẩu
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <form onSubmit={handleVerifyOtp} className="space-y-3.5">
+                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
+                          <p className="text-xs text-slate-400">Mã OTP đã gửi tới</p>
+                          <p className="text-white font-bold tracking-widest text-sm mt-0.5">{phone}</p>
+                          <button type="button" onClick={() => { setOtpSent(false); setOtp(""); }} className="text-[10px] text-emerald-400 hover:underline mt-1">
+                            Đổi số điện thoại
+                          </button>
+                        </div>
+                        <div className="relative">
+                          <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                          <input
+                            type="text"
+                            placeholder="Nhập mã OTP 6 số"
+                            value={otp}
+                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                            maxLength={6}
+                            className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white text-center tracking-[0.5em] font-black text-lg placeholder:text-slate-500 placeholder:tracking-normal focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
+                            required
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          disabled={isLoading || otp.length < 6}
+                          className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
+                        >
+                          {isLoading ? <Loader2 className="animate-spin" size={18} /> : "XÁC NHẬN & ĐĂNG NHẬP ✓"}
                         </button>
-                      </p>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
+                      </form>
+                    )}
+                  </div>
+                )}
 
                 {/* Divider + Google */}
-                <div className="mt-5 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-white/5" />
-                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">hoặc</span>
-                  <div className="h-px flex-1 bg-white/5" />
+                <div className="pt-2 flex items-center gap-3">
+                  <div className="h-px flex-1 bg-white/10" />
+                  <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">hoặc</span>
+                  <div className="h-px flex-1 bg-white/10" />
                 </div>
+
                 <button
                   onClick={handleGoogleLogin}
                   type="button"
-                  className="w-full h-12 bg-white/[0.03] border border-white/10 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-3 mt-3 hover:bg-white/8 transition-all active:scale-[0.98]"
+                  className="w-full h-11 bg-white/[0.04] border border-white/10 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-2.5 hover:bg-white/8 transition-all active:scale-[0.98] cursor-pointer"
                 >
                   <svg viewBox="0 0 24 24" className="w-4 h-4">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -452,6 +418,13 @@ export default function LoginPage() {
                   </svg>
                   Tiếp tục với Google
                 </button>
+
+                <p className="text-center text-[10px] text-slate-500 pt-1">
+                  Chưa có tài khoản?{" "}
+                  <button type="button" onClick={() => switchTab("register")} className="text-emerald-400 font-bold hover:underline">
+                    Đăng ký dùng thử 5 ngày miễn phí
+                  </button>
+                </p>
               </motion.div>
             )}
 
@@ -459,219 +432,139 @@ export default function LoginPage() {
             {mainTab === "register" && (
               <motion.div
                 key="register-tab"
-                initial={{ opacity: 0, x: 15 }}
+                initial={{ opacity: 0, x: 10 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -15 }}
+                exit={{ opacity: 0, x: -10 }}
                 transition={{ duration: 0.2 }}
+                className="space-y-4"
               >
-                {/* Register method sub-tabs */}
-                <div className="flex gap-2 mb-5">
+                {/* Switch sub-type */}
+                <div className="flex gap-2 mb-2">
                   <button
+                    type="button"
                     onClick={() => setRegMethod("phone")}
-                    className={`flex-1 py-2 text-[11px] font-bold rounded-xl border transition-all ${
+                    className={`flex-1 py-1.5 text-[11px] font-bold rounded-xl border transition-all cursor-pointer ${
                       regMethod === "phone"
-                        ? "bg-emerald-500/15 border-emerald-500/40 text-emerald-400"
-                        : "border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/20"
+                        ? "bg-emerald-500/20 border-emerald-500/50 text-emerald-400"
+                        : "border-white/10 text-slate-400"
                     }`}
                   >
-                    📱 Bằng SĐT (OTP)
+                    📱 Đăng ký bằng SĐT
                   </button>
                   <button
+                    type="button"
                     onClick={() => setRegMethod("email")}
-                    className={`flex-1 py-2 text-[11px] font-bold rounded-xl border transition-all ${
+                    className={`flex-1 py-1.5 text-[11px] font-bold rounded-xl border transition-all cursor-pointer ${
                       regMethod === "email"
-                        ? "bg-blue-500/15 border-blue-500/40 text-blue-400"
-                        : "border-white/8 text-slate-500 hover:text-slate-300 hover:border-white/20"
+                        ? "bg-blue-500/20 border-blue-500/50 text-blue-400"
+                        : "border-white/10 text-slate-400"
                     }`}
                   >
-                    ✉️ Bằng Email
+                    ✉️ Đăng ký bằng Email
                   </button>
                 </div>
 
-                <AnimatePresence mode="wait">
-                  {/* ── Register by Phone ── */}
-                  {regMethod === "phone" && (
-                    <motion.form
-                      key="reg-phone"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      onSubmit={handleRegister}
-                      className="space-y-3.5"
-                    >
-                      <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-slate-400">
-                          Đăng ký bằng SĐT = nhận ngay{" "}
-                          <span className="text-emerald-400 font-bold">7 ngày dùng thử miễn phí</span> 🎁
-                        </p>
-                      </div>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="text"
-                          placeholder="Họ và tên hoặc Tên hồ câu"
-                          value={regName}
-                          onChange={(e) => setRegName(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <div className="relative">
-                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="tel"
-                          placeholder="Số điện thoại (vd: 0912345678)"
-                          value={regPhone}
-                          onChange={(e) => setRegPhone(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type={showRegPassword ? "text" : "password"}
-                          placeholder="Mật khẩu (ít nhất 6 ký tự)"
-                          value={regPassword}
-                          onChange={(e) => setRegPassword(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-11 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                        <button type="button" onClick={() => setShowRegPassword(!showRegPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-                          {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="password"
-                          placeholder="Xác nhận mật khẩu"
-                          value={regConfirmPassword}
-                          onChange={(e) => setRegConfirmPassword(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-emerald-500/50 focus:ring-2 focus:ring-emerald-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98]"
-                      >
-                        {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Tạo tài khoản bằng SĐT →"}
-                      </button>
-                    </motion.form>
+                <form onSubmit={handleRegister} className="space-y-3">
+                  {/* Name Input */}
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                    <input
+                      type="text"
+                      placeholder="Họ tên hoặc Tên hồ câu"
+                      value={regName}
+                      onChange={(e) => setRegName(e.target.value)}
+                      className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                      required
+                    />
+                  </div>
+
+                  {/* Phone or Email */}
+                  {regMethod === "phone" ? (
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        type="tel"
+                        placeholder="Số điện thoại của bạn (vd: 0855550813)"
+                        value={regPhone}
+                        onChange={(e) => setRegPhone(e.target.value)}
+                        className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="relative">
+                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        type="email"
+                        placeholder="Địa chỉ Email của bạn"
+                        value={regEmail}
+                        onChange={(e) => setRegEmail(e.target.value)}
+                        className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-xs font-medium"
+                        required
+                      />
+                    </div>
                   )}
 
-                  {/* ── Register by Email ── */}
-                  {regMethod === "email" && (
-                    <motion.form
-                      key="reg-email"
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -8 }}
-                      onSubmit={handleRegister}
-                      className="space-y-3.5"
+                  {/* Password */}
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                    <input
+                      type={showRegPassword ? "text" : "password"}
+                      placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+                      value={regPassword}
+                      onChange={(e) => setRegPassword(e.target.value)}
+                      className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowRegPassword(!showRegPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
                     >
-                      <div className="bg-blue-500/8 border border-blue-500/15 rounded-xl p-3 text-center">
-                        <p className="text-[10px] text-slate-400">
-                          Đăng ký bằng Email = nhận ngay{" "}
-                          <span className="text-emerald-400 font-bold">7 ngày dùng thử miễn phí</span> 🎁
-                        </p>
-                      </div>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="text"
-                          placeholder="Họ và tên hoặc Tên hồ câu"
-                          value={regName}
-                          onChange={(e) => setRegName(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="email"
-                          placeholder="Email"
-                          value={regEmail}
-                          onChange={(e) => setRegEmail(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type={showRegPassword ? "text" : "password"}
-                          placeholder="Mật khẩu (ít nhất 6 ký tự)"
-                          value={regPassword}
-                          onChange={(e) => setRegPassword(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-11 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                        <button type="button" onClick={() => setShowRegPassword(!showRegPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300">
-                          {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                        </button>
-                      </div>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                        <input
-                          type="password"
-                          placeholder="Xác nhận mật khẩu"
-                          value={regConfirmPassword}
-                          onChange={(e) => setRegConfirmPassword(e.target.value)}
-                          className="w-full h-13 bg-white/[0.03] border border-white/10 rounded-xl pl-11 pr-4 py-3.5 text-white placeholder:text-slate-600 focus:outline-none focus:border-blue-500/50 focus:ring-2 focus:ring-blue-500/15 transition-all text-sm font-medium"
-                          required
-                        />
-                      </div>
-                      <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full h-12 bg-blue-600 hover:bg-blue-500 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-blue-500/20 active:scale-[0.98]"
-                      >
-                        {isLoading ? <Loader2 className="animate-spin" size={18} /> : "Tạo tài khoản bằng Email →"}
-                      </button>
-                    </motion.form>
-                  )}
-                </AnimatePresence>
+                      {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
 
-                {/* Divider + Google */}
-                <div className="mt-5 flex items-center gap-3">
-                  <div className="h-px flex-1 bg-white/5" />
-                  <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest">hoặc</span>
-                  <div className="h-px flex-1 bg-white/5" />
-                </div>
-                <button
-                  onClick={handleGoogleLogin}
-                  type="button"
-                  className="w-full h-12 bg-white/[0.03] border border-white/10 text-slate-300 font-bold text-xs uppercase tracking-wider rounded-xl flex items-center justify-center gap-3 mt-3 hover:bg-white/8 transition-all active:scale-[0.98]"
-                >
-                  <svg viewBox="0 0 24 24" className="w-4 h-4">
-                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-                  </svg>
-                  Tiếp tục với Google
-                </button>
+                  {/* Confirm Password */}
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                    <input
+                      type="password"
+                      placeholder="Nhập lại mật khẩu"
+                      value={regConfirmPassword}
+                      onChange={(e) => setRegConfirmPassword(e.target.value)}
+                      className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                      required
+                    />
+                  </div>
 
-                <p className="text-center text-[10px] text-slate-500 mt-5">
-                  Đã có tài khoản?{" "}
-                  <button type="button" onClick={() => switchTab("login")} className="text-emerald-400 font-bold hover:underline">
-                    Đăng nhập ngay
+                  {/* Free Trial Banner */}
+                  <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center flex items-center justify-center gap-1.5">
+                    <Sparkles size={13} className="text-emerald-400" />
+                    <span className="text-[11px] font-bold text-emerald-300">Tặng ngay 5 ngày dùng thử trọn gói Full tính năng</span>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/25 active:scale-[0.98] cursor-pointer"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin" size={18} /> : "TẠO TÀI KHOẢN & DÙNG THỬ →"}
                   </button>
-                </p>
+                </form>
               </motion.div>
             )}
-          </AnimatePresence>
 
-          {/* Footer */}
-          <p className="text-center text-[9px] text-slate-600 uppercase tracking-widest mt-6">
-            Bằng cách tiếp tục, bạn đồng ý với{" "}
-            <Link href="#" className="underline hover:text-slate-400 transition-colors">Điều khoản</Link>
-            {" & "}
-            <Link href="#" className="underline hover:text-slate-400 transition-colors">Chính sách</Link>
+          </AnimatePresence>
+        </div>
+
+        {/* Footer info */}
+        <div className="px-8 pb-6 text-center border-t border-white/5 pt-4">
+          <p className="text-[10px] text-slate-500">
+            Hỗ trợ kỹ thuật 24/7 qua Hotline / Zalo:{" "}
+            <a href="https://zalo.me/0855550813" target="_blank" rel="noopener noreferrer" className="text-emerald-400 font-bold hover:underline">
+              0855550813
+            </a>
           </p>
         </div>
       </motion.div>

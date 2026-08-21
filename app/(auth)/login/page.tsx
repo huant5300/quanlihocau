@@ -2,38 +2,22 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Fish, Loader2, User, Lock, Phone, KeyRound, Eye, EyeOff, Mail, Sparkles, AlertCircle } from "lucide-react";
+import { Fish, Loader2, User, Lock, Phone, Eye, EyeOff, Mail, Sparkles } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
-import type { ConfirmationResult } from "firebase/auth";
-
-declare global {
-  interface Window {
-    recaptchaVerifier: any;
-    grecaptcha: any;
-  }
-}
 
 type MainTab = "login" | "register";
-type LoginMethod = "password" | "otp";
 
 export default function LoginPage() {
   const router = useRouter();
   const [mainTab, setMainTab] = useState<MainTab>("login");
-  const [loginMethod, setLoginMethod] = useState<LoginMethod>("password");
 
-  // Login states (Password)
+  // Login states
   const [loginId, setLoginId] = useState("");
   const [loginPassword, setLoginPassword] = useState("");
   const [showLoginPassword, setShowLoginPassword] = useState(false);
-
-  // Phone OTP states
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [confirmationResult, setConfirmationResult] = useState<ConfirmationResult | null>(null);
 
   // Register states
   const [regPhone, setRegPhone] = useState("");
@@ -46,10 +30,10 @@ export default function LoginPage() {
 
   const [isLoading, setIsLoading] = useState(false);
 
-  // ── LOGIN: Số điện thoại / Email + Mật khẩu ──
-  const handlePasswordLogin = async (e: React.FormEvent) => {
+  // ── ĐĂNG NHẬP BẰNG SỐ ĐIỆN THOẠI / EMAIL + MẬT KHẨU ──
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginId || !loginPassword) {
+    if (!loginId.trim() || !loginPassword) {
       toast.error("Vui lòng nhập số điện thoại (hoặc email) và mật khẩu");
       return;
     }
@@ -61,7 +45,7 @@ export default function LoginPage() {
         redirect: false,
       });
       if (result?.error) {
-        toast.error("Sai số điện thoại / email hoặc mật khẩu. Vui lòng kiểm tra lại!");
+        toast.error("Sai số điện thoại / email hoặc mật khẩu. Vui lòng thử lại!");
       } else {
         toast.success("Đăng nhập thành công! 🎉");
         router.push("/dashboard");
@@ -74,65 +58,7 @@ export default function LoginPage() {
     }
   };
 
-  // ── LOGIN: Gửi SMS OTP ──
-  const handleSendOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!phone) {
-      toast.error("Vui lòng nhập số điện thoại");
-      return;
-    }
-    let formatted = phone.trim();
-    if (formatted.startsWith("0")) formatted = "+84" + formatted.slice(1);
-    else if (!formatted.startsWith("+")) formatted = "+" + formatted;
-
-    setIsLoading(true);
-    try {
-      const { auth } = await import("@/lib/firebase");
-      const { RecaptchaVerifier, signInWithPhoneNumber } = await import("firebase/auth");
-
-      if (!window.recaptchaVerifier) {
-        window.recaptchaVerifier = new RecaptchaVerifier(auth, "recaptcha-container", { size: "invisible" });
-      }
-      const confirmation = await signInWithPhoneNumber(auth, formatted, window.recaptchaVerifier);
-      setConfirmationResult(confirmation);
-      setOtpSent(true);
-      toast.success("Mã OTP đã được gửi về điện thoại!");
-    } catch (err: any) {
-      console.warn("Firebase Phone Auth error:", err);
-      // Fallback thân thiện chuyển sang đăng nhập bằng mật khẩu
-      setLoginId(phone);
-      setLoginMethod("password");
-      toast.info("Dịch vụ SMS OTP quốc tế đang bảo trì. Vui lòng nhập mật khẩu tài khoản để đăng nhập trực tiếp!", { duration: 5000 });
-      try { window.recaptchaVerifier?.clear(); window.recaptchaVerifier = null; } catch {}
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // ── LOGIN: Xác thực OTP ──
-  const handleVerifyOtp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!confirmationResult) return;
-    setIsLoading(true);
-    try {
-      const result = await confirmationResult.confirm(otp);
-      const idToken = await result.user.getIdToken();
-      const signInResult = await signIn("firebase-phone", { idToken, redirect: false });
-      if (signInResult?.error) {
-        toast.error("Xác thực thất bại: " + signInResult.error);
-      } else {
-        toast.success("Đăng nhập thành công! 🎉");
-        router.push("/dashboard");
-        router.refresh();
-      }
-    } catch {
-      toast.error("Mã OTP không hợp lệ hoặc đã hết hạn.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // ── REGISTER: Tạo tài khoản mới ──
+  // ── ĐĂNG KÝ TÀI KHOẢN MỚI ──
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!regName.trim()) {
@@ -153,7 +79,7 @@ export default function LoginPage() {
       return;
     }
     if (regMethod === "phone" && !regPhone.trim()) {
-      toast.error("Vui lòng nhập số điện thoại liên hệ");
+      toast.error("Vui lòng nhập số điện thoại");
       return;
     }
 
@@ -178,7 +104,7 @@ export default function LoginPage() {
       if (!res.ok) {
         toast.error(data.error || "Đăng ký thất bại");
       } else {
-        toast.success("Đăng ký thành công! Đang kích hoạt 5 ngày dùng thử...");
+        toast.success("Đăng ký thành công! Đang tự động đăng nhập...");
         const loginIdentifier = regMethod === "email" ? regEmail.trim() : regPhone.trim();
         const result = await signIn("credentials", {
           email: loginIdentifier,
@@ -189,7 +115,7 @@ export default function LoginPage() {
           router.push("/dashboard");
           router.refresh();
         } else {
-          switchTab("login");
+          setMainTab("login");
           setLoginId(loginIdentifier);
           toast.info("Đã tạo tài khoản, vui lòng đăng nhập.");
         }
@@ -203,18 +129,9 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => signIn("google", { callbackUrl: "/dashboard" });
 
-  const switchTab = (tab: MainTab) => {
-    setMainTab(tab);
-    setOtpSent(false);
-    setOtp("");
-    setPhone("");
-    setShowLoginPassword(false);
-  };
-
   return (
     <div className="min-h-screen bg-[#030712] flex items-center justify-center p-4 relative overflow-hidden">
-      <div id="recaptcha-container" />
-
+      
       {/* Background glows */}
       <div className="absolute inset-0 pointer-events-none z-0">
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/15 blur-[130px] rounded-full animate-pulse" />
@@ -240,16 +157,20 @@ export default function LoginPage() {
             <Fish size={28} />
           </div>
           <h1 className="text-xl font-black text-white tracking-wider uppercase">Quản lý Hồ câu</h1>
-          <p className="text-[11px] text-slate-400 mt-1">Phần mềm quản lý hồ câu chuyên nghiệp</p>
+          <p className="text-[11px] text-slate-400 mt-1">Hệ thống quản lý hồ câu chuyên nghiệp</p>
         </div>
 
-        {/* ── MAIN TABS: Đăng nhập | Đăng ký ── */}
+        {/* ── MAIN TABS: ĐĂNG NHẬP | ĐĂNG KÝ ── */}
         <div className="px-8">
           <div className="flex bg-white/[0.05] border border-white/10 p-1 rounded-2xl mb-6">
             {(["login", "register"] as MainTab[]).map((tab) => (
               <button
                 key={tab}
-                onClick={() => switchTab(tab)}
+                onClick={() => {
+                  setMainTab(tab);
+                  setShowLoginPassword(false);
+                  setShowRegPassword(false);
+                }}
                 className={`flex-1 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all duration-200 cursor-pointer ${
                   mainTab === tab
                     ? "bg-emerald-500 text-white shadow-lg shadow-emerald-500/30"
@@ -266,7 +187,7 @@ export default function LoginPage() {
         <div className="px-8 pb-8">
           <AnimatePresence mode="wait">
 
-            {/* ════════════════ LOGIN TAB ════════════════ */}
+            {/* ════════════════ TAB ĐĂNG NHẬP ════════════════ */}
             {mainTab === "login" && (
               <motion.div
                 key="login-tab"
@@ -276,127 +197,49 @@ export default function LoginPage() {
                 transition={{ duration: 0.2 }}
                 className="space-y-4"
               >
-                {loginMethod === "password" ? (
-                  /* ── Form Đăng nhập chính bằng SĐT/Email + Mật khẩu ── */
-                  <form onSubmit={handlePasswordLogin} className="space-y-3.5">
-                    {/* Identifier Input */}
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                      <input
-                        type="text"
-                        placeholder="Số điện thoại (0855550813) hoặc Email"
-                        value={loginId}
-                        onChange={(e) => setLoginId(e.target.value)}
-                        className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
-                        required
-                      />
-                    </div>
-
-                    {/* Password Input */}
-                    <div className="relative">
-                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                      <input
-                        type={showLoginPassword ? "text" : "password"}
-                        placeholder="Mật khẩu của bạn"
-                        value={loginPassword}
-                        onChange={(e) => setLoginPassword(e.target.value)}
-                        className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
-                        required
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowLoginPassword(!showLoginPassword)}
-                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                      >
-                        {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                      </button>
-                    </div>
-
-                    {/* Submit Button */}
-                    <button
-                      type="submit"
-                      disabled={isLoading}
-                      className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/25 active:scale-[0.98] cursor-pointer"
-                    >
-                      {isLoading ? <Loader2 className="animate-spin" size={18} /> : "ĐĂNG NHẬP HỆ THỐNG →"}
-                    </button>
-
-                    {/* OTP Option Switch */}
-                    <div className="text-center pt-1">
-                      <button
-                        type="button"
-                        onClick={() => { setLoginMethod("otp"); setPhone(loginId); }}
-                        className="text-[11px] text-slate-400 hover:text-emerald-400 transition-colors font-semibold"
-                      >
-                        📱 Hoặc đăng nhập bằng mã SMS OTP
-                      </button>
-                    </div>
-                  </form>
-                ) : (
-                  /* ── Form Đăng nhập phụ bằng SMS OTP ── */
-                  <div className="space-y-3.5">
-                    {!otpSent ? (
-                      <form onSubmit={handleSendOtp} className="space-y-3.5">
-                        <div className="relative">
-                          <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                          <input
-                            type="tel"
-                            placeholder="Nhập SĐT nhận mã OTP (vd: 0855550813)"
-                            value={phone}
-                            onChange={(e) => setPhone(e.target.value)}
-                            className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
-                            required
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          disabled={isLoading}
-                          className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
-                        >
-                          {isLoading ? <Loader2 className="animate-spin" size={18} /> : "GỬI MÃ OTP →"}
-                        </button>
-                        <div className="text-center">
-                          <button
-                            type="button"
-                            onClick={() => setLoginMethod("password")}
-                            className="text-[11px] text-slate-400 hover:text-white transition-colors font-semibold"
-                          >
-                            ← Quay lại đăng nhập bằng Mật khẩu
-                          </button>
-                        </div>
-                      </form>
-                    ) : (
-                      <form onSubmit={handleVerifyOtp} className="space-y-3.5">
-                        <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-3 text-center">
-                          <p className="text-xs text-slate-400">Mã OTP đã gửi tới</p>
-                          <p className="text-white font-bold tracking-widest text-sm mt-0.5">{phone}</p>
-                          <button type="button" onClick={() => { setOtpSent(false); setOtp(""); }} className="text-[10px] text-emerald-400 hover:underline mt-1">
-                            Đổi số điện thoại
-                          </button>
-                        </div>
-                        <div className="relative">
-                          <KeyRound className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                          <input
-                            type="text"
-                            placeholder="Nhập mã OTP 6 số"
-                            value={otp}
-                            onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
-                            maxLength={6}
-                            className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white text-center tracking-[0.5em] font-black text-lg placeholder:text-slate-500 placeholder:tracking-normal focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all"
-                            required
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          disabled={isLoading || otp.length < 6}
-                          className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/20 active:scale-[0.98] cursor-pointer"
-                        >
-                          {isLoading ? <Loader2 className="animate-spin" size={18} /> : "XÁC NHẬN & ĐĂNG NHẬP ✓"}
-                        </button>
-                      </form>
-                    )}
+                <form onSubmit={handleLogin} className="space-y-3.5">
+                  {/* Ô nhập Số điện thoại hoặc Email */}
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                    <input
+                      type="text"
+                      placeholder="Số điện thoại (0855550813) hoặc Email"
+                      value={loginId}
+                      onChange={(e) => setLoginId(e.target.value)}
+                      className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                      required
+                    />
                   </div>
-                )}
+
+                  {/* Ô nhập Mật khẩu */}
+                  <div className="relative">
+                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                    <input
+                      type={showLoginPassword ? "text" : "password"}
+                      placeholder="Mật khẩu của bạn"
+                      value={loginPassword}
+                      onChange={(e) => setLoginPassword(e.target.value)}
+                      className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowLoginPassword(!showLoginPassword)}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                    >
+                      {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+
+                  {/* Nút Đăng nhập */}
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/25 active:scale-[0.98] cursor-pointer"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin" size={18} /> : "ĐĂNG NHẬP VÀO HỆ THỐNG →"}
+                  </button>
+                </form>
 
                 {/* Divider + Google */}
                 <div className="pt-2 flex items-center gap-3">
@@ -421,14 +264,18 @@ export default function LoginPage() {
 
                 <p className="text-center text-[10px] text-slate-500 pt-1">
                   Chưa có tài khoản?{" "}
-                  <button type="button" onClick={() => switchTab("register")} className="text-emerald-400 font-bold hover:underline">
+                  <button 
+                    type="button" 
+                    onClick={() => setMainTab("register")} 
+                    className="text-emerald-400 font-bold hover:underline"
+                  >
                     Đăng ký dùng thử 5 ngày miễn phí
                   </button>
                 </p>
               </motion.div>
             )}
 
-            {/* ════════════════ REGISTER TAB ════════════════ */}
+            {/* ════════════════ TAB ĐĂNG KÝ ════════════════ */}
             {mainTab === "register" && (
               <motion.div
                 key="register-tab"
@@ -438,7 +285,7 @@ export default function LoginPage() {
                 transition={{ duration: 0.2 }}
                 className="space-y-4"
               >
-                {/* Switch sub-type */}
+                {/* Switch phương thức đăng ký */}
                 <div className="flex gap-2 mb-2">
                   <button
                     type="button"
@@ -465,7 +312,7 @@ export default function LoginPage() {
                 </div>
 
                 <form onSubmit={handleRegister} className="space-y-3">
-                  {/* Name Input */}
+                  {/* Họ tên */}
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
@@ -478,7 +325,7 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  {/* Phone or Email */}
+                  {/* SĐT hoặc Email */}
                   {regMethod === "phone" ? (
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
@@ -505,12 +352,12 @@ export default function LoginPage() {
                     </div>
                   )}
 
-                  {/* Password */}
+                  {/* Mật khẩu */}
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
                       type={showRegPassword ? "text" : "password"}
-                      placeholder="Mật khẩu (tối thiểu 6 ký tự)"
+                      placeholder="Mật khẩu tự đặt (tối thiểu 6 ký tự)"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
                       className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
@@ -525,7 +372,7 @@ export default function LoginPage() {
                     </button>
                   </div>
 
-                  {/* Confirm Password */}
+                  {/* Xác nhận mật khẩu */}
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
@@ -538,18 +385,19 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  {/* Free Trial Banner */}
+                  {/* Badge dùng thử */}
                   <div className="p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-center flex items-center justify-center gap-1.5">
                     <Sparkles size={13} className="text-emerald-400" />
-                    <span className="text-[11px] font-bold text-emerald-300">Tặng ngay 5 ngày dùng thử trọn gói Full tính năng</span>
+                    <span className="text-[11px] font-bold text-emerald-300">Tặng 5 ngày dùng thử miễn phí Full tính năng</span>
                   </div>
 
+                  {/* Nút Đăng ký */}
                   <button
                     type="submit"
                     disabled={isLoading}
                     className="w-full h-12 bg-emerald-500 hover:bg-emerald-400 text-white font-black uppercase tracking-widest text-xs rounded-xl flex items-center justify-center gap-2 transition-all disabled:opacity-50 shadow-lg shadow-emerald-500/25 active:scale-[0.98] cursor-pointer"
                   >
-                    {isLoading ? <Loader2 className="animate-spin" size={18} /> : "TẠO TÀI KHOẢN & DÙNG THỬ →"}
+                    {isLoading ? <Loader2 className="animate-spin" size={18} /> : "TẠO TÀI KHOẢN & BẮT ĐẦU →"}
                   </button>
                 </form>
               </motion.div>

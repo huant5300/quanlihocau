@@ -83,8 +83,8 @@ export const useUIStore = create<UIState>((set) => ({
   tenantName: "Hồ câu giải trí",
   setTenantName: (name) => set({ tenantName: name }),
   
-  currentLakeId: "lake_01",
-  currentLakeName: "Hồ câu giải trí",
+  currentLakeId: null,
+  currentLakeName: null,
   setCurrentLake: (id, name) => set({ currentLakeId: id, currentLakeName: name, tenantName: name }),
 
   notifications: [],

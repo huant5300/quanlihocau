@@ -15,10 +15,10 @@ async function setupOnboardingData(userId: string, userName: string) {
   try {
     console.log(`Setting up onboarding data for user: ${userId} (${userName})`);
 
-    // 1. Create a default lake with a 14-day TRIAL plan
+    // 1. Create a default lake with a 7-day TRIAL plan
     const lakeName = `Hồ câu ${userName}`;
     const trialExpiry = new Date();
-    trialExpiry.setDate(trialExpiry.getDate() + 14); // 14 days trial
+    trialExpiry.setDate(trialExpiry.getDate() + 7); // 7 days trial
 
     const lake = await prisma.fishingLake.create({
       data: {
@@ -99,16 +99,19 @@ async function setupOnboardingData(userId: string, userName: string) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau-secret-key-production-2025",
   adapter: PrismaAdapter(prisma),
   session: { strategy: "jwt" },
   trustHost: true,
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      checks: ["none"],
-      allowDangerousEmailAccountLinking: true,
-    }),
+    ...((process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID) && (process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET) ? [
+      Google({
+        clientId: process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET,
+        checks: ["none"],
+        allowDangerousEmailAccountLinking: true,
+      })
+    ] : []),
     Credentials({
       name: "Credentials",
       credentials: {
@@ -125,7 +128,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             where: {
               OR: [
                 { email: loginId },
-                { username: loginId }
+                { username: loginId },
+                { phone: loginId }
               ]
             },
           });
@@ -160,73 +164,153 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
       },
     }),
-    {
-      id: "zalo",
-      name: "Zalo",
-      type: "oauth",
-      authorization: {
-        url: "https://oauth.zaloapp.com/v4/permission",
-        params: {
-          app_id: process.env.ZALO_CLIENT_ID,
-          scope: "gems",
+    Credentials({
+      id: "firebase-phone",
+      name: "Firebase Phone",
+      credentials: {
+        idToken: { label: "ID Token", type: "text" },
+      },
+      async authorize(credentials) {
+        const idToken = credentials?.idToken as string;
+        if (!idToken) return null;
+
+        let decodedToken;
+        try {
+          const { adminAuth } = await import("@/lib/firebase-admin");
+          decodedToken = await adminAuth.verifyIdToken(idToken);
+        } catch (error) {
+          console.error("Firebase Token Verification Error:", error);
+          throw new Error("Xác thực Firebase thất bại hoặc token hết hạn");
         }
-      },
-      client: {
-        token_endpoint_auth_method: "none",
-      },
-      token: {
-        url: "https://oauth.zaloapp.com/v4/access_token",
-        async request(context: any) {
-          const body = new URLSearchParams({
-            code: (context.params.code as string) || "",
-            app_id: process.env.ZALO_CLIENT_ID || "",
-            grant_type: "authorization_code",
+
+        const phone = decodedToken.phone_number;
+        if (!phone) {
+          throw new Error("Không lấy được số điện thoại từ Firebase");
+        }
+
+        // Find or create user by phone
+        let user = await prisma.user.findFirst({
+          where: { phone }
+        });
+
+        if (!user) {
+          user = await prisma.user.create({
+            data: {
+              phone: phone,
+              name: `Chủ Hồ (${phone.slice(-4)})`,
+              role: UserRole.OWNER,
+            }
           });
-          if (context.checks.code_verifier) {
-            body.append("code_verifier", context.checks.code_verifier);
+          const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
+          user.lakeId = lakeId;
+        } else if (user.role === UserRole.OWNER && !user.lakeId) {
+          const hasLake = await prisma.fishingLake.findFirst({
+            where: { managerId: user.id },
+          });
+          if (!hasLake) {
+            const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
+            user.lakeId = lakeId;
           }
-          
-          const response = await fetch("https://oauth.zaloapp.com/v4/access_token", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              "secret_key": process.env.ZALO_CLIENT_SECRET || "",
-            },
-            body,
-          });
-          
-          const tokens = await response.json();
-          if (!response.ok) {
-            throw new Error(`Zalo Token Error: ${JSON.stringify(tokens)}`);
-          }
-          return { tokens };
         }
-      },
-      userinfo: {
-        url: "https://graph.zalo.me/v2.0/me",
-        async request(context: any) {
-          const response = await fetch("https://graph.zalo.me/v2.0/me?fields=id,name,picture", {
-            headers: {
-              access_token: (context.tokens.access_token as string) || "",
-            },
-          });
-          return await response.json();
+
+        if (!user.isActive) {
+          throw new Error("Tài khoản đã bị khóa");
         }
-      },
-      profile(profile: any) {
+
         return {
-          id: profile.id,
-          name: profile.name,
-          email: `${profile.id}@zalo.me`,
-          image: profile.picture?.data?.url || null,
-          role: UserRole.OWNER,
+          id: user.id,
+          name: user.name,
+          email: user.email || `${phone.replace(/\+/g, '')}@phone.local`,
+          role: user.role,
+          lakeId: user.lakeId,
         };
       }
-    }
+    }),
+    ...(process.env.ZALO_CLIENT_ID && process.env.ZALO_CLIENT_SECRET ? [
+      {
+        id: "zalo",
+        name: "Zalo",
+        type: "oauth" as const,
+        authorization: {
+          url: "https://oauth.zaloapp.com/v4/permission",
+          params: {
+            app_id: process.env.ZALO_CLIENT_ID,
+            scope: "gems",
+          }
+        },
+        client: {
+          token_endpoint_auth_method: "none" as const,
+        },
+        token: {
+          url: "https://oauth.zaloapp.com/v4/access_token",
+          async request(context: any) {
+            const body = new URLSearchParams({
+              code: (context.params.code as string) || "",
+              app_id: process.env.ZALO_CLIENT_ID || "",
+              grant_type: "authorization_code",
+            });
+            if (context.checks.code_verifier) {
+              body.append("code_verifier", context.checks.code_verifier);
+            }
+            
+            const response = await fetch("https://oauth.zaloapp.com/v4/access_token", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded",
+                "secret_key": process.env.ZALO_CLIENT_SECRET || "",
+              },
+              body,
+            });
+            
+            const tokens = await response.json();
+            if (!response.ok) {
+              throw new Error(`Zalo Token Error: ${JSON.stringify(tokens)}`);
+            }
+            return { tokens };
+          }
+        },
+        userinfo: {
+          url: "https://graph.zalo.me/v2.0/me",
+          async request(context: any) {
+            const response = await fetch("https://graph.zalo.me/v2.0/me?fields=id,name,picture", {
+              headers: {
+                access_token: (context.tokens.access_token as string) || "",
+              },
+            });
+            return await response.json();
+          }
+        },
+        profile(profile: any) {
+          return {
+            id: profile.id,
+            name: profile.name,
+            email: `${profile.id}@zalo.me`,
+            image: profile.picture?.data?.url || null,
+            role: UserRole.OWNER,
+          };
+        }
+      }
+    ] : [])
   ],
   callbacks: {
     async signIn({ user, account }) {
       const email = user.email;
+
+      // Firebase Phone Auth users don't have email - allow them through
+      if (account?.provider === "firebase-phone") {
+        let currentUserId = user.id;
+        if (currentUserId) {
+          await prisma.activityLog.create({
+            data: {
+              userId: currentUserId,
+              action: "LOGIN",
+              details: { provider: "firebase-phone" },
+            },
+          });
+        }
+        return true;
+      }
+
       if (!email) return false;
 
       let currentUserId = user.id;

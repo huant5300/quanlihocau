@@ -1,10 +1,11 @@
 import prisma from "@/lib/prisma";
 
-export type SubscriptionPlan = "FREE" | "BASIC" | "PREMIUM";
+export type SubscriptionPlan = "FREE" | "SILVER" | "GOLD";
 
 export interface PlanLimits {
   name: string;
   pricePerMonth: number;
+  maxLakes: number;     // Số hồ câu tối đa
   maxHuts: number;      // Số chòi (FishingArea) tối đa
   maxStaff: number;     // Số nhân viên tối đa
   maxCustomers: number; // Số khách hàng tối đa
@@ -15,24 +16,27 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
   FREE: {
     name: "Gói Dùng Thử (TRIAL)",
     pricePerMonth: 0,
-    maxHuts: 5,
-    maxStaff: 1,
-    maxCustomers: 50,
+    maxLakes: 1,
+    maxHuts: 10,
+    maxStaff: 2,
+    maxCustomers: 100,
     offlineMode: false,
   },
-  BASIC: {
-    name: "Gói Cơ Bản (BASIC)",
-    pricePerMonth: 299000,
-    maxHuts: 15,
+  SILVER: {
+    name: "Gói Bạc (SILVER)",
+    pricePerMonth: 99000,
+    maxLakes: 1,
+    maxHuts: 50,
     maxStaff: 5,
-    maxCustomers: 300,
+    maxCustomers: 999999,
     offlineMode: true,
   },
-  PREMIUM: {
-    name: "Gói Chuyên Nghiệp (PREMIUM)",
-    pricePerMonth: 599000,
+  GOLD: {
+    name: "Gói Vàng (GOLD)",
+    pricePerMonth: 199000,
+    maxLakes: 5,
     maxHuts: 999999,
-    maxStaff: 999999,
+    maxStaff: 20,
     maxCustomers: 999999,
     offlineMode: true,
   },

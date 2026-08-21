@@ -35,6 +35,7 @@ const menuItems = [
   { label: "Kho Hàng", href: "/dashboard/inventory", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER] },
   { label: "Ca Làm Việc", href: "/dashboard/shifts", icon: Clock, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER, UserRole.STAFF, UserRole.CASHIER] },
   { label: "Báo Cáo", href: "/dashboard/reports", icon: History, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
+  { label: "Gói Dịch Vụ", href: "/dashboard/billing", icon: Package, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
   { label: "Nhân Viên", href: "/dashboard/staff", icon: Users, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
   { label: "Cài Đặt", href: "/dashboard/settings", icon: Settings, roles: [UserRole.SUPER_ADMIN, UserRole.OWNER] },
 ];

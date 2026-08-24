@@ -33,8 +33,8 @@ const isTransientConnectionError = (error: any): boolean => {
 
 const poolConfig: PoolConfig = {
   connectionString,
-  max: 10,
-  idleTimeoutMillis: 30000,
+  max: process.env.NODE_ENV === "production" ? 2 : 5, // Tối ưu Serverless: giảm max connection để tránh lỗi 'too many clients' khi scale lambdas
+  idleTimeoutMillis: 5000, // Giải phóng connection nhanh hơn trong môi trường Serverless (5 giây)
   connectionTimeoutMillis: 10000,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,

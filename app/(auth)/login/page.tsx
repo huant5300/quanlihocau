@@ -202,7 +202,10 @@ export default function LoginPage() {
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
+                      id="loginId"
+                      name="loginId"
                       type="text"
+                      autoComplete="username"
                       placeholder="Số điện thoại (0855550813) hoặc Email"
                       value={loginId}
                       onChange={(e) => setLoginId(e.target.value)}
@@ -215,7 +218,10 @@ export default function LoginPage() {
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
+                      id="loginPassword"
+                      name="loginPassword"
                       type={showLoginPassword ? "text" : "password"}
+                      autoComplete="current-password"
                       placeholder="Mật khẩu của bạn"
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
@@ -316,7 +322,10 @@ export default function LoginPage() {
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
+                      id="regName"
+                      name="regName"
                       type="text"
+                      autoComplete="name"
                       placeholder="Họ tên hoặc Tên hồ câu"
                       value={regName}
                       onChange={(e) => setRegName(e.target.value)}
@@ -330,7 +339,10 @@ export default function LoginPage() {
                     <div className="relative">
                       <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                       <input
+                        id="regPhone"
+                        name="regPhone"
                         type="tel"
+                        autoComplete="tel"
                         placeholder="Số điện thoại của bạn (vd: 0855550813)"
                         value={regPhone}
                         onChange={(e) => setRegPhone(e.target.value)}
@@ -342,7 +354,10 @@ export default function LoginPage() {
                     <div className="relative">
                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                       <input
+                        id="regEmail"
+                        name="regEmail"
                         type="email"
+                        autoComplete="email"
                         placeholder="Địa chỉ Email của bạn"
                         value={regEmail}
                         onChange={(e) => setRegEmail(e.target.value)}
@@ -356,7 +371,10 @@ export default function LoginPage() {
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
+                      id="regPassword"
+                      name="regPassword"
                       type={showRegPassword ? "text" : "password"}
+                      autoComplete="new-password"
                       placeholder="Mật khẩu tự đặt (tối thiểu 6 ký tự)"
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
@@ -376,7 +394,10 @@ export default function LoginPage() {
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                     <input
+                      id="regConfirmPassword"
+                      name="regConfirmPassword"
                       type="password"
+                      autoComplete="new-password"
                       placeholder="Nhập lại mật khẩu"
                       value={regConfirmPassword}
                       onChange={(e) => setRegConfirmPassword(e.target.value)}

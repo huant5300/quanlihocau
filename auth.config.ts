@@ -5,9 +5,20 @@ const rawBaseUrl = process.env.NEXTAUTH_URL || process.env.AUTH_URL || process.e
 export const baseUrl = rawBaseUrl.replace(/\/+$/, "");
 
 export const authConfig = {
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "fallback_secret_key_123456",
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau_secret_key_2026_safe",
   trustHost: true,
   basePath: "/api/auth",
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-authjs.session-token" : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   pages: {
     signIn: "/login",
     error: "/login",
@@ -18,10 +29,12 @@ export const authConfig = {
       const isDashboard = nextUrl.pathname.startsWith("/dashboard");
       const isOnboarding = nextUrl.pathname.startsWith("/onboarding");
 
+      // Logged-in users are always allowed on /dashboard and /onboarding regardless of lakeId
       if (isDashboard || isOnboarding) {
-        if (isLoggedIn) return true;
-        return false; // Redirect to login
-      } else if (isLoggedIn && nextUrl.pathname === "/login") {
+        return isLoggedIn;
+      }
+      // Redirect already logged-in users away from /login to /dashboard
+      if (isLoggedIn && nextUrl.pathname === "/login") {
         return Response.redirect(new URL("/dashboard", baseUrl));
       }
       return true;

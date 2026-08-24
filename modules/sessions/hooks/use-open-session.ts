@@ -115,6 +115,7 @@ export function useOpenSession() {
     onSuccess: (result, variables) => {
       toast.success("Đã mở lượt câu mới thành công");
       
+      if (!result) return;
       if (variables.should_print) {
         const selectedPkg = packages.find(p => p.id === variables.package_id);
         printerService.printBill({
@@ -145,6 +146,7 @@ export function useOpenSession() {
     // Navigate instantly before waiting for mutation to finish
     router.push("/dashboard/sessions");
     createMutation.mutate(data);
+    return true;
   };
 
   return {

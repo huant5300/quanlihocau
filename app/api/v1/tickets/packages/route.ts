@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     }
 
     const packages = await prisma.fishingPackage.findMany({
-      where: { isActive: true, lakeId },
+      where: { isActive: true },
       orderBy: { durationHours: "asc" }
     }).catch((err) => {
       console.error("Prisma packages query error (returning empty array):", err);

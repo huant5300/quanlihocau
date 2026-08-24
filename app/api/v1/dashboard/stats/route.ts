@@ -50,12 +50,12 @@ export async function GET(req: NextRequest) {
     ] = await Promise.all([
       // 1. Active sessions
       prisma.fishingSession.count({
-        where: { lakeId, status: "ACTIVE" }
-      }),
+        where: { lakeId: lakeId || "", status: "ACTIVE" }
+      }).catch(() => 0),
       // 2. Period transactions (for revenue breakdown)
       prisma.transaction.findMany({
         where: {
-          lakeId,
+          lakeId: lakeId || "",
           type: "INCOME",
           createdAt: { gte: periodStart }
         },
@@ -65,59 +65,59 @@ export async function GET(req: NextRequest) {
           paymentMethod: true,
           createdAt: true,
         }
-      }),
+      }).catch(() => []),
       // 3. Total customers
-      prisma.customer.count({ where: { lakeId } }),
+      prisma.customer.count({ where: { lakeId: lakeId || "" } }).catch(() => 0),
       // 4. Fish catches today count
       prisma.fishCatch.count({
         where: {
           createdAt: { gte: today },
-          session: { lakeId }
+          session: { lakeId: lakeId || "" }
         }
-      }),
+      }).catch(() => 0),
       // 5. Recent transactions
       prisma.transaction.findMany({
-        where: { lakeId },
+        where: { lakeId: lakeId || "" },
         take: 5,
         orderBy: { createdAt: "desc" }
-      }),
+      }).catch(() => []),
       // 6. 7-day income transactions
       prisma.transaction.findMany({
         where: {
-          lakeId,
+          lakeId: lakeId || "",
           type: "INCOME",
           createdAt: { gte: startOf7Days }
         },
         select: { amount: true, createdAt: true, category: true }
-      }),
+      }).catch(() => []),
       // 7. Fish catches in the last 30 days
       prisma.fishCatch.findMany({
         where: {
           createdAt: { gte: getVnSubDays(today, 30) },
-          session: { lakeId }
+          session: { lakeId: lakeId || "" }
         },
         include: { fishType: true }
-      }),
+      }).catch(() => []),
       // 8. Spot capacity (areas)
-      prisma.fishingArea.count({ where: { lakeId } }),
+      prisma.fishingArea.count({ where: { lakeId: lakeId || "" } }).catch(() => 0),
       // 9. Session count in period
       prisma.fishingSession.count({
         where: {
-          lakeId,
+          lakeId: lakeId || "",
           createdAt: { gte: periodStart }
         }
-      }),
+      }).catch(() => 0),
       // 10. Payment method breakdown
       prisma.payment.findMany({
         where: {
           createdAt: { gte: periodStart },
-          invoice: { lakeId }
+          invoice: { lakeId: lakeId || "" }
         },
         select: {
           amount: true,
           method: true,
         }
-      }),
+      }).catch(() => []),
     ]);
 
     // Revenue breakdown by category and payment method

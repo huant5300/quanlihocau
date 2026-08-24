@@ -5,67 +5,70 @@ import { UserRole } from "@prisma/client";
 import { cache } from "react";
 
 export const getActiveLakeId = cache(async () => {
-  const session = await auth();
-  
-  const cookieStore = await cookies();
-  const cookieLakeId = cookieStore.get("lakeId")?.value;
-
-  // 1. If not logged in, fallback to cookie or first lake in DB
-  if (!session?.user) {
-    if (cookieLakeId) return cookieLakeId;
-    const firstLake = await prisma.fishingLake.findFirst();
-    return firstLake?.id || "lake_01";
-  }
-
-  const { id: userId, role, lakeId: userLakeId } = session.user;
-
-  // 2. For STAFF / CASHIER: Hard-locked to their assigned lakeId!
-  if (role === UserRole.STAFF || role === UserRole.CASHIER) {
-    if (userLakeId) return userLakeId;
-    const assignedUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { lakeId: true }
-    });
-    if (assignedUser?.lakeId) return assignedUser.lakeId;
-    const firstLake = await prisma.fishingLake.findFirst();
-    return firstLake?.id || "";
-  }
-
-  // 3. For OWNER: Can switch lakes, but must only access their own managed lakes!
-  if (role === UserRole.OWNER) {
-    if (cookieLakeId) {
-      const isLakeOwner = await prisma.fishingLake.findFirst({
-        where: { id: cookieLakeId, managerId: userId }
-      });
-      if (isLakeOwner) return cookieLakeId;
-    }
-
-    if (userLakeId) {
-      const existing = await prisma.fishingLake.findUnique({
-        where: { id: userLakeId }
-      });
-      if (existing) return existing.id;
-    }
+  try {
+    const session = await auth();
     
-    const firstManagedLake = await prisma.fishingLake.findFirst({
-      where: { managerId: userId }
-    });
-    if (firstManagedLake) return firstManagedLake.id;
+    const cookieStore = await cookies();
+    const cookieLakeId = cookieStore.get("lakeId")?.value;
 
-    const assignedUser = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { lakeId: true }
-    });
-    if (assignedUser?.lakeId) return assignedUser.lakeId;
+    // 1. If not logged in, fallback to cookie or first lake in DB
+    if (!session?.user) {
+      if (cookieLakeId) return cookieLakeId;
+      const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
+      return firstLake?.id || "lake_01";
+    }
 
-    const firstLake = await prisma.fishingLake.findFirst();
+    const { id: userId, role, lakeId: userLakeId } = session.user;
+
+    // 2. For STAFF / CASHIER: Hard-locked to their assigned lakeId!
+    if (role === UserRole.STAFF || role === UserRole.CASHIER) {
+      if (userLakeId) return userLakeId;
+      const assignedUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { lakeId: true }
+      }).catch(() => null);
+      if (assignedUser?.lakeId) return assignedUser.lakeId;
+      const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
+      return firstLake?.id || "";
+    }
+
+    // 3. For OWNER: Can switch lakes, but must only access their own managed lakes!
+    if (role === UserRole.OWNER) {
+      if (cookieLakeId) {
+        const isLakeOwner = await prisma.fishingLake.findFirst({
+          where: { id: cookieLakeId, managerId: userId }
+        }).catch(() => null);
+        if (isLakeOwner) return cookieLakeId;
+      }
+
+      if (userLakeId) {
+        return userLakeId;
+      }
+      
+      const firstManagedLake = await prisma.fishingLake.findFirst({
+        where: { managerId: userId }
+      }).catch(() => null);
+      if (firstManagedLake) return firstManagedLake.id;
+
+      const assignedUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { lakeId: true }
+      }).catch(() => null);
+      if (assignedUser?.lakeId) return assignedUser.lakeId;
+
+      const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
+      return firstLake?.id || "";
+    }
+
+    // 4. For SUPER_ADMIN: Can access any lake
+    if (cookieLakeId) return cookieLakeId;
+    if (userLakeId) return userLakeId;
+    const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
     return firstLake?.id || "";
+  } catch (err) {
+    console.error("getActiveLakeId error (returning fallback):", err);
+    return "";
   }
-
-  // 4. For SUPER_ADMIN: Can access any lake
-  if (cookieLakeId) return cookieLakeId;
-  const firstLake = await prisma.fishingLake.findFirst();
-  return firstLake?.id || "";
 });
 
 export async function setActiveLakeId(lakeId: string) {

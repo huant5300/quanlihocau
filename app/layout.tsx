@@ -90,6 +90,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="vi" suppressHydrationWarning className="dark">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for (var i = 0; i < registrations.length; i++) {
+                    registrations[i].unregister();
+                  }
+                });
+              }
+            `,
+          }}
+        />
+      </head>
       <body className={`${inter.className} ${plusJakartaSans.variable} ${beVietnamPro.variable} ${caveat.variable} antialiased`} suppressHydrationWarning>
         <AppProviders>
           <PWARegistration />

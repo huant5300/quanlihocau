@@ -1,36 +1,28 @@
 "use client";
 
 import { useEffect } from "react";
-import { SyncService } from "@/lib/offline/sync-service";
-import { requestNotificationPermission } from "@/utils/notification-helper";
 
 export function PWARegistration() {
   useEffect(() => {
-    // Register Service Worker
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").then(
-          (registration) => {
-            console.log("SW registered:", registration);
-            // Yêu cầu quyền thông báo sau khi đăng ký SW thành công
-            requestNotificationPermission().then((granted) => {
-              if (granted) {
-                console.log("SW: Quyền thông báo đã được cấp.");
-              }
-            });
-          },
-          (err) => {
-            console.log("SW registration failed:", err);
-          }
-        );
+    // Unregister all existing Service Workers immediately
+    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((registrations) => {
+        for (const registration of registrations) {
+          registration.unregister().then((success) => {
+            if (success) console.log("SW: Successfully unregistered service worker");
+          });
+        }
       });
     }
 
-    // Initialize Sync Service
-    SyncService.init();
-    
-    // Initial sync check
-    SyncService.processQueue();
+    // Clear all existing caches
+    if (typeof window !== "undefined" && "caches" in window) {
+      caches.keys().then((keys) => {
+        for (const key of keys) {
+          caches.delete(key);
+        }
+      });
+    }
   }, []);
 
   return null;

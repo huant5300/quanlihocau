@@ -331,6 +331,21 @@ export async function updateLakeDetails(data: { name: string; address: string; p
       });
     }
 
+    // Check unique phone number across other lakes
+    const existingLakeWithPhone = await prisma.fishingLake.findFirst({
+      where: {
+        phone: phoneTrimmed,
+        ...(lake?.id ? { id: { not: lake.id } } : {})
+      }
+    });
+
+    if (existingLakeWithPhone) {
+      return {
+        success: false,
+        error: `Số điện thoại ${phoneTrimmed} đã được đăng ký bởi hồ câu khác! Mỗi tài khoản / hồ câu chỉ được sử dụng 1 số điện thoại duy nhất.`
+      };
+    }
+
     if (lake) {
       // Update existing lake
       lake = await prisma.fishingLake.update({

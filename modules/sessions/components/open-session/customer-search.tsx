@@ -113,7 +113,7 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange, onCus
     }
     setIsCreating(true);
     try {
-      const result = await customerService.createCustomer({
+      const result: any = await customerService.createCustomer({
         fullName: newCustomerName || "Khách mới",
         phone: newCustomerPhone || `temp_${Date.now()}`,
       });
@@ -122,7 +122,11 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange, onCus
         setShowCreateForm(false);
         setNewCustomerName("");
         setNewCustomerPhone("");
-        toast.success("Đã tạo khách hàng mới!");
+        if (result.alreadyExisted) {
+          toast.info(result.message || "Khách hàng đã có trong hệ thống, đã tự động chọn!");
+        } else {
+          toast.success("Đã tạo khách hàng mới!");
+        }
       }
     } catch (error: any) {
       toast.error(error.message || "Không thể tạo khách hàng");

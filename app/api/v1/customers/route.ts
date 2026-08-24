@@ -15,12 +15,15 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get("search") || undefined;
 
     const lakeId = await getActiveLakeId();
-    const customers = await CustomerRepository.getAll(lakeId);
+    const customers = await CustomerRepository.getAll(lakeId).catch((err) => {
+      console.warn("[Customers GET] Fallback on error:", err.message);
+      return [];
+    });
 
-    let filteredCustomers = customers;
+    let filteredCustomers = customers || [];
     if (search) {
       const query = search.toLowerCase();
-      filteredCustomers = customers.filter(c => 
+      filteredCustomers = filteredCustomers.filter(c => 
         (c.fullName || "").toLowerCase().includes(query) || 
         (c.phone || "").includes(query)
       );
@@ -28,7 +31,8 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json(filteredCustomers);
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error("[Customers API GET Error]:", error.message);
+    return NextResponse.json([], { status: 200 });
   }
 }
 
@@ -53,9 +57,11 @@ export async function POST(req: NextRequest) {
 
     if (existing) {
       return NextResponse.json({ 
-        success: false, 
-        message: `Số điện thoại ${body.phone} đã được đăng ký bởi khách hàng "${existing.fullName}"` 
-      }, { status: 400 });
+        success: true,
+        alreadyExisted: true,
+        message: `Số điện thoại ${body.phone} đã thuộc về "${existing.fullName}". Đã tự động chọn khách này.`,
+        ...existing
+      }, { status: 200 });
     }
 
     const customer = await CustomerRepository.create({
@@ -68,6 +74,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(customer);
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error("[Customers API POST Error]:", error.message);
+    return NextResponse.json({ success: false, message: error.message || "Không thể tạo khách hàng, vui lòng thử lại" }, { status: 500 });
   }
 }

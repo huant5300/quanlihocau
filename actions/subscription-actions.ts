@@ -196,7 +196,7 @@ export async function approveSubscriptionOrder(orderId: string) {
       return { success: false, error: "Yêu cầu này đã được xử lý từ trước" };
     }
 
-    // Tính toán thời hạn gói cước mới
+    // Tính toán thời hạn gói cước mới (Ưu đãi: Đăng ký 1 năm tặng 3 tháng = 15 tháng, 6 tháng tặng 1 tháng = 7 tháng)
     const currentExpires = order.lake.subscriptionExpiresAt;
     let baseDate = new Date();
     
@@ -205,8 +205,16 @@ export async function approveSubscriptionOrder(orderId: string) {
       baseDate = new Date(currentExpires);
     }
 
+    let bonusMonths = 0;
+    if (order.durationMonths === 12) {
+      bonusMonths = 3;
+    } else if (order.durationMonths === 6) {
+      bonusMonths = 1;
+    }
+
+    const totalActiveMonths = order.durationMonths + bonusMonths;
     const expiresAtNew = new Date(baseDate);
-    expiresAtNew.setMonth(expiresAtNew.getMonth() + order.durationMonths);
+    expiresAtNew.setMonth(expiresAtNew.getMonth() + totalActiveMonths);
 
     // Cập nhật database trong Transaction
     await prisma.$transaction([

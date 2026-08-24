@@ -234,7 +234,9 @@ export function OnboardingWizard() {
 
               <form onSubmit={handleSaveSetup} className="space-y-5">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-850 dark:text-slate-200 ml-1">Tên hồ câu</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-850 dark:text-slate-200 ml-1 flex items-center gap-1">
+                    Tên hồ câu <span className="text-rose-500 font-black text-xs">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -246,7 +248,9 @@ export function OnboardingWizard() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-850 dark:text-slate-200 ml-1">Địa chỉ hồ câu</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-850 dark:text-slate-200 ml-1 flex items-center gap-1">
+                    Địa chỉ hồ câu <span className="text-rose-500 font-black text-xs">*</span>
+                  </label>
                   <input
                     type="text"
                     required
@@ -258,7 +262,9 @@ export function OnboardingWizard() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-850 dark:text-slate-200 ml-1">Số điện thoại liên hệ</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-850 dark:text-slate-200 ml-1 flex items-center gap-1">
+                    Số điện thoại liên hệ <span className="text-rose-500 font-black text-xs">* (1 hồ / 1 SĐT duy nhất)</span>
+                  </label>
                   <input
                     type="tel"
                     required

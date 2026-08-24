@@ -22,12 +22,16 @@ export function HeartbeatProvider({ children }: { children: React.ReactNode }) {
       window.addEventListener(event, handleActivity, { passive: true });
     });
 
-    // Send heartbeat every 30 seconds
+    // Send heartbeat every 30 seconds if active and tab is visible
     const interval = setInterval(async () => {
+      if (typeof document !== "undefined" && document.visibilityState !== "visible") {
+        return;
+      }
+
       const timeSinceLastActivity = Date.now() - lastActivityRef.current;
       
-      // If user has interacted with the page in the last 30 seconds
-      if (timeSinceLastActivity < 30000) {
+      // If user has interacted with the page in the last 45 seconds
+      if (timeSinceLastActivity < 45000) {
         try {
           await fetch("/api/v1/user/heartbeat", {
             method: "POST",
@@ -35,9 +39,11 @@ export function HeartbeatProvider({ children }: { children: React.ReactNode }) {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({ seconds: 30 }),
+          }).catch(() => {
+            // Silently ignore transient network drops for background heartbeat
           });
-        } catch (error) {
-          console.error("Failed to send heartbeat:", error);
+        } catch {
+          // Ignore
         }
       }
     }, 30000);

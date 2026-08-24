@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { lakeSettingsSchema, LakeSettingsInput } from "../schemas/lake-settings.schema";
 import { SettingsCard } from "./settings-card";
-import { Building2, Save, Loader2, QrCode } from "lucide-react";
+import { Building2, Save, Loader2, QrCode, AlertCircle } from "lucide-react";
 import { settingsService } from "@/services/api/settings-service";
 import { toast } from "sonner";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -65,11 +65,12 @@ export function LakeInfoForm() {
         bankBin: data.bankBin,
       }),
     onSuccess: () => {
-      toast.success("Đã cập nhật thông tin hồ câu thành công");
+      toast.success("Đã cập nhật thông tin hồ câu thành công!");
       queryClient.invalidateQueries({ queryKey: ["lake-info"] });
     },
-    onError: () => {
-      toast.error("Có lỗi xảy ra khi cập nhật");
+    onError: (error: any) => {
+      const msg = error?.response?.data?.message || error?.message || "Có lỗi xảy ra khi cập nhật";
+      toast.error(msg);
     }
   });
 
@@ -85,44 +86,73 @@ export function LakeInfoForm() {
     >
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         
+        {/* Notice for required fields */}
+        <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-xl text-amber-600 dark:text-amber-400 text-xs font-semibold">
+          <AlertCircle size={16} className="shrink-0 text-amber-500" />
+          <span>
+            Các mục đánh dấu <span className="text-rose-500 font-black text-sm">*</span> là bắt buộc (1 tài khoản / hồ sử dụng 1 số điện thoại duy nhất).
+          </span>
+        </div>
+
         {/* Lake Basic Info */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          
+          {/* Lake Name */}
           <div className="space-y-1.5">
-            <label htmlFor="lake-name-input" className="text-xs font-bold text-slate-700 dark:text-zinc-300">Tên Hồ câu</label>
+            <label htmlFor="lake-name-input" className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+              Tên Hồ câu <span className="text-rose-500 font-black">*</span>
+            </label>
             <input 
               id="lake-name-input"
               type="text"
               placeholder="VD: Hồ Câu Dịch Vụ Đồng Quê"
               {...register("name")}
-              className="w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-800 dark:text-zinc-200 outline-none focus:border-emerald-500 font-semibold"
+              className={`w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border rounded-xl text-xs text-slate-800 dark:text-zinc-200 outline-none transition-all font-semibold ${
+                errors.name ? "border-rose-500 focus:border-rose-600 ring-1 ring-rose-500/20" : "border-slate-200 dark:border-zinc-700 focus:border-emerald-500"
+              }`}
             />
-            {errors.name && <p className="text-[10px] text-rose-500 font-bold ml-1">{errors.name.message}</p>}
+            {errors.name && <p className="text-[11px] text-rose-500 font-bold ml-1">{errors.name.message}</p>}
           </div>
 
+          {/* Lake Phone */}
           <div className="space-y-1.5">
-            <label htmlFor="lake-phone-input" className="text-xs font-bold text-slate-700 dark:text-zinc-300">Số điện thoại liên hệ</label>
+            <label htmlFor="lake-phone-input" className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+              Số điện thoại liên hệ <span className="text-rose-500 font-black">*</span>
+            </label>
             <input 
               id="lake-phone-input"
               type="tel"
-              placeholder="VD: 0912345678"
+              placeholder="VD: 0855550813 (10 chữ số)"
               {...register("phone")}
-              className="w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-800 dark:text-zinc-200 outline-none focus:border-emerald-500 font-semibold"
+              className={`w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border rounded-xl text-xs text-slate-800 dark:text-zinc-200 outline-none transition-all font-semibold ${
+                errors.phone ? "border-rose-500 focus:border-rose-600 ring-1 ring-rose-500/20" : "border-slate-200 dark:border-zinc-700 focus:border-emerald-500"
+              }`}
             />
+            {errors.phone && <p className="text-[11px] text-rose-500 font-bold ml-1">{errors.phone.message}</p>}
           </div>
 
+          {/* Lake Address */}
           <div className="space-y-1.5 md:col-span-2">
-            <label htmlFor="lake-address-input" className="text-xs font-bold text-slate-700 dark:text-zinc-300">Địa chỉ hồ câu</label>
+            <label htmlFor="lake-address-input" className="text-xs font-bold text-slate-700 dark:text-zinc-300 flex items-center gap-1">
+              Địa chỉ hồ câu <span className="text-rose-500 font-black">*</span>
+            </label>
             <input 
               id="lake-address-input"
               type="text"
               placeholder="VD: Số 123 Đường Câu Cá, Bình Dương"
               {...register("address")}
-              className="w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs text-slate-800 dark:text-zinc-200 outline-none focus:border-emerald-500 font-semibold"
+              className={`w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border rounded-xl text-xs text-slate-800 dark:text-zinc-200 outline-none transition-all font-semibold ${
+                errors.address ? "border-rose-500 focus:border-rose-600 ring-1 ring-rose-500/20" : "border-slate-200 dark:border-zinc-700 focus:border-emerald-500"
+              }`}
             />
+            {errors.address && <p className="text-[11px] text-rose-500 font-bold ml-1">{errors.address.message}</p>}
           </div>
 
+          {/* Receipt Footer */}
           <div className="space-y-1.5 md:col-span-2">
-            <label htmlFor="lake-receipt-footer-textarea" className="text-xs font-bold text-slate-700 dark:text-zinc-300">Lời chào chân hóa đơn</label>
+            <label htmlFor="lake-receipt-footer-textarea" className="text-xs font-bold text-slate-700 dark:text-zinc-300">
+              Lời chào chân hóa đơn
+            </label>
             <textarea 
               id="lake-receipt-footer-textarea"
               placeholder="VD: Chúc quý cần thủ giật được nhiều cá khủng! Hẹn gặp lại quý khách."
@@ -132,7 +162,7 @@ export function LakeInfoForm() {
           </div>
         </div>
 
-        {/* Bank & VietQR Settings (NO DANGEROUS PIN / BIN CONFUSION) */}
+        {/* Bank & VietQR Settings */}
         <div className="pt-4 border-t border-slate-100 dark:border-zinc-800 space-y-4">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 flex items-center justify-center">
@@ -150,7 +180,7 @@ export function LakeInfoForm() {
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             
-            {/* Bank Select Dropdown (Automatic mapping) */}
+            {/* Bank Select Dropdown */}
             <div className="space-y-1.5">
               <label htmlFor="bank-name-select" className="text-xs font-bold text-slate-700 dark:text-zinc-300">
                 Ngân Hàng Nhận Tiền
@@ -221,4 +251,3 @@ export function LakeInfoForm() {
     </SettingsCard>
   );
 }
-

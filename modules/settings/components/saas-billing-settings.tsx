@@ -5,49 +5,33 @@ import { SettingsCard } from "./settings-card";
 import { 
   CreditCard, 
   CheckCircle2, 
-  AlertTriangle, 
-  Calendar, 
-  HelpCircle, 
-  Copy, 
   Loader2, 
-  History, 
+  Copy, 
   Check, 
+  QrCode, 
   Info,
-  QrCode
+  Flame,
+  Sparkles,
+  Gift,
+  Clock,
+  Zap
 } from "lucide-react";
+import { cn } from "@/utils/utils";
+import { toast } from "sonner";
 import { 
   getLakeSubscriptionDetails, 
   createSubscriptionOrder, 
   getMySubscriptionOrders 
 } from "@/actions/subscription-actions";
-import { toast } from "sonner";
-import { cn } from "@/utils/utils";
-
-interface SubscriptionDetails {
-  plan: string;
-  status: string;
-  expiresAt: string | null;
-  isExpired: boolean;
-  limits: {
-    name: string;
-    maxHuts: number;
-    maxStaff: number;
-    maxCustomers: number;
-    offlineMode: boolean;
-  };
-  usage: {
-    huts: number;
-    staff: number;
-    customers: number;
-  };
-}
 
 export function SaasBillingSettings() {
   const [loading, setLoading] = useState(true);
-  const [subDetails, setSubDetails] = useState<SubscriptionDetails | null>(null);
+  const [subDetails, setSubDetails] = useState<any | null>(null);
   const [orders, setOrders] = useState<any[]>([]);
+  
+  // State nâng cấp gói
   const [selectedPlan, setSelectedPlan] = useState<"BASIC" | "PREMIUM">("BASIC");
-  const [duration, setDuration] = useState<number>(6); // mặc định 6 tháng
+  const [duration, setDuration] = useState<number>(12); // mặc định 12 tháng để kích hoạt ưu đãi cao nhất
   const [submitting, setSubmitting] = useState(false);
   const [activeOrder, setActiveOrder] = useState<any | null>(null);
   const [copiedText, setCopiedText] = useState(false);
@@ -87,6 +71,39 @@ export function SaasBillingSettings() {
     setTimeout(() => setCopiedText(false), 2000);
   };
 
+  // Tính tiền & ưu đãi tặng thêm tháng (12 tháng tặng 3 tháng = 15 tháng, 6 tháng tặng 1 tháng = 7 tháng)
+  const getPricingInfo = (plan: "BASIC" | "PREMIUM", months: number) => {
+    const basePrice = plan === "BASIC" ? 99000 : 199000;
+    const rawTotal = basePrice * months;
+    
+    let bonusMonths = 0;
+    let badgeText = "";
+    if (months === 12) {
+      bonusMonths = 3;
+      badgeText = "TẶNG +3 THÁNG MIỄN PHÍ";
+    } else if (months === 6) {
+      bonusMonths = 1;
+      badgeText = "TẶNG +1 THÁNG MIỄN PHÍ";
+    }
+
+    const totalActiveMonths = months + bonusMonths;
+    const effectivePricePerMonth = Math.round(rawTotal / totalActiveMonths);
+    const savedAmount = bonusMonths * basePrice;
+
+    return {
+      pricePerMonth: basePrice,
+      rawTotal,
+      finalTotal: rawTotal,
+      bonusMonths,
+      totalActiveMonths,
+      effectivePricePerMonth,
+      savedAmount,
+      badgeText,
+    };
+  };
+
+  const pricing = getPricingInfo(selectedPlan, duration);
+
   const handleCreateOrder = async () => {
     setSubmitting(true);
     try {
@@ -108,26 +125,6 @@ export function SaasBillingSettings() {
       setSubmitting(false);
     }
   };
-
-  // Tính tiền & giảm giá (6 tháng giảm 10%, 12 tháng giảm 20%)
-  const getPricingInfo = (plan: "BASIC" | "PREMIUM", months: number) => {
-    const basePrice = plan === "BASIC" ? 299000 : 599000;
-    const rawTotal = basePrice * months;
-    let discount = 0;
-    
-    if (months === 6) discount = 0.1; // 10%
-    if (months === 12) discount = 0.2; // 20%
-    
-    const finalTotal = Math.round(rawTotal * (1 - discount));
-    return {
-      pricePerMonth: basePrice,
-      rawTotal,
-      discountPercent: discount * 100,
-      finalTotal,
-    };
-  };
-
-  const pricing = getPricingInfo(selectedPlan, duration);
 
   if (loading) {
     return (
@@ -243,116 +240,307 @@ export function SaasBillingSettings() {
       {/* 2. Đăng ký / Nâng cấp gói */}
       <SettingsCard
         title="Nâng cấp & Gia hạn dịch vụ"
-        description="Lựa chọn các gói dịch vụ phù hợp với mô hình kinh doanh của bạn."
+        description="Lựa chọn các gói dịch vụ phù hợp với quy mô hồ câu của bạn."
         icon={CreditCard}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Chọn gói & thời gian (Left 7 Columns) */}
-          <div className="lg:col-span-7 space-y-6">
-            {/* Gói cước */}
-            <div className="grid grid-cols-2 gap-4">
-              <button
-                type="button"
-                onClick={() => setSelectedPlan("BASIC")}
-                className={cn(
-                  "p-6 rounded-2xl border-2 text-left space-y-3 transition-all relative overflow-hidden",
-                  selectedPlan === "BASIC" 
-                    ? "border-primary bg-primary/5 text-foreground" 
-                    : "border-white/5 bg-accent/20 text-muted-foreground"
-                )}
-              >
-                <h4 className="text-sm font-black uppercase text-primary">BASIC</h4>
-                <p className="text-xl font-black text-foreground">299.000đ<span className="text-xs font-normal text-muted-foreground">/tháng</span></p>
-                <ul className="text-[10px] space-y-1.5 font-bold pt-2 border-t border-white/5">
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Tối đa 15 chòi câu</li>
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Tối đa 5 nhân viên</li>
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Tối đa 300 khách hàng</li>
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Đồng bộ offline</li>
-                </ul>
-              </button>
+        <div className="space-y-6">
+          
+          {/* 🔥 LIMITED-TIME OFFER BANNER */}
+          <div className="relative overflow-hidden p-5 sm:p-6 rounded-3xl bg-gradient-to-r from-amber-500/20 via-rose-500/20 to-orange-500/20 border-2 border-amber-500/30 dark:border-amber-500/40 shadow-xl shadow-amber-500/10">
+            <div className="absolute -right-8 -top-8 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none" />
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative z-10">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-rose-500 text-white flex items-center justify-center shadow-lg shadow-amber-500/30 shrink-0 animate-bounce">
+                  <Flame size={24} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider animate-pulse flex items-center gap-1">
+                      <Zap size={10} /> Ưu Đãi Có Hạn
+                    </span>
+                    <span className="text-[11px] font-bold text-amber-500 dark:text-amber-400 flex items-center gap-1">
+                      <Clock size={12} /> Áp dụng ngay hôm nay
+                    </span>
+                  </div>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white mt-1">
+                    Đăng Ký 1 Năm <span className="text-rose-500 underline underline-offset-4">TẶNG NGAY 3 THÁNG</span> | 6 Tháng <span className="text-amber-500 underline underline-offset-4">TẶNG 1 THÁNG</span>
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-zinc-300 font-semibold mt-0.5">
+                    Nhận trọn vẹn lên đến <strong className="text-emerald-500">15 tháng sử dụng</strong> với chi phí siêu tiết kiệm chỉ từ 79k/tháng!
+                  </p>
+                </div>
+              </div>
 
-              <button
-                type="button"
-                onClick={() => setSelectedPlan("PREMIUM")}
-                className={cn(
-                  "p-6 rounded-2xl border-2 text-left space-y-3 transition-all relative overflow-hidden",
-                  selectedPlan === "PREMIUM" 
-                    ? "border-primary bg-primary/5 text-foreground" 
-                    : "border-white/5 bg-accent/20 text-muted-foreground"
-                )}
-              >
-                <div className="absolute top-0 right-0 bg-primary text-white text-[8px] font-black uppercase tracking-wider px-2 py-0.5 rounded-bl-lg">Phổ biến</div>
-                <h4 className="text-sm font-black uppercase text-primary">PREMIUM</h4>
-                <p className="text-xl font-black text-foreground">599.000đ<span className="text-xs font-normal text-muted-foreground">/tháng</span></p>
-                <ul className="text-[10px] space-y-1.5 font-bold pt-2 border-t border-white/5">
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Không giới hạn chòi</li>
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Không giới hạn nhân viên</li>
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Không giới hạn khách</li>
-                  <li className="flex items-center gap-1.5"><CheckCircle2 size={12} className="text-emerald-500" /> Ưu tiên cập nhật</li>
-                </ul>
-              </button>
-            </div>
-
-            {/* Thời gian */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Thời gian đăng ký</label>
-              <div className="grid grid-cols-4 gap-2">
-                {[1, 3, 6, 12].map((m) => (
-                  <button
-                    key={m}
-                    type="button"
-                    onClick={() => setDuration(m)}
-                    className={cn(
-                      "h-14 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border",
-                      duration === m 
-                        ? "bg-primary border-primary text-white shadow-lg shadow-primary/20" 
-                        : "bg-accent/20 border-white/5 hover:border-white/20 text-foreground"
-                    )}
-                  >
-                    {m} Tháng
-                    {m === 6 && <span className="block text-[8px] text-white/80 font-black mt-0.5">-10%</span>}
-                    {m === 12 && <span className="block text-[8px] text-white/80 font-black mt-0.5">-20%</span>}
-                  </button>
-                ))}
+              <div className="shrink-0 self-end sm:self-center">
+                <button
+                  type="button"
+                  onClick={() => setDuration(12)}
+                  className="px-4 py-2.5 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 active:scale-95 text-white rounded-xl text-xs font-black uppercase tracking-wider shadow-lg shadow-rose-500/25 flex items-center gap-1.5 transition-all"
+                >
+                  <Gift size={14} />
+                  Chọn Gói 1 Năm (+3 Tháng)
+                </button>
               </div>
             </div>
           </div>
 
-          {/* Hóa đơn & Button thanh toán (Right 5 Columns) */}
-          <div className="lg:col-span-5">
-            <div className="bg-accent/10 border border-white/5 rounded-3xl p-6 space-y-6">
-              <h4 className="font-black text-sm uppercase tracking-wider border-b border-white/5 pb-3">Chi tiết thanh toán</h4>
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            {/* Chọn gói & thời gian (Left 7 Columns) */}
+            <div className="lg:col-span-7 space-y-6">
               
-              <div className="space-y-3 text-xs font-bold text-muted-foreground">
-                <div className="flex justify-between">
-                  <span>Giá gói:</span>
-                  <span className="text-foreground">{pricing.pricePerMonth.toLocaleString()}đ / tháng</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Thời gian:</span>
-                  <span className="text-foreground">{duration} tháng</span>
-                </div>
-                {pricing.discountPercent > 0 && (
-                  <div className="flex justify-between text-emerald-500">
-                    <span>Khuyến mãi:</span>
-                    <span>-{pricing.discountPercent}%</span>
+              {/* Chọn Gói cước */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                
+                {/* Gói BASIC */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlan("BASIC")}
+                  className={cn(
+                    "p-5 rounded-2xl border-2 text-left space-y-3 transition-all relative overflow-hidden",
+                    selectedPlan === "BASIC" 
+                      ? "border-emerald-500 bg-emerald-500/5 text-foreground shadow-lg shadow-emerald-500/10 ring-2 ring-emerald-500/20" 
+                      : "border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-accent/20 text-muted-foreground hover:border-slate-300 dark:hover:border-white/15"
+                  )}
+                >
+                  <div className="flex justify-between items-start">
+                    <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[9px] font-black uppercase tracking-wider">
+                      1 Hồ Độc Lập
+                    </span>
+                    {selectedPlan === "BASIC" && <CheckCircle2 size={16} className="text-emerald-500" />}
                   </div>
-                )}
-                <div className="flex justify-between border-t border-white/5 pt-4 text-sm font-black text-foreground">
-                  <span className="uppercase tracking-wider">Tổng thanh toán:</span>
-                  <span className="text-emerald-500 text-lg font-black">{pricing.finalTotal.toLocaleString()}đ</span>
-                </div>
+
+                  <div>
+                    <h4 className="text-sm font-black uppercase text-emerald-600 dark:text-emerald-400">BASIC (1 Hồ)</h4>
+                    <p className="text-2xl font-black text-foreground mt-0.5">
+                      99.000đ<span className="text-xs font-semibold text-muted-foreground">/tháng</span>
+                    </p>
+                  </div>
+
+                  <ul className="text-[11px] space-y-2 font-bold pt-2 border-t border-slate-200 dark:border-white/5">
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> 1 Hồ câu duy nhất</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Tối đa 2 Nhân viên / Thu ngân</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Full tính năng tạo vé & đếm ngược</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> In bill nhiệt Bluetooth 58mm (PT-210)</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Thu cá trừ bill & Tự tính tiền</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Tự động tạo mã VietQR quét tiền</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Quản lý kho hàng & Quản lý cá</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Chốt ca & Báo cáo doanh thu</li>
+                  </ul>
+                </button>
+
+                {/* Gói PREMIUM */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlan("PREMIUM")}
+                  className={cn(
+                    "p-5 rounded-2xl border-2 text-left space-y-3 transition-all relative overflow-hidden",
+                    selectedPlan === "PREMIUM" 
+                      ? "border-primary bg-primary/5 text-foreground shadow-lg shadow-primary/10 ring-2 ring-primary/20" 
+                      : "border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-accent/20 text-muted-foreground hover:border-slate-300 dark:hover:border-white/15"
+                  )}
+                >
+                  <div className="absolute top-0 right-0 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[8px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-bl-lg flex items-center gap-1 shadow-sm">
+                    <Sparkles size={10} /> Chuỗi 5 Hồ
+                  </div>
+
+                  <div className="flex justify-between items-start">
+                    <span className="px-2 py-0.5 rounded-lg bg-primary/10 text-primary text-[9px] font-black uppercase tracking-wider">
+                      Quản lý 5 Hồ
+                    </span>
+                    {selectedPlan === "PREMIUM" && <CheckCircle2 size={16} className="text-primary" />}
+                  </div>
+
+                  <div>
+                    <h4 className="text-sm font-black uppercase text-primary">PREMIUM (Chuỗi Hồ)</h4>
+                    <p className="text-2xl font-black text-foreground mt-0.5">
+                      199.000đ<span className="text-xs font-semibold text-muted-foreground">/tháng</span>
+                    </p>
+                  </div>
+
+                  <ul className="text-[11px] space-y-2 font-bold pt-2 border-t border-slate-200 dark:border-white/5">
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Quản lý đến 5 Hồ câu độc lập</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Tối đa 10 Nhân viên / Thu ngân</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Full toàn bộ tính năng như Basic</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Chuyển đổi linh hoạt giữa các hồ</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Báo cáo tổng hợp doanh thu chuỗi</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Không giới hạn khách hàng CRM</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Ưu tiên cập nhật tính năng mới</li>
+                    <li className="flex items-center gap-2"><CheckCircle2 size={13} className="text-emerald-500 shrink-0" /> Hỗ trợ kỹ thuật 24/7</li>
+                  </ul>
+                </button>
               </div>
 
-              <button
-                type="button"
-                onClick={handleCreateOrder}
-                disabled={submitting}
-                className="w-full h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all disabled:opacity-50"
-              >
-                {submitting ? <Loader2 className="animate-spin" size={16} /> : <CreditCard size={16} />}
-                Gửi yêu cầu nâng cấp
-              </button>
+              {/* Chọn Thời gian đăng ký với Offer */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-zinc-200 ml-1 flex items-center gap-1.5">
+                    <Clock size={14} className="text-amber-500" /> Thời gian đăng ký & Ưu đãi
+                  </label>
+                  <span className="text-[11px] font-bold text-rose-500">Đăng ký dài hạn = Tặng thêm tháng</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                  
+                  {/* 1 Tháng */}
+                  <button
+                    type="button"
+                    onClick={() => setDuration(1)}
+                    className={cn(
+                      "h-16 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-0.5",
+                      duration === 1 
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md" 
+                        : "bg-slate-50 dark:bg-accent/20 border-slate-200 dark:border-white/5 hover:border-slate-300 text-slate-700 dark:text-zinc-300"
+                    )}
+                  >
+                    <span>1 Tháng</span>
+                    <span className="text-[9px] font-semibold text-muted-foreground">Tiêu chuẩn</span>
+                  </button>
+
+                  {/* 3 Tháng */}
+                  <button
+                    type="button"
+                    onClick={() => setDuration(3)}
+                    className={cn(
+                      "h-16 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border flex flex-col items-center justify-center gap-0.5",
+                      duration === 3 
+                        ? "bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-md" 
+                        : "bg-slate-50 dark:bg-accent/20 border-slate-200 dark:border-white/5 hover:border-slate-300 text-slate-700 dark:text-zinc-300"
+                    )}
+                  >
+                    <span>3 Tháng</span>
+                    <span className="text-[9px] font-semibold text-muted-foreground">Tiêu chuẩn</span>
+                  </button>
+
+                  {/* 6 Tháng (TẶNG 1 THÁNG = 7T) */}
+                  <button
+                    type="button"
+                    onClick={() => setDuration(6)}
+                    className={cn(
+                      "h-16 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border relative flex flex-col items-center justify-center gap-0.5 overflow-hidden",
+                      duration === 6 
+                        ? "bg-amber-500 border-amber-500 text-white shadow-lg shadow-amber-500/25 ring-2 ring-amber-500/30" 
+                        : "bg-amber-500/10 border-amber-500/30 hover:border-amber-500 text-amber-700 dark:text-amber-300"
+                    )}
+                  >
+                    <span className="text-[8px] font-black uppercase tracking-widest bg-amber-600 text-white px-2 py-0.5 rounded-full absolute top-1">
+                      +1 Tháng FREE
+                    </span>
+                    <span className="mt-3">6 Tháng</span>
+                    <span className="text-[9px] font-bold opacity-90">(Nhận 7 Tháng)</span>
+                  </button>
+
+                  {/* 12 Tháng (TẶNG 3 THÁNG = 15T - BEST DEAL) */}
+                  <button
+                    type="button"
+                    onClick={() => setDuration(12)}
+                    className={cn(
+                      "h-16 rounded-2xl font-black text-xs uppercase tracking-wider transition-all border relative flex flex-col items-center justify-center gap-0.5 overflow-hidden",
+                      duration === 12 
+                        ? "bg-gradient-to-r from-rose-500 to-amber-500 border-rose-500 text-white shadow-xl shadow-rose-500/30 ring-2 ring-rose-500/40" 
+                        : "bg-rose-500/10 border-rose-500/30 hover:border-rose-500 text-rose-600 dark:text-rose-300"
+                    )}
+                  >
+                    <span className="text-[8px] font-black uppercase tracking-widest bg-rose-600 text-white px-2 py-0.5 rounded-full absolute top-1 animate-pulse">
+                      🔥 TẶNG 3 THÁNG
+                    </span>
+                    <span className="mt-3">1 Năm (12T)</span>
+                    <span className="text-[9px] font-bold opacity-90">(Nhận 15 Tháng)</span>
+                  </button>
+
+                </div>
+              </div>
+            </div>
+
+            {/* Hóa đơn & Button thanh toán (Right 5 Columns) */}
+            <div className="lg:col-span-5">
+              <div className="bg-slate-50 dark:bg-accent/15 border-2 border-slate-200 dark:border-white/10 rounded-3xl p-6 space-y-6 shadow-sm">
+                
+                <div className="flex items-center justify-between border-b border-slate-200 dark:border-white/10 pb-3">
+                  <h4 className="font-black text-sm uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
+                    <Sparkles size={16} className="text-amber-500" />
+                    Chi tiết thanh toán
+                  </h4>
+                  {pricing.bonusMonths > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-rose-500 text-white text-[9px] font-black uppercase tracking-wider animate-pulse">
+                      Đã áp dụng ưu đãi
+                    </span>
+                  )}
+                </div>
+                
+                <div className="space-y-3.5 text-xs font-bold text-slate-600 dark:text-zinc-400">
+                  
+                  <div className="flex justify-between">
+                    <span>Gói đã chọn:</span>
+                    <span className="text-slate-900 dark:text-white font-extrabold uppercase">
+                      {selectedPlan === "BASIC" ? "BASIC (1 Hồ)" : "PREMIUM (Chuỗi 5 Hồ)"}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span>Đơn giá tiêu chuẩn:</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{pricing.pricePerMonth.toLocaleString()}đ / tháng</span>
+                  </div>
+
+                  <div className="flex justify-between">
+                    <span>Thời gian mua:</span>
+                    <span className="text-slate-900 dark:text-white font-bold">{duration} Tháng</span>
+                  </div>
+
+                  {pricing.bonusMonths > 0 && (
+                    <div className="flex justify-between items-center p-2.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-rose-500/10 border border-amber-500/20 text-rose-600 dark:text-rose-400 font-black">
+                      <span className="flex items-center gap-1.5">
+                        <Gift size={14} className="text-rose-500 shrink-0" />
+                        Quà tặng thêm:
+                      </span>
+                      <span className="text-xs uppercase">+{pricing.bonusMonths} Tháng Miễn Phí</span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between text-emerald-600 dark:text-emerald-400">
+                    <span>Tổng thời gian sử dụng:</span>
+                    <span className="font-black text-sm">
+                      {pricing.totalActiveMonths} Tháng
+                    </span>
+                  </div>
+
+                  {pricing.bonusMonths > 0 && (
+                    <div className="flex justify-between text-slate-500 text-[11px]">
+                      <span>Giá tương đương chỉ:</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                        ~{pricing.effectivePricePerMonth.toLocaleString()}đ / tháng
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex justify-between border-t-2 border-dashed border-slate-200 dark:border-white/10 pt-4 text-sm font-black text-slate-900 dark:text-white">
+                    <span className="uppercase tracking-wider">Tổng thanh toán:</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 text-xl font-black">{pricing.finalTotal.toLocaleString()}đ</span>
+                  </div>
+                </div>
+
+                {/* CTA BUTTON */}
+                <button
+                  type="button"
+                  onClick={handleCreateOrder}
+                  disabled={submitting}
+                  className="w-full h-14 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-2.5 shadow-xl shadow-emerald-600/30 transition-all disabled:opacity-50"
+                >
+                  {submitting ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <Zap size={18} className="animate-pulse" />
+                  )}
+                  <span>
+                    {pricing.bonusMonths > 0 
+                      ? `Nhận Ưu Đãi & Kích Hoạt (${pricing.totalActiveMonths} Tháng)`
+                      : "Gửi Yêu Cầu Nâng Cấp"}
+                  </span>
+                </button>
+
+                <p className="text-[10px] text-center text-slate-400 font-semibold leading-relaxed">
+                  🔒 Tự động tạo mã QR VietQR chuẩn xác. Kích hoạt ngay sau khi chuyển khoản.
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -364,7 +552,7 @@ export function SaasBillingSettings() {
           <div className="w-full max-w-2xl bg-slate-900 border border-white/10 rounded-[2.5rem] p-8 sm:p-10 shadow-2xl relative space-y-8 animate-in zoom-in-95 duration-200">
             <h3 className="text-xl font-black uppercase text-center text-white flex items-center justify-center gap-2">
               <QrCode className="text-primary animate-pulse" size={24} />
-              Thanh Toán Qua Chuyển Khoản
+              Thanh Toán Qua Chuyển Khoản VietQR
             </h3>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
@@ -397,6 +585,12 @@ export function SaasBillingSettings() {
                     <span>Số tiền:</span>
                     <span className="text-emerald-400 font-black text-sm">{pricing.finalTotal.toLocaleString()}đ</span>
                   </div>
+                  {pricing.bonusMonths > 0 && (
+                    <div className="flex justify-between text-rose-400 font-bold text-[11px]">
+                      <span>Ưu đãi áp dụng:</span>
+                      <span>+{pricing.bonusMonths} Tháng Miễn Phí (Tổng {pricing.totalActiveMonths}T)</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">
@@ -439,69 +633,42 @@ export function SaasBillingSettings() {
       )}
 
       {/* 4. Lịch sử yêu cầu */}
-      <SettingsCard
-        title="Lịch sử yêu cầu nâng cấp"
-        description="Theo dõi trạng thái các đơn hàng gia hạn dịch vụ của bạn."
-        icon={History}
-      >
-        <div className="overflow-x-auto no-scrollbar pt-2">
-          {orders.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground font-medium uppercase text-[10px] tracking-widest bg-accent/10 rounded-2xl border border-dashed border-white/5">
-              Chưa có giao dịch nâng cấp nào được thực hiện
-            </div>
-          ) : (
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-white/5 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                  <th className="pb-4 pl-4">Thời gian</th>
-                  <th className="pb-4">Mã đơn hàng</th>
-                  <th className="pb-4">Gói cước</th>
-                  <th className="pb-4 text-center">Thời gian</th>
-                  <th className="pb-4 text-right">Tổng tiền</th>
-                  <th className="pb-4 text-center">Trạng thái</th>
-                  <th className="pb-4 pr-4">Ghi chú</th>
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((o) => (
-                  <tr key={o.id} className="border-b border-white/5 text-xs font-semibold hover:bg-white/5 transition-all">
-                    <td className="py-4 pl-4 text-muted-foreground">
-                      {new Date(o.createdAt).toLocaleString("vi-VN")}
-                    </td>
-                    <td className="py-4 font-black">
-                      #{o.id.substring(0, 8).toUpperCase()}
-                    </td>
-                    <td className="py-4 text-primary font-black uppercase">
-                      {o.plan}
-                    </td>
-                    <td className="py-4 text-center font-bold">
-                      {o.durationMonths} tháng
-                    </td>
-                    <td className="py-4 text-right font-black text-emerald-500">
-                      {o.amount.toLocaleString()}đ
-                    </td>
-                    <td className="py-4 text-center">
-                      <span className={cn(
-                        "inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-widest",
-                        o.status === "APPROVED" && "bg-emerald-500/15 text-emerald-400",
-                        o.status === "PENDING" && "bg-amber-500/15 text-amber-400",
-                        o.status === "REJECTED" && "bg-red-500/15 text-red-400"
-                      )}>
-                        {o.status === "APPROVED" && "Đã duyệt"}
-                        {o.status === "PENDING" && "Chờ duyệt"}
-                        {o.status === "REJECTED" && "Từ chối"}
-                      </span>
-                    </td>
-                    <td className="py-4 text-muted-foreground max-w-[150px] truncate pr-4">
-                      {o.notes || "—"}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
-        </div>
-      </SettingsCard>
+      {orders.length > 0 && (
+        <SettingsCard
+          title="Lịch sử giao dịch & Nâng cấp"
+          description="Danh sách các đơn hàng nâng cấp gói cước hồ câu của bạn."
+          icon={CreditCard}
+        >
+          <div className="divide-y divide-white/5">
+            {orders.map((o: any) => (
+              <div key={o.id} className="py-4 flex items-center justify-between text-xs">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <span className="font-black text-foreground uppercase tracking-wider">{o.plan}</span>
+                    <span className="text-muted-foreground">({o.durationMonths} Tháng {o.durationMonths === 12 ? "+ 3T tặng" : o.durationMonths === 6 ? "+ 1T tặng" : ""})</span>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground">
+                    Mã đơn: <span className="text-foreground font-mono font-bold">{o.id}</span> • {new Date(o.createdAt).toLocaleDateString("vi-VN")}
+                  </p>
+                </div>
+
+                <div className="text-right space-y-1">
+                  <p className="font-black text-foreground">{o.amount.toLocaleString()}đ</p>
+                  <span className={cn(
+                    "inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider",
+                    o.status === "APPROVED" ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20" :
+                    o.status === "REJECTED" ? "bg-red-500/10 text-red-500 border border-red-500/20" :
+                    "bg-amber-500/10 text-amber-500 border border-amber-500/20"
+                  )}>
+                    {o.status === "APPROVED" ? "ĐÃ DUYỆT" :
+                     o.status === "REJECTED" ? "ĐÃ HỦY" : "CHỜ DUYỆT"}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </SettingsCard>
+      )}
     </div>
   );
 }

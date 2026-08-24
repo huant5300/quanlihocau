@@ -73,7 +73,8 @@ export async function GET(req: NextRequest) {
     
     return NextResponse.json(calculatedSessions);
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error("[Sessions API GET Error]:", error?.message);
+    return NextResponse.json([], { status: 200 });
   }
 }
 

@@ -19,11 +19,17 @@ import {
   HelpCircle,
   ShieldCheck,
   ChevronRight,
-  Plus
+  Plus,
+  Smartphone,
+  Share2,
+  PlusSquare,
+  MoreVertical,
+  Download
 } from "lucide-react";
 import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/utils/utils";
 import Link from "next/link";
+import { PWAInstallModal } from "@/components/shared/pwa-install-modal";
 
 interface StepGuide {
   step: number;
@@ -41,7 +47,8 @@ interface StepGuide {
 
 export function GuideClient() {
   const { setOpenSessionModalOpen } = useUIStore();
-  const [activeTab, setActiveTab] = useState<"flow" | "features" | "faq">("flow");
+  const [activeTab, setActiveTab] = useState<"flow" | "features" | "pwa" | "faq">("flow");
+  const [showPwaModal, setShowPwaModal] = useState(false);
 
   const operatingSteps: StepGuide[] = [
     {
@@ -216,44 +223,57 @@ export function GuideClient() {
       </div>
 
       {/* ── NAVIGATION TABS ── */}
-      <div className="flex bg-white dark:bg-zinc-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs">
+      <div className="grid grid-cols-2 sm:grid-cols-4 bg-white dark:bg-zinc-900 p-1.5 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs gap-1">
         <button
           onClick={() => setActiveTab("flow")}
           className={cn(
-            "flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2",
+            "py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5",
             activeTab === "flow"
               ? "bg-emerald-600 text-white shadow-2xs"
               : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
           )}
         >
           <Play size={14} />
-          <span>Quy trình 4 Bước chuẩn (Từ vào ca đến thu tiền)</span>
+          <span>Quy trình 4 Bước</span>
         </button>
 
         <button
           onClick={() => setActiveTab("features")}
           className={cn(
-            "flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2",
+            "py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5",
             activeTab === "features"
               ? "bg-emerald-600 text-white shadow-2xs"
               : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
           )}
         >
           <Sparkles size={14} />
-          <span>Các tính năng nổi bật</span>
+          <span>Tính năng nổi bật</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab("pwa")}
+          className={cn(
+            "py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5",
+            activeTab === "pwa"
+              ? "bg-emerald-600 text-white shadow-2xs"
+              : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
+          )}
+        >
+          <Smartphone size={14} />
+          <span>Cài Icon vào ĐT</span>
         </button>
 
         <button
           onClick={() => setActiveTab("faq")}
           className={cn(
-            "flex-1 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-2",
+            "py-2.5 px-3 rounded-xl text-xs font-extrabold transition-all flex items-center justify-center gap-1.5",
             activeTab === "faq"
               ? "bg-emerald-600 text-white shadow-2xs"
               : "text-slate-600 dark:text-zinc-400 hover:text-slate-900"
           )}
         >
           <HelpCircle size={14} />
-          <span>Câu hỏi thường gặp</span>
+          <span>Hỏi & Đáp</span>
         </button>
       </div>
 
@@ -362,7 +382,169 @@ export function GuideClient() {
         </div>
       )}
 
-      {/* ── TAB 3: FAQ ── */}
+      {/* ── TAB 3: PWA INSTALL TO HOME SCREEN ── */}
+      {activeTab === "pwa" && (
+        <div className="space-y-6">
+          {/* Header Card */}
+          <div className="bg-white dark:bg-zinc-900 p-6 sm:p-8 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-[10px] font-black uppercase tracking-wider">
+                    PWA - Progressive Web App
+                  </span>
+                  <span className="text-xs font-bold text-slate-500">• Không tốn dung lượng máy</span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white">
+                  Cài Đặt Icon Lên Màn Hình Chính Điện Thoại (iOS Safari & Android Chrome)
+                </h2>
+                <p className="text-xs sm:text-sm text-slate-500 dark:text-zinc-400 font-medium">
+                  Không cần tải từ App Store hay CH Play, bạn vẫn có thể ghim icon ứng dụng ra màn hình chính, mở full màn hình và vận hành mượt mà như app gốc!
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowPwaModal(true)}
+                className="px-5 py-3 bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white rounded-2xl font-extrabold text-xs flex items-center gap-2 shadow-md shadow-emerald-600/25 transition-all shrink-0"
+              >
+                <Smartphone size={16} />
+                <span>Mở cửa sổ hướng dẫn nhanh</span>
+              </button>
+            </div>
+          </div>
+
+          {/* 2 Platform Guide Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* iOS Safari Column */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs p-6 space-y-5">
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div className="w-10 h-10 rounded-2xl bg-slate-900 text-white dark:bg-white dark:text-slate-900 flex items-center justify-center font-black text-sm shrink-0">
+                  
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                    Dành Cho iPhone / iPad (Safari)
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Yêu cầu mở bằng trình duyệt Safari mặc định</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    1
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Nhấn nút Chia sẻ (Share) <Share2 size={14} className="text-blue-500 shrink-0" />
+                    </p>
+                    <p className="text-slate-500 dark:text-zinc-400 font-medium">
+                      Trên trình duyệt <strong>Safari</strong>, nhìn xuống thanh công cụ dưới cùng và bấm vào biểu tượng <strong>Ô vuông có mũi tên hướng lên</strong>.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    2
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Chọn "Thêm vào MH chính" <PlusSquare size={14} className="text-emerald-500 shrink-0" />
+                    </p>
+                    <p className="text-slate-500 dark:text-zinc-400 font-medium">
+                      Cuộn nhẹ menu chia sẻ xuống dưới và bấm vào dòng <strong>"Thêm vào MH chính" (Add to Home Screen)</strong> có icon dấu cộng.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    3
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-white">
+                      Nhấn "Thêm" (Add) ở góc trên bên phải
+                    </p>
+                    <p className="text-slate-500 dark:text-zinc-400 font-medium">
+                      Icon <strong>Quản lý Hồ câu</strong> sẽ xuất hiện trực tiếp trên màn hình chính của iPhone. Khi bấm vào sẽ mở toàn màn hình (không thanh địa chỉ duyệt web).
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Android Chrome Column */}
+            <div className="bg-white dark:bg-zinc-900 rounded-3xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs p-6 space-y-5">
+              <div className="flex items-center gap-3 pb-3 border-b border-slate-100 dark:border-zinc-800">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-500 text-white flex items-center justify-center font-black text-sm shrink-0 shadow-sm">
+                  ⚡
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-slate-900 dark:text-white">
+                    Dành Cho Android (Google Chrome & Cốc Cốc)
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-zinc-400">Tương thích với Samsung, Xiaomi, Oppo, Vivo...</p>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {/* Step 1 */}
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    1
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Bấm Menu 3 chấm <MoreVertical size={14} className="text-slate-600 dark:text-zinc-400 shrink-0" />
+                    </p>
+                    <p className="text-slate-500 dark:text-zinc-400 font-medium">
+                      Trên trình duyệt <strong>Google Chrome</strong>, nhấn vào biểu tượng <strong>3 dấu chấm dọc</strong> ở góc trên bên phải màn hình.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 2 */}
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    2
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-white flex items-center gap-1.5">
+                      Chọn "Cài đặt ứng dụng" <Download size={14} className="text-emerald-500 shrink-0" />
+                    </p>
+                    <p className="text-slate-500 dark:text-zinc-400 font-medium">
+                      Tìm và nhấn vào mục <strong>"Cài đặt ứng dụng"</strong> (hoặc <strong>"Thêm vào Màn hình chính"</strong>).
+                    </p>
+                  </div>
+                </div>
+
+                {/* Step 3 */}
+                <div className="flex items-start gap-3.5 p-4 rounded-2xl bg-slate-50 dark:bg-zinc-800/50 border border-slate-100 dark:border-zinc-800">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-black text-xs shrink-0 shadow-sm">
+                    3
+                  </div>
+                  <div className="space-y-1 text-xs">
+                    <p className="font-extrabold text-slate-900 dark:text-white">
+                      Bấm "Cài đặt" trên popup xác nhận
+                    </p>
+                    <p className="text-slate-500 dark:text-zinc-400 font-medium">
+                      Trình duyệt sẽ tự động tạo icon App và ghim ra màn hình ngoài. Ứng dụng chạy mượt mà độc lập, không cần đăng nhập lại nhiều lần.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* ── TAB 4: FAQ ── */}
       {activeTab === "faq" && (
         <div className="space-y-4">
           {faqs.map((faq, idx) => (
@@ -385,6 +567,9 @@ export function GuideClient() {
           ))}
         </div>
       )}
+
+      {/* PWA Modal Component */}
+      <PWAInstallModal isOpen={showPwaModal} onClose={() => setShowPwaModal(false)} />
 
       {/* ── FOOTER CSKH HOTLINE ── */}
       <div className="bg-white dark:bg-zinc-900 p-6 rounded-2xl border border-slate-200/80 dark:border-zinc-800 shadow-2xs flex flex-col sm:flex-row items-center justify-between gap-4">

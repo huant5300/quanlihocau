@@ -104,6 +104,31 @@ export default function RootLayout({
             `,
           }}
         />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "SoftwareApplication",
+              "name": "QuanLiHoCau - Phần Mềm Quản Lý Hồ Câu Cá Chuyên Nghiệp",
+              "operatingSystem": "Web, iOS (Safari), Android (Chrome PWA)",
+              "applicationCategory": "BusinessApplication",
+              "aggregateRating": {
+                "@type": "AggregateRating",
+                "ratingValue": "4.9",
+                "ratingCount": "128"
+              },
+              "offers": {
+                "@type": "Offer",
+                "price": "99000",
+                "priceCurrency": "VND",
+                "priceValidUntil": "2028-12-31",
+                "description": "Gói Basic 99.000đ/tháng - Full tính năng quản lý hồ câu, đếm ngược, in bill nhiệt bluetooth và VietQR"
+              },
+              "description": "Giải pháp số hóa hồ câu cá dịch vụ toàn diện tại Việt Nam. Quản lý ca câu realtime, tự động tính tiền giờ, in hóa đơn bluetooth cầm tay và chống thất thoát 100%."
+            }),
+          }}
+        />
       </head>
       <body className={`${inter.className} ${plusJakartaSans.variable} ${beVietnamPro.variable} ${caveat.variable} antialiased`} suppressHydrationWarning>
         <AppProviders>

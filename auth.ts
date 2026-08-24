@@ -9,19 +9,18 @@ import { UserRole } from "@prisma/client";
 
 import { authConfig } from "./auth.config";
 
-// Onboarding helper to create a default high-quality lake for a new Owner
+// Lightweight and fast onboarding helper to avoid serverless connection exhaustion
 async function setupOnboardingData(userId: string, userName: string) {
   try {
-    console.log(`Setting up onboarding data for user: ${userId} (${userName})`);
+    console.log(`[Auth:Onboarding] Setting up default data for user: ${userId} (${userName})`);
 
-    // 1. Create a default lake with a 5-day TRIAL plan
-    const lakeName = `Hồ câu ${userName}`;
     const trialExpiry = new Date();
     trialExpiry.setDate(trialExpiry.getDate() + 5); // 5 days trial
 
+    // 1. Create Lake
     const lake = await prisma.fishingLake.create({
       data: {
-        name: lakeName,
+        name: `Hồ câu ${userName}`,
         description: "Hồ câu dịch vụ chuyên nghiệp, thoáng mát và tiện nghi.",
         address: "Chưa cập nhật",
         phone: "Chưa cập nhật",
@@ -31,74 +30,41 @@ async function setupOnboardingData(userId: string, userName: string) {
         subscriptionStatus: "ACTIVE",
         subscriptionExpiresAt: trialExpiry,
       },
+      select: { id: true },
     });
 
-    // 2. Associate the manager user with this lake directly
+    // 2. Link Lake to User
     await prisma.user.update({
       where: { id: userId },
       data: { lakeId: lake.id },
     });
 
-    // 3. Create default fishing areas (5 huts)
-    const areasData = [
-      { name: "Chòi 1", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
-      { name: "Chòi 2", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
-      { name: "Chòi 3", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
-      { name: "Chòi 4", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
-      { name: "Chòi 5", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
-    ];
-    await prisma.fishingArea.createMany({ data: areasData });
-
-    // 4. Create default categories if they don't exist
-    const categories = [
-      { id: "cat_bait", name: "Mồi câu" },
-      { id: "cat_drink", name: "Đồ uống" },
-      { id: "cat_food", name: "Đồ ăn" },
-      { id: "cat_equipment", name: "Dụng cụ" },
-    ];
-    for (const cat of categories) {
-      await prisma.productCategory.upsert({
-        where: { id: cat.id },
-        update: {},
-        create: cat,
+    // 3. Create default fishing areas in background / non-blocking
+    try {
+      await prisma.fishingArea.createMany({
+        data: [
+          { name: "Chòi 1", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
+          { name: "Chòi 2", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
+          { name: "Chòi 3", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
+          { name: "Chòi 4", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
+          { name: "Chòi 5", lakeId: lake.id, status: "AVAILABLE" as any, hourlyRate: 50000, capacity: 1, minDuration: 1 },
+        ],
       });
+    } catch (areaErr) {
+      console.warn("[Auth:Onboarding] Warning: Default areas creation skipped/error:", areaErr);
     }
 
-    // 5. Create default products for this new lake
-    const productsData = [
-      { name: "Nước Suối", categoryId: "cat_drink", price: 10000, stock: 100, unit: "Chai", lakeId: lake.id },
-      { name: "Sting dâu", categoryId: "cat_drink", price: 15000, stock: 100, unit: "Lon", lakeId: lake.id },
-      { name: "Mồi Cám Xanh", categoryId: "cat_bait", price: 25000, stock: 50, unit: "Gói", lakeId: lake.id },
-      { name: "Phao Câu", categoryId: "cat_equipment", price: 30000, stock: 20, unit: "Cái", lakeId: lake.id },
-    ];
-    await prisma.product.createMany({ data: productsData });
-
-    // 6. Create default fish types if they don't exist
-    const fishTypes = [
-      { name: "Cá Tra", buybackPrice: 25000 },
-      { name: "Cá Chép", buybackPrice: 35000 },
-      { name: "Cá Trê", buybackPrice: 20000 },
-      { name: "Cá Rô Phi", buybackPrice: 15000 },
-    ];
-    for (const fish of fishTypes) {
-      await prisma.fishType.upsert({
-        where: { name: fish.name },
-        update: {},
-        create: fish,
-      });
-    }
-
-    console.log(`Successfully completed onboarding for ${userId}`);
+    console.log(`[Auth:Onboarding] Finished onboarding for lake: ${lake.id}`);
     return lake.id;
   } catch (error) {
-    console.error("Error in setupOnboardingData:", error);
+    console.error("[Auth:Onboarding] Error in setupOnboardingData:", error);
     return null;
   }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  debug: true,
+  debug: false,
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau_secret_key_2026_safe",
   basePath: "/api/auth",
   session: { strategy: "jwt" },
@@ -130,8 +96,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const loginId = credentials?.email as string;
-        if (!loginId || !credentials?.password) {
+        const loginId = (credentials?.email as string)?.trim();
+        const plainPassword = credentials?.password as string;
+
+        if (!loginId || !plainPassword) {
           console.warn("[Auth:Authorize] Fail: Missing login identifier or password");
           return null;
         }
@@ -154,15 +122,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
 
           if (!user.password) {
-            console.warn(`[Auth:Authorize] Fail: User '${loginId}' has no password configured (OAuth account)`);
+            console.warn(`[Auth:Authorize] Fail: User '${loginId}' has no password (OAuth account)`);
             return null;
           }
 
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password as string,
-            user.password
-          );
-
+          const isPasswordValid = await bcrypt.compare(plainPassword, user.password);
           if (!isPasswordValid) {
             console.warn(`[Auth:Authorize] Fail: Invalid password for '${loginId}'`);
             return null;
@@ -170,10 +134,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           // Check if user account is locked/inactive
           if (user.isActive === false) {
-            console.warn(`[Auth:Authorize] Fail: Account is locked / inactive (isActive: false) for '${loginId}'`);
+            console.warn(`[Auth:Authorize] Fail: Account is locked (isActive: false) for '${loginId}'`);
             return null;
-          } else if (user.isActive === undefined || user.isActive === null) {
-            console.warn(`[Auth:Authorize] Warning: user.isActive is undefined/null, defaulting safely to active for '${loginId}'`);
           }
 
           // Ensure lake onboarding for OWNER, safely caught so login never fails
@@ -181,6 +143,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             try {
               const hasLake = await prisma.fishingLake.findFirst({
                 where: { managerId: user.id },
+                select: { id: true },
               });
               if (hasLake) {
                 user.lakeId = hasLake.id;
@@ -228,50 +191,61 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           decodedToken = await adminAuth.verifyIdToken(idToken);
         } catch (error) {
           console.error("Firebase Token Verification Error:", error);
-          throw new Error("Xác thực Firebase thất bại hoặc token hết hạn");
+          return null;
         }
 
         const phone = decodedToken.phone_number;
         if (!phone) {
-          throw new Error("Không lấy được số điện thoại từ Firebase");
+          console.error("No phone number found in Firebase token");
+          return null;
         }
 
-        // Find or create user by phone
-        let user = await prisma.user.findFirst({
-          where: { phone }
-        });
+        try {
+          let user = await prisma.user.findFirst({
+            where: { phone }
+          });
 
-        if (!user) {
-          user = await prisma.user.create({
-            data: {
-              phone: phone,
-              name: `Chủ Hồ (${phone.slice(-4)})`,
-              role: UserRole.OWNER,
-            }
-          });
-          const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
-          user.lakeId = lakeId;
-        } else if (user.role === UserRole.OWNER && !user.lakeId) {
-          const hasLake = await prisma.fishingLake.findFirst({
-            where: { managerId: user.id },
-          });
-          if (!hasLake) {
+          if (!user) {
+            user = await prisma.user.create({
+              data: {
+                phone: phone,
+                name: `Chủ Hồ (${phone.slice(-4)})`,
+                role: UserRole.OWNER,
+                isActive: true,
+              }
+            });
             const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
             user.lakeId = lakeId;
+          } else if (user.role === UserRole.OWNER && !user.lakeId) {
+            const hasLake = await prisma.fishingLake.findFirst({
+              where: { managerId: user.id },
+              select: { id: true },
+            });
+            if (!hasLake) {
+              const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
+              user.lakeId = lakeId;
+            } else {
+              user.lakeId = hasLake.id;
+            }
           }
-        }
 
-        if (!user.isActive) {
-          throw new Error("Tài khoản đã bị khóa");
-        }
+          if (user.isActive === false) {
+            console.warn(`[Firebase Phone] User account ${user.id} is inactive`);
+            return null;
+          }
 
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email || `${phone.replace(/\+/g, '')}@phone.local`,
-          role: user.role,
-          lakeId: user.lakeId,
-        };
+          return {
+            id: user.id,
+            name: user.name,
+            email: user.email || `${phone.replace(/\+/g, '')}@phone.local`,
+            role: user.role,
+            lakeId: user.lakeId || null,
+            phone: user.phone || phone,
+          };
+        } catch (err) {
+          console.error("[Firebase Phone] DB Error:", err);
+          return null;
+        }
       }
     }),
     ...(process.env.ZALO_CLIENT_ID && process.env.ZALO_CLIENT_SECRET ? [
@@ -348,7 +322,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // Credentials and Firebase phone logins are already validated in authorize()
       if (account?.provider === "credentials" || account?.provider === "firebase-phone") {
         if (user?.id) {
-          await prisma.activityLog.create({
+          prisma.activityLog.create({
             data: {
               userId: user.id,
               action: "LOGIN",
@@ -365,43 +339,52 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       let currentUserId = user.id;
 
       if (account?.provider === "google" || account?.provider === "zalo") {
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-        });
-
-        if (!existingUser) {
-          const newUser = await prisma.user.create({
-            data: {
-              email: email,
-              name: user.name || "Chủ Hồ",
-              image: user.image,
-              role: UserRole.OWNER,
-            },
+        try {
+          const existingUser = await prisma.user.findUnique({
+            where: { email },
           });
-          const lakeId = await setupOnboardingData(newUser.id, newUser.name || "Chủ Hồ");
-          user.role = UserRole.OWNER;
-          user.id = newUser.id;
-          (user as any).lakeId = lakeId;
-          currentUserId = newUser.id;
-        } else {
-          if (existingUser.role === UserRole.OWNER) {
-            const hasLake = await prisma.fishingLake.findFirst({
-              where: { managerId: existingUser.id },
+
+          if (!existingUser) {
+            const newUser = await prisma.user.create({
+              data: {
+                email: email,
+                name: user.name || "Chủ Hồ",
+                image: user.image,
+                role: UserRole.OWNER,
+                isActive: true,
+              },
             });
-            if (!hasLake) {
-              const lakeId = await setupOnboardingData(existingUser.id, existingUser.name || "Chủ Hồ");
-              existingUser.lakeId = lakeId;
+            const lakeId = await setupOnboardingData(newUser.id, newUser.name || "Chủ Hồ");
+            user.role = UserRole.OWNER;
+            user.id = newUser.id;
+            (user as any).lakeId = lakeId;
+            currentUserId = newUser.id;
+          } else {
+            if (existingUser.role === UserRole.OWNER && !existingUser.lakeId) {
+              const hasLake = await prisma.fishingLake.findFirst({
+                where: { managerId: existingUser.id },
+                select: { id: true },
+              });
+              if (!hasLake) {
+                const lakeId = await setupOnboardingData(existingUser.id, existingUser.name || "Chủ Hồ");
+                existingUser.lakeId = lakeId;
+              } else {
+                existingUser.lakeId = hasLake.id;
+              }
             }
+            user.role = existingUser.role;
+            user.id = existingUser.id;
+            (user as any).lakeId = existingUser.lakeId;
+            currentUserId = existingUser.id;
           }
-          user.role = existingUser.role;
-          user.id = existingUser.id;
-          (user as any).lakeId = existingUser.lakeId;
-          currentUserId = existingUser.id;
+        } catch (dbErr) {
+          console.error("OAuth DB Sync Error (non-fatal, continuing sign in):", dbErr);
+          // Allow login to proceed even if background DB sync encountered transient connection error
         }
       }
 
       if (currentUserId) {
-        await prisma.activityLog.create({
+        prisma.activityLog.create({
           data: {
             userId: currentUserId,
             action: "LOGIN",
@@ -409,34 +392,47 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           },
         }).catch((err) => console.error("Error creating activity log:", err));
       }
+
       return true;
     },
     async jwt({ token, user }) {
+      // 1. If user object is passed during initial sign in, immediately populate token
       if (user) {
-        token.role = (user as any).role;
+        token.role = (user as any).role || UserRole.OWNER;
         token.id = user.id;
         token.lakeId = (user as any).lakeId || null;
         token.phone = (user as any).phone || null;
         token.appUsageTime = (user as any).appUsageTime || 0;
-      } else if (token.role === undefined) {
-        const dbUser = await prisma.user.findFirst({
-          where: {
-            OR: [
-              ...(token.id ? [{ id: token.id as string }] : []),
-              ...(token.sub ? [{ id: token.sub as string }] : []),
-              ...(token.email ? [{ email: token.email }, { username: token.email }] : []),
-            ]
-          },
-          select: { role: true, id: true, lakeId: true, phone: true, appUsageTime: true },
-        });
-        if (dbUser) {
-          token.role = dbUser.role;
-          token.id = dbUser.id;
-          token.lakeId = dbUser.lakeId || null;
-          token.phone = dbUser.phone || null;
-          token.appUsageTime = dbUser.appUsageTime || 0;
+      } 
+      // 2. Only query DB if token.role is missing and we don't have user info yet
+      else if (!token.role || !token.id) {
+        try {
+          const dbUser = await prisma.user.findFirst({
+            where: {
+              OR: [
+                ...(token.id ? [{ id: token.id as string }] : []),
+                ...(token.sub ? [{ id: token.sub as string }] : []),
+                ...(token.email ? [{ email: token.email }, { username: token.email }] : []),
+              ]
+            },
+            select: { role: true, id: true, lakeId: true, phone: true, appUsageTime: true },
+          });
+          if (dbUser) {
+            token.role = dbUser.role;
+            token.id = dbUser.id;
+            token.lakeId = dbUser.lakeId || null;
+            token.phone = dbUser.phone || null;
+            token.appUsageTime = dbUser.appUsageTime || 0;
+          }
+        } catch (dbErr) {
+          console.error("JWT DB Lookup Error (non-fatal):", dbErr);
         }
       }
+      
+      // 3. Fallback defaults
+      token.role = token.role || UserRole.STAFF;
+      token.id = token.id || token.sub;
+
       if (token.email === "huant5300@gmail.com") {
         token.role = UserRole.SUPER_ADMIN;
       }
@@ -457,3 +453,4 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
 });
+

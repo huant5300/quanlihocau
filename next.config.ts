@@ -22,6 +22,27 @@ const nextConfig: NextConfig = {
     removeConsole: process.env.NODE_ENV === "production",
   },
   allowedDevOrigins: ["*", "localhost", "localhost:3000", "local-origin.dev", "*.local-origin.dev"],
+  async headers() {
+    return [
+      {
+        source: "/(.*)",
+        headers: [
+          {
+            key: "X-Content-Type-Options",
+            value: "nosniff",
+          },
+          {
+            key: "X-Frame-Options",
+            value: "DENY",
+          },
+          {
+            key: "Referrer-Policy",
+            value: "strict-origin-when-cross-origin",
+          },
+        ],
+      },
+    ];
+  },
   experimental: {
     optimizePackageImports: [
       "lucide-react",
@@ -35,7 +56,12 @@ const nextConfig: NextConfig = {
       "framer-motion"
     ],
     serverActions: {
-      allowedOrigins: ["*.vercel.app", "localhost:3000"],
+      allowedOrigins: [
+        "quanlihocau.com",
+        "www.quanlihocau.com",
+        "*.vercel.app",
+        "localhost:3000",
+      ],
     },
   },
   typescript: {

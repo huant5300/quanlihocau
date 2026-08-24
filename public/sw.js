@@ -1,18 +1,22 @@
-const CACHE_NAME = 'fishing-saas-v2';
+const CACHE_NAME = 'fishing-saas-v3';
+// Chỉ cache những đường dẫn chắc chắn tồn tại
 const ASSETS_TO_CACHE = [
   '/',
-  '/dashboard',
   '/login',
-  '/globals.css',
   '/manifest.json'
 ];
 
-// Install Event - cache core static assets
+// Install Event - cache core static assets safely
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       console.log('SW: Pre-caching core assets');
-      return cache.addAll(ASSETS_TO_CACHE);
+      // Dùng Promise.allSettled để không crash nếu 1 asset lỗi
+      return Promise.allSettled(
+        ASSETS_TO_CACHE.map(url =>
+          cache.add(url).catch(err => console.warn('SW: Could not cache', url, err))
+        )
+      );
     }).then(() => self.skipWaiting())
   );
 });
@@ -54,26 +58,23 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
-      // Fetch network response in background and update cache
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
           // Only cache successful basic internal HTTP requests
           if (
             networkResponse && 
-            networkResponse.status === 200 && 
+            networkResponse.ok && 
             networkResponse.type === 'basic'
           ) {
+            const responseToCache = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
-              cache.put(event.request, networkResponse.clone());
+              cache.put(event.request, responseToCache);
             });
           }
           return networkResponse;
         })
-        .catch((err) => {
-          console.warn('SW: Network fetch failed for:', event.request.url, err);
-        });
+        .catch(() => cachedResponse); // Fallback to cache on network error
 
-      // Return cached response immediately if available, otherwise wait for network
       return cachedResponse || fetchPromise;
     })
   );

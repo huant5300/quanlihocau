@@ -99,17 +99,30 @@ async function setupOnboardingData(userId: string, userName: string) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau-secret-key-production-2025",
-  adapter: PrismaAdapter(prisma),
+  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau_secret_key_2026_safe",
+  basePath: "/api/auth",
   session: { strategy: "jwt" },
   trustHost: true,
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-authjs.session-token" : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   providers: [
-    Google({
-      clientId: process.env.GOOGLE_CLIENT_ID || process.env.AUTH_GOOGLE_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || process.env.AUTH_GOOGLE_SECRET || "",
-      checks: ["none"],
-      allowDangerousEmailAccountLinking: true,
-    }),
+    // Google OAuth - chỉ bật khi có đầy đủ credentials
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET ? [
+      Google({
+        clientId: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        allowDangerousEmailAccountLinking: true,
+      }),
+    ] : []),
     Credentials({
       name: "Credentials",
       credentials: {
@@ -118,10 +131,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
       async authorize(credentials) {
         const loginId = credentials?.email as string;
-        console.log("Authorize attempt for:", loginId);
-        if (!loginId || !credentials?.password) return null;
+        if (!loginId || !credentials?.password) {
+          console.warn("[Auth:Authorize] Fail: Missing login identifier or password");
+          return null;
+        }
 
         try {
+          console.log(`[Auth:Authorize] Attempting login for identifier: ${loginId}`);
           const user = await prisma.user.findFirst({
             where: {
               OR: [
@@ -132,49 +148,67 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             },
           });
 
-          console.log("User found:", user ? "YES" : "NO");
-          if (!user || !user.password) return null;
+          if (!user) {
+            console.warn(`[Auth:Authorize] Fail: User not found for '${loginId}'`);
+            return null;
+          }
+
+          if (!user.password) {
+            console.warn(`[Auth:Authorize] Fail: User '${loginId}' has no password configured (OAuth account)`);
+            return null;
+          }
 
           const isPasswordValid = await bcrypt.compare(
             credentials.password as string,
             user.password
           );
 
-          console.log("Password valid:", isPasswordValid);
-          if (!isPasswordValid) return null;
-
-          // Check if user account is locked/inactive
-          if (!user.isActive) {
-            console.log("User account is locked");
+          if (!isPasswordValid) {
+            console.warn(`[Auth:Authorize] Fail: Invalid password for '${loginId}'`);
             return null;
           }
 
+          // Check if user account is locked/inactive
+          if (user.isActive === false) {
+            console.warn(`[Auth:Authorize] Fail: Account is locked / inactive (isActive: false) for '${loginId}'`);
+            return null;
+          } else if (user.isActive === undefined || user.isActive === null) {
+            console.warn(`[Auth:Authorize] Warning: user.isActive is undefined/null, defaulting safely to active for '${loginId}'`);
+          }
+
+          // Ensure lake onboarding for OWNER, safely caught so login never fails
           if (user.role === UserRole.OWNER && !user.lakeId) {
-            const hasLake = await prisma.fishingLake.findFirst({
-              where: { managerId: user.id },
-            });
-            if (hasLake) {
-              user.lakeId = hasLake.id;
-              await prisma.user.update({
-                where: { id: user.id },
-                data: { lakeId: hasLake.id },
+            try {
+              const hasLake = await prisma.fishingLake.findFirst({
+                where: { managerId: user.id },
               });
-            } else {
-              const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
-              user.lakeId = lakeId;
+              if (hasLake) {
+                user.lakeId = hasLake.id;
+                await prisma.user.update({
+                  where: { id: user.id },
+                  data: { lakeId: hasLake.id },
+                });
+              } else {
+                const lakeId = await setupOnboardingData(user.id, user.name || "Chủ Hồ");
+                if (lakeId) user.lakeId = lakeId;
+              }
+            } catch (onboardingErr) {
+              console.error("[Auth:Authorize] Warning: Lake onboarding failed during login, continuing:", onboardingErr);
             }
           }
 
+          console.log(`[Auth:Authorize] Success: Authenticated user ${user.id} (${user.role})`);
           return {
             id: user.id,
             name: user.name,
-            email: user.email,
+            email: user.email || (user.phone ? `${user.phone.replace(/[^0-9]/g, "")}@phone.local` : `${user.id}@user.local`),
             role: user.role,
-            lakeId: user.lakeId,
-          };
+            lakeId: user.lakeId || null,
+            phone: user.phone || null,
+          } as any;
         } catch (error) {
-          console.error("Authorize Error:", error);
-          throw error;
+          console.error(`[Auth:Authorize] DB Error for '${loginId}':`, error instanceof Error ? error.message : error);
+          return null;
         }
       },
     }),
@@ -308,23 +342,21 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account }) {
-      const email = user.email;
-
-      // Firebase Phone Auth users don't have email - allow them through
-      if (account?.provider === "firebase-phone") {
-        let currentUserId = user.id;
-        if (currentUserId) {
+      // Credentials and Firebase phone logins are already validated in authorize()
+      if (account?.provider === "credentials" || account?.provider === "firebase-phone") {
+        if (user?.id) {
           await prisma.activityLog.create({
             data: {
-              userId: currentUserId,
+              userId: user.id,
               action: "LOGIN",
-              details: { provider: "firebase-phone" },
+              details: { provider: account.provider },
             },
-          });
+          }).catch((err) => console.error("Error creating activity log:", err));
         }
         return true;
       }
 
+      const email = user?.email;
       if (!email) return false;
 
       let currentUserId = user.id;
@@ -370,25 +402,26 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           data: {
             userId: currentUserId,
             action: "LOGIN",
-            details: { provider: account?.provider || "credentials" },
+            details: { provider: account?.provider || "oauth" },
           },
-        });
+        }).catch((err) => console.error("Error creating activity log:", err));
       }
       return true;
     },
     async jwt({ token, user }) {
       if (user) {
-        token.role = user.role;
+        token.role = (user as any).role;
         token.id = user.id;
-        token.lakeId = (user as any).lakeId;
-        token.phone = (user as any).phone;
+        token.lakeId = (user as any).lakeId || null;
+        token.phone = (user as any).phone || null;
         token.appUsageTime = (user as any).appUsageTime || 0;
-      } else if (token.email && token.role === undefined) {
+      } else if (token.role === undefined) {
         const dbUser = await prisma.user.findFirst({
           where: {
             OR: [
-              { email: token.email },
-              { username: token.email }
+              ...(token.id ? [{ id: token.id as string }] : []),
+              ...(token.sub ? [{ id: token.sub as string }] : []),
+              ...(token.email ? [{ email: token.email }, { username: token.email }] : []),
             ]
           },
           select: { role: true, id: true, lakeId: true, phone: true, appUsageTime: true },
@@ -396,9 +429,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (dbUser) {
           token.role = dbUser.role;
           token.id = dbUser.id;
-          token.lakeId = dbUser.lakeId;
-          token.phone = dbUser.phone;
-          token.appUsageTime = dbUser.appUsageTime;
+          token.lakeId = dbUser.lakeId || null;
+          token.phone = dbUser.phone || null;
+          token.appUsageTime = dbUser.appUsageTime || 0;
         }
       }
       if (token.email === "huant5300@gmail.com") {
@@ -408,11 +441,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.role = token.role as UserRole;
-        session.user.id = token.id as string;
-        session.user.lakeId = token.lakeId as string;
-        (session.user as any).phone = token.phone as string;
-        (session.user as any).appUsageTime = token.appUsageTime as number;
+        session.user.role = (token.role as UserRole) || UserRole.STAFF;
+        session.user.id = (token.id as string) || (token.sub as string);
+        session.user.lakeId = (token.lakeId as string) || "";
+        (session.user as any).phone = (token.phone as string) || "";
+        (session.user as any).appUsageTime = (token.appUsageTime as number) || 0;
       }
       if (session.user?.email === "huant5300@gmail.com") {
         session.user.role = UserRole.SUPER_ADMIN;

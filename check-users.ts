@@ -28,6 +28,19 @@ async function main() {
       hasPassword: !!u.password,
     });
   }
+
+  const accounts = await prisma.account.findMany({
+    select: {
+      id: true,
+      userId: true,
+      provider: true,
+      providerAccountId: true,
+    }
+  });
+  console.log("=== ACCOUNTS IN DATABASE ===");
+  for (const a of accounts) {
+    console.log(a);
+  }
 }
 
 main().catch(console.error).finally(() => prisma.$disconnect());

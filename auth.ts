@@ -99,6 +99,7 @@ async function setupOnboardingData(userId: string, userName: string) {
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
+  debug: true,
   secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau_secret_key_2026_safe",
   basePath: "/api/auth",
   session: { strategy: "jwt" },
@@ -341,6 +342,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ] : [])
   ],
   callbacks: {
+    authorized({ auth }) {
+      return !!auth?.user;
+    },
     async signIn({ user, account }) {
       // Credentials and Firebase phone logins are already validated in authorize()
       if (account?.provider === "credentials" || account?.provider === "firebase-phone") {

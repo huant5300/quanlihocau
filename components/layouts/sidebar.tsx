@@ -110,7 +110,7 @@ const menuSections: MenuItem[] = [
     roles: [UserRole.SUPER_ADMIN, UserRole.OWNER, UserRole.MANAGER],
     children: [
       { label: "Danh sách nhân viên", href: "/dashboard/staff" },
-      { label: "Giao ca & Chấm công", href: "/dashboard/shifts" },
+      { label: "Bàn giao ca & Dòng tiền", href: "/dashboard/shifts" },
     ]
   },
   { 
@@ -120,8 +120,7 @@ const menuSections: MenuItem[] = [
     icon: BarChart3, 
     roles: [UserRole.SUPER_ADMIN, UserRole.OWNER],
     children: [
-      { label: "Tổng quan báo cáo", href: "/dashboard" },
-      { label: "Báo cáo bán hàng", href: "/dashboard/reports" },
+      { label: "Tổng quan báo cáo", href: "/dashboard/reports" },
       { label: "Lịch sử hoạt động", href: "/dashboard/activity-log" },
     ]
   },
@@ -174,7 +173,8 @@ export function Sidebar() {
     );
   }
 
-  const userRole = session?.user?.role || UserRole.STAFF;
+  const isSuperAdminUser = session?.user?.role === UserRole.SUPER_ADMIN || session?.user?.email === "huant5300@gmail.com";
+  const userRole = isSuperAdminUser ? UserRole.SUPER_ADMIN : (session?.user?.role || UserRole.STAFF);
   const filteredItems = menuSections.filter(item => item.roles.includes(userRole));
 
   return (

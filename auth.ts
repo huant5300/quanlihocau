@@ -315,9 +315,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     ] : [])
   ],
   callbacks: {
-    authorized({ auth }) {
-      return !!auth?.user;
-    },
     async signIn({ user, account }) {
       // Credentials and Firebase phone logins are already validated in authorize()
       if (account?.provider === "credentials" || account?.provider === "firebase-phone") {
@@ -334,11 +331,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       }
 
       const email = user?.email;
-      if (!email) return false;
+      let currentUserId = user?.id;
 
-      let currentUserId = user.id;
-
-      if (account?.provider === "google" || account?.provider === "zalo") {
+      if ((account?.provider === "google" || account?.provider === "zalo") && email) {
         try {
           const existingUser = await prisma.user.findUnique({
             where: { email },
@@ -379,7 +374,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           }
         } catch (dbErr) {
           console.error("OAuth DB Sync Error (non-fatal, continuing sign in):", dbErr);
-          // Allow login to proceed even if background DB sync encountered transient connection error
         }
       }
 

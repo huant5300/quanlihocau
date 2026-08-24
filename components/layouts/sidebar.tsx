@@ -208,7 +208,7 @@ export function Sidebar() {
               <Link key={item.id} href={item.href || "#"}>
                 <div
                   className={cn(
-                    "flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all group",
+                    "flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all group active:scale-[0.98]",
                     isParentActive
                       ? "bg-emerald-600 text-white font-bold shadow-sm shadow-emerald-600/20"
                       : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-white"
@@ -234,7 +234,7 @@ export function Sidebar() {
                 type="button"
                 onClick={() => toggleGroup(item.id)}
                 className={cn(
-                  "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all text-left group",
+                  "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all text-left group active:scale-[0.98]",
                   isParentActive && !isGroupOpen
                     ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 font-bold"
                     : "text-slate-600 dark:text-zinc-400 hover:bg-slate-50 dark:hover:bg-zinc-800/60 hover:text-slate-900 dark:hover:text-white"
@@ -265,7 +265,7 @@ export function Sidebar() {
                           <button
                             key={idx}
                             onClick={() => setOpenSessionModalOpen(true)}
-                            className="w-full text-left py-2 px-3 rounded-lg text-[11px] font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-2 transition-colors"
+                            className="w-full text-left py-2 px-3 rounded-lg text-[11px] font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-2 transition-colors active:scale-[0.98]"
                           >
                             <PlusCircle size={13} />
                             <span>{child.label}</span>
@@ -278,7 +278,7 @@ export function Sidebar() {
                         <Link key={idx} href={child.href}>
                           <div
                             className={cn(
-                              "py-2 px-3 rounded-lg text-[11px] font-medium transition-colors flex items-center justify-between",
+                              "py-2 px-3 rounded-lg text-[11px] font-medium transition-colors flex items-center justify-between active:scale-[0.98]",
                               isChildActive
                                 ? "bg-emerald-600 text-white font-bold shadow-xs"
                                 : "text-slate-500 dark:text-zinc-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/70 dark:hover:bg-zinc-800/40"

@@ -24,8 +24,8 @@ export function NavLink({ href, icon: Icon, label, collapsed, isMobile }: NavLin
       <Link
         href={href}
         className={cn(
-          "flex flex-col items-center justify-center gap-1 w-12 h-12 rounded-2xl transition-all relative",
-          isActive ? "text-primary" : "text-muted-foreground"
+          "flex flex-col items-center justify-center gap-1 w-12 h-12 rounded-2xl transition-all active:scale-90 relative",
+          isActive ? "text-primary font-bold" : "text-muted-foreground hover:text-foreground"
         )}
       >
         {isActive && (
@@ -45,7 +45,7 @@ export function NavLink({ href, icon: Icon, label, collapsed, isMobile }: NavLin
     <Link
       href={href}
       className={cn(
-        "flex items-center gap-4 px-4 py-4 rounded-[1.5rem] transition-all duration-300 group relative overflow-hidden min-h-[48px]",
+        "flex items-center gap-4 px-4 py-4 rounded-[1.5rem] transition-all duration-200 group relative overflow-hidden min-h-[48px] active:scale-[0.98]",
         isActive 
           ? "bg-primary text-white shadow-xl shadow-primary/20" 
           : "text-muted-foreground hover:bg-accent/50 hover:text-foreground"

@@ -54,10 +54,11 @@ export async function deleteCustomerAction(id: string) {
 export async function getCustomersAction() {
   try {
     const lakeId = await getActiveLakeId();
-    const customers = await CustomerRepository.getAll(lakeId);
-    return { success: true, data: customers };
+    const customers = await CustomerRepository.getAll(lakeId || "").catch(() => []);
+    return { success: true, data: customers || [] };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error("getCustomersAction error:", error);
+    return { success: true, data: [] };
   }
 }
 

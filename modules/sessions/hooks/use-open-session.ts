@@ -7,7 +7,7 @@ import { useState, useEffect } from "react";
 import { sessionService } from "@/services/api/session-service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { FishingPackage } from "@prisma/client";
 import { printerService } from "@/services/printer/printer-service";
 
@@ -46,30 +46,19 @@ export function useOpenSession() {
     form.setValue("prepaid_amount", packagePrice + productsPrice);
   }, [watchedPackageId, watchedProducts, packages, form]);
 
-  const onSubmit = async (data: OpenSessionInput) => {
-    setIsLoading(true);
-    try {
+  const createMutation = useMutation({
+    mutationFn: async (data: OpenSessionInput) => {
       const selectedPkg = packages.find((p: FishingPackage) => p.id === data.package_id);
-      if (!selectedPkg) {
-        toast.error("Vui lòng chọn gói câu");
-        return false;
-      }
+      if (!selectedPkg) throw new Error("Vui lòng chọn gói câu");
 
-      const productsPrice = data.products.reduce((sum, p) => sum + (p.price * p.quantity), 0);
-      const sessionPrice = Number(selectedPkg.price);
-      const totalAmount = sessionPrice + productsPrice;
-
-      // Calculate end time
       const durationHours = Number(selectedPkg.durationHours) || 2;
-      const endTime = new Date(Date.now() + durationHours * 60 * 60 * 1000).toISOString();
-
-      const result = await sessionService.createSession({
+      return sessionService.createSession({
         areaId: data.hut_id,
         startTime: new Date().toISOString(),
-        customerId: undefined, // Will handle customer creation/selection in API if needed
+        customerId: undefined,
         customer_name: data.customer_name,
         phone: data.phone_number,
-        hourlyRate: Number(selectedPkg.price) / durationHours, // Approximate hourly rate for overtime
+        hourlyRate: Number(selectedPkg.price) / durationHours,
         packageId: data.package_id,
         prepaidAmount: data.prepaid_amount,
         products: data.products.map(p => ({
@@ -78,48 +67,90 @@ export function useOpenSession() {
           unitPrice: p.price
         })),
       });
+    },
+    onMutate: async (newSessionData) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ["sessions"] });
+      await queryClient.cancelQueries({ queryKey: ["active-sessions"] });
 
-      if (result) {
-        toast.success("Đã mở lượt câu mới thành công");
-        
-        // In hóa đơn nếu được chọn
-        if (data.should_print) {
-          printerService.printBill({
-            sessionId: result.id,
-            hutNumber: result.area?.name || "N/A",
-            customerName: result.customer?.fullName || "Khách lẻ",
-            sessionFee: sessionPrice,
-            products: data.products.map(p => ({
-              name: p.name,
-              quantity: p.quantity,
-              price: p.price
-            })),
-            buybackDeduction: 0,
-            totalAmount: totalAmount,
-            prepaidAmount: data.prepaid_amount
-          });
-        }
+      const previousSessions = queryClient.getQueryData(["sessions"]);
+      const previousActive = queryClient.getQueryData(["active-sessions"]);
 
-        // Refresh data and redirect
-        await queryClient.invalidateQueries({ queryKey: ["sessions"] });
-        await queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
-        
-        router.push("/dashboard/sessions");
-        return true;
+      // Create a fake session object for instant UI rendering
+      const tempId = `temp-${Date.now()}`;
+      const selectedPkg = packages.find(p => p.id === newSessionData.package_id);
+      
+      const optimisticSession = {
+        id: tempId,
+        areaId: newSessionData.hut_id,
+        customer: { fullName: newSessionData.customer_name || "Khách lẻ", phone: newSessionData.phone_number },
+        startTime: new Date().toISOString(),
+        status: "ACTIVE",
+        FishingPackage: selectedPkg,
+        sessionAmount: newSessionData.prepaid_amount,
+        // Mock nested relations so UI doesn't crash
+        area: { id: newSessionData.hut_id, name: "Vị trí đang mở..." },
+        invoices: [],
+        fishCatches: []
+      };
+
+      queryClient.setQueryData(["sessions"], (old: any) => {
+        if (!old) return [optimisticSession];
+        return [optimisticSession, ...old];
+      });
+
+      queryClient.setQueryData(["active-sessions"], (old: any) => {
+        if (!old) return [optimisticSession];
+        return [optimisticSession, ...old];
+      });
+
+      return { previousSessions, previousActive };
+    },
+    onError: (err, newSessionData, context) => {
+      // Rollback
+      queryClient.setQueryData(["sessions"], context?.previousSessions);
+      queryClient.setQueryData(["active-sessions"], context?.previousActive);
+      toast.error(err.message || "Đã có lỗi xảy ra");
+    },
+    onSuccess: (result, variables) => {
+      toast.success("Đã mở lượt câu mới thành công");
+      
+      if (variables.should_print) {
+        const selectedPkg = packages.find(p => p.id === variables.package_id);
+        printerService.printBill({
+          sessionId: result.id,
+          hutNumber: result.area?.name || "N/A",
+          customerName: result.customer?.fullName || "Khách lẻ",
+          sessionFee: Number(selectedPkg?.price || 0),
+          products: variables.products.map(p => ({
+            name: p.name,
+            quantity: p.quantity,
+            price: p.price
+          })),
+          buybackDeduction: 0,
+          totalAmount: Number(selectedPkg?.price || 0) + variables.products.reduce((s, p) => s + p.price * p.quantity, 0),
+          prepaidAmount: variables.prepaid_amount
+        });
       }
-      return false;
-    } catch (error: any) {
-      toast.error(error.message || "Đã có lỗi xảy ra");
-      return false;
-    } finally {
-      setIsLoading(false);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["huts"] });
+      queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
     }
+  });
+
+  const onSubmit = async (data: OpenSessionInput) => {
+    // Navigate instantly before waiting for mutation to finish
+    router.push("/dashboard/sessions");
+    createMutation.mutate(data);
   };
 
   return {
     form,
     onSubmit,
-    isLoading,
+    isLoading: createMutation.isPending,
     packages,
   };
 }

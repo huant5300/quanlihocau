@@ -7,6 +7,8 @@ import { getLakeSubscription } from "@/utils/saas-helpers";
 import { SubscriptionBlocker } from "@/components/shared/subscription-blocker";
 import { UserRole } from "@prisma/client";
 
+import { OfflineProvider } from "@/providers/offline-provider";
+
 export default async function DashboardLayout({
   children,
 }: {
@@ -38,11 +40,13 @@ export default async function DashboardLayout({
 
   return (
     <HeartbeatProvider>
-      <MainLayout>
-        <SubscriptionBlocker isExpired={isExpired} planName={planName} expiryDate={expiryDate}>
-          {children}
-        </SubscriptionBlocker>
-      </MainLayout>
+      <OfflineProvider>
+        <MainLayout>
+          <SubscriptionBlocker isExpired={isExpired} planName={planName} expiryDate={expiryDate}>
+            {children}
+          </SubscriptionBlocker>
+        </MainLayout>
+      </OfflineProvider>
     </HeartbeatProvider>
   );
 }

@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { paymentSchema, PaymentInput } from "../schemas/payment.schema";
 import { useState } from "react";
 import { sessionService } from "@/services/api/session-service";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 
 export function usePayment(totalAmount: number, sessionId: string) {
@@ -22,9 +22,8 @@ export function usePayment(totalAmount: number, sessionId: string) {
     },
   });
 
-  const onSubmit = async (data: PaymentInput) => {
-    setIsLoading(true);
-    try {
+  const checkoutMutation = useMutation({
+    mutationFn: async (data: PaymentInput) => {
       const methodMapping: Record<string, string> = {
         "Cash": "CASH",
         "Bank Transfer": "TRANSFER",
@@ -32,20 +31,49 @@ export function usePayment(totalAmount: number, sessionId: string) {
       };
       const paymentMethod = methodMapping[data.paymentMethod] || "CASH";
 
-      await sessionService.checkoutSession(sessionId, {
+      return sessionService.checkoutSession(sessionId, {
         amount: data.amountPaid,
         paymentMethod: paymentMethod,
         notes: data.notes
       });
+    },
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["sessions"] });
+      await queryClient.cancelQueries({ queryKey: ["active-sessions"] });
+
+      const previousSessions = queryClient.getQueryData(["sessions"]);
+      const previousActive = queryClient.getQueryData(["active-sessions"]);
+
+      // Optimistically mark session as completed in lists
+      queryClient.setQueryData(["sessions"], (old: any) => {
+        if (!old) return old;
+        return old.map((s: any) => s.id === sessionId ? { ...s, status: "COMPLETED" } : s);
+      });
+      queryClient.setQueryData(["active-sessions"], (old: any) => {
+        if (!old) return old;
+        return old.filter((s: any) => s.id !== sessionId);
+      });
+
+      return { previousSessions, previousActive };
+    },
+    onError: (err, newSessionData, context) => {
+      queryClient.setQueryData(["sessions"], context?.previousSessions);
+      queryClient.setQueryData(["active-sessions"], context?.previousActive);
+      toast.error(err.message || "Thanh toán thất bại");
+    },
+    onSuccess: () => {
       setIsSuccess(true);
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["sessions"] });
       queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
+      queryClient.invalidateQueries({ queryKey: ["huts"] });
       queryClient.invalidateQueries({ queryKey: ["dashboard-stats"] });
-    } catch (error: any) {
-      toast.error(error.message || "Thanh toán thất bại");
-    } finally {
-      setIsLoading(false);
     }
+  });
+
+  const onSubmit = async (data: PaymentInput) => {
+    checkoutMutation.mutate(data);
   };
 
   return {

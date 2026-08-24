@@ -20,6 +20,12 @@ function NavigationProgressInner() {
         setIsNavigating(false);
         setProgress(0);
         setShowPill(false);
+        
+        // Hide global loader
+        if (typeof window !== "undefined") {
+          const { globalLoader } = require("./global-loader");
+          globalLoader.hide();
+        }
       }, 250);
       return () => clearTimeout(timer);
     }
@@ -59,6 +65,12 @@ function NavigationProgressInner() {
       // Immediately start the progress bar on click!
       setIsNavigating(true);
       setProgress(35);
+      
+      // Also show global loader for better visibility
+      if (typeof window !== "undefined") {
+        const { globalLoader } = require("./global-loader");
+        globalLoader.show("Đang tải dữ liệu...");
+      }
     };
 
     document.addEventListener("click", handleAnchorClick, { capture: true });

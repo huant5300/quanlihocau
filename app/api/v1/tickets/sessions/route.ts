@@ -134,7 +134,7 @@ export async function POST(req: NextRequest) {
       // 2. Calculate endTime if package exists
       let endTime = null;
       if (packageId) {
-        const pkg = await tx.fishingPackage.findUnique({ where: { id: packageId } });
+        const pkg = await tx.fishingPackage.findUnique({ where: { id: packageId, lakeId } });
         if (pkg) {
           endTime = new Date(new Date(startTime).getTime() + Number(pkg.durationHours) * 60 * 60 * 1000);
         }
@@ -162,7 +162,7 @@ export async function POST(req: NextRequest) {
 
       // 3. Update area status to OCCUPIED
       await tx.fishingArea.update({
-        where: { id: areaId },
+        where: { id: areaId, lakeId },
         data: { status: "OCCUPIED" }
       });
 
@@ -183,7 +183,7 @@ export async function POST(req: NextRequest) {
       if (body.products && Array.isArray(body.products)) {
         let totalProductAmount = 0;
         for (const item of body.products) {
-          const product = await tx.product.findUnique({ where: { id: item.productId } });
+          const product = await tx.product.findUnique({ where: { id: item.productId, lakeId } });
           if (product) {
             const quantity = item.quantity || 1;
             const unitPrice = item.unitPrice || product.price;
@@ -203,7 +203,7 @@ export async function POST(req: NextRequest) {
 
             // Update stock
             await tx.product.update({
-              where: { id: product.id },
+              where: { id: product.id, lakeId },
               data: { stock: { decrement: quantity } }
             });
 
@@ -221,7 +221,7 @@ export async function POST(req: NextRequest) {
 
         // Update invoice total
         await tx.invoice.update({
-          where: { id: invoice.id },
+          where: { id: invoice.id, lakeId },
           data: { 
             subtotal: totalProductAmount,
             totalAmount: totalProductAmount

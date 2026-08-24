@@ -19,8 +19,8 @@ export function useDashboardData() {
         productRevenue: data.productRevenue || 0,
       };
     },
-    staleTime: 10000,
-    refetchInterval: 20000, // Poll every 20s for stats
+    staleTime: 30000,
+    refetchInterval: 60000, // Poll every 60s for stats (rely on mutations for updates)
     refetchOnWindowFocus: true,
   });
 
@@ -30,8 +30,8 @@ export function useDashboardData() {
     queryFn: async () => {
       return await sessionService.getSessions("ACTIVE");
     },
-    staleTime: 10000,
-    refetchInterval: 15000, // Poll every 15s for active sessions
+    staleTime: 30000,
+    refetchInterval: 60000, // Poll every 60s for active sessions
     refetchOnWindowFocus: true,
   });
 

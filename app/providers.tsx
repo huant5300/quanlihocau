@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "next-themes";
 import { NavigationProgress } from "@/components/shared/navigation-progress";
+import { GlobalLoader } from "@/components/shared/global-loader";
 
 export default function AppProviders({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
@@ -15,6 +16,7 @@ export default function AppProviders({ children }: { children: React.ReactNode }
       <SessionProvider>
         <QueryClientProvider client={queryClient}>
           <NavigationProgress />
+          <GlobalLoader />
           {children}
           <Toaster 
             position="top-center" 

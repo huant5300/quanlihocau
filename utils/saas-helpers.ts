@@ -1,6 +1,6 @@
 import prisma from "@/lib/prisma";
 
-export type SubscriptionPlan = "FREE" | "SILVER" | "GOLD";
+export type SubscriptionPlan = "FREE" | "SILVER" | "GOLD" | "TRIAL";
 
 export interface PlanLimits {
   name: string;
@@ -12,8 +12,17 @@ export interface PlanLimits {
   offlineMode: boolean; // Có hỗ trợ offline sync không
 }
 
-export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
+export const PLAN_LIMITS: Record<string, PlanLimits> = {
   FREE: {
+    name: "Gói Dùng Thử (TRIAL)",
+    pricePerMonth: 0,
+    maxLakes: 1,
+    maxHuts: 10,
+    maxStaff: 2,
+    maxCustomers: 100,
+    offlineMode: false,
+  },
+  TRIAL: {
     name: "Gói Dùng Thử (TRIAL)",
     pricePerMonth: 0,
     maxLakes: 1,
@@ -46,43 +55,56 @@ export const PLAN_LIMITS: Record<SubscriptionPlan, PlanLimits> = {
  * Lấy chi tiết gói dịch vụ và tình trạng gia hạn của một hồ câu
  */
 export async function getLakeSubscription(lakeId: string) {
-  const lake = await prisma.fishingLake.findUnique({
-    where: { id: lakeId },
-    select: {
-      subscriptionPlan: true,
-      subscriptionStatus: true,
-      subscriptionExpiresAt: true,
-    },
-  });
+  try {
+    const lake = await prisma.fishingLake.findUnique({
+      where: { id: lakeId },
+      select: {
+        subscriptionPlan: true,
+        subscriptionStatus: true,
+        subscriptionExpiresAt: true,
+      },
+    });
 
-  if (!lake) {
+    if (!lake) {
+      return {
+        plan: "FREE" as SubscriptionPlan,
+        status: "ACTIVE",
+        expiresAt: null,
+        isExpired: false,
+        limits: PLAN_LIMITS.FREE,
+      };
+    }
+
+    const plan = (lake.subscriptionPlan || "FREE") as SubscriptionPlan;
+    const status = lake.subscriptionStatus || "ACTIVE";
+    const expiresAt = lake.subscriptionExpiresAt;
+
+    let isExpired = false;
+    if (status === "EXPIRED") {
+      isExpired = true;
+    } else if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
+      isExpired = true;
+    }
+
+    const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.FREE;
+
+    return {
+      plan,
+      status,
+      expiresAt,
+      isExpired,
+      limits,
+    };
+  } catch (error) {
+    console.error("Error in getLakeSubscription:", error);
     return {
       plan: "FREE" as SubscriptionPlan,
-      status: "EXPIRED",
+      status: "ACTIVE",
       expiresAt: null,
-      isExpired: true,
+      isExpired: false,
       limits: PLAN_LIMITS.FREE,
     };
   }
-
-  const plan = (lake.subscriptionPlan || "FREE") as SubscriptionPlan;
-  const status = lake.subscriptionStatus || "ACTIVE";
-  const expiresAt = lake.subscriptionExpiresAt;
-
-  let isExpired = false;
-  if (status === "EXPIRED") {
-    isExpired = true;
-  } else if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
-    isExpired = true;
-  }
-
-  return {
-    plan,
-    status,
-    expiresAt,
-    isExpired,
-    limits: PLAN_LIMITS[plan] || PLAN_LIMITS.FREE,
-  };
 }
 
 /**

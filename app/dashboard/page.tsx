@@ -10,135 +10,155 @@ export default async function DashboardPage() {
   const lakeId = await getActiveLakeId();
 
   const today = getVnStartOfToday();
-
   const startOf7Days = getVnSubDays(today, 6);
 
-  const [
-    activeSessionsList,
-    todayRevenueAgg,
-    totalCustomers,
-    todayCatches,
-    recentTransactions,
-    sevenDaysTransactions,
-    spotsCount
-  ] = await Promise.all([
-    // 1. Active sessions list
-    prisma.fishingSession.findMany({
-      where: {
-        lakeId,
-        status: "ACTIVE"
-      },
-      include: {
-        area: true,
-        customer: true,
-        fishCatches: { include: { fishType: true } },
-        invoices: {
-          where: { status: "UNPAID" },
-          include: { items: true }
+  try {
+    const [
+      activeSessionsList,
+      todayRevenueAgg,
+      totalCustomers,
+      todayCatches,
+      recentTransactions,
+      sevenDaysTransactions,
+      spotsCount
+    ] = await Promise.all([
+      // 1. Active sessions list
+      prisma.fishingSession.findMany({
+        where: {
+          lakeId: lakeId || "",
+          status: "ACTIVE"
+        },
+        include: {
+          area: true,
+          customer: true,
+          fishCatches: { include: { fishType: true } },
+          invoices: {
+            where: { status: "UNPAID" },
+            include: { items: true }
+          }
+        },
+        orderBy: { startTime: "desc" }
+      }).catch(() => []),
+      // 2. Today's revenue
+      prisma.transaction.aggregate({
+        _sum: { amount: true },
+        where: {
+          lakeId: lakeId || "",
+          type: "INCOME",
+          createdAt: { gte: today }
         }
-      },
-      orderBy: { startTime: "desc" }
-    }),
-    // 2. Today's revenue
-    prisma.transaction.aggregate({
-      _sum: { amount: true },
-      where: {
-        lakeId,
-        type: "INCOME",
-        createdAt: { gte: today }
-      }
-    }),
-    // 3. Total customers
-    prisma.customer.count({
-      where: {
-        lakeId
-      }
-    }),
-    // 4. Fish catches today
-    prisma.fishCatch.findMany({
-      where: {
-        createdAt: { gte: today },
-        session: {
-          lakeId
+      }).catch(() => ({ _sum: { amount: null } })),
+      // 3. Total customers
+      prisma.customer.count({
+        where: {
+          lakeId: lakeId || ""
         }
-      },
-      include: {
-        fishType: true
-      }
-    }),
-    // 5. Recent transactions
-    prisma.transaction.findMany({
-      where: {
-        lakeId
-      },
-      take: 5,
-      orderBy: { createdAt: "desc" }
-    }),
-    // 6. 7-day transactions
-    prisma.transaction.findMany({
-      where: {
-        lakeId,
-        type: "INCOME",
-        createdAt: { gte: startOf7Days }
-      },
-      select: {
-        amount: true,
-        createdAt: true
-      }
-    }),
-    // 7. Spot capacity
-    prisma.fishingArea.count({
-      where: {
-        lakeId
-      }
-    })
-  ]);
+      }).catch(() => 0),
+      // 4. Fish catches today
+      prisma.fishCatch.findMany({
+        where: {
+          createdAt: { gte: today },
+          session: {
+            lakeId: lakeId || ""
+          }
+        },
+        include: {
+          fishType: true
+        }
+      }).catch(() => []),
+      // 5. Recent transactions
+      prisma.transaction.findMany({
+        where: {
+          lakeId: lakeId || ""
+        },
+        take: 5,
+        orderBy: { createdAt: "desc" }
+      }).catch(() => []),
+      // 6. 7-day transactions
+      prisma.transaction.findMany({
+        where: {
+          lakeId: lakeId || "",
+          type: "INCOME",
+          createdAt: { gte: startOf7Days }
+        },
+        select: {
+          amount: true,
+          createdAt: true
+        }
+      }).catch(() => []),
+      // 7. Spot capacity
+      prisma.fishingArea.count({
+        where: {
+          lakeId: lakeId || ""
+        }
+      }).catch(() => 0)
+    ]);
 
-  // Group catches by fish type and count the number of fish
-  const fishTypeGroups: Record<string, number> = {};
-  todayCatches.forEach(c => {
-    const name = c.fishType?.name || "Cá khác";
-    fishTypeGroups[name] = (fishTypeGroups[name] || 0) + 1;
-  });
+    // Group catches by fish type and count the number of fish
+    const fishTypeGroups: Record<string, number> = {};
+    (todayCatches || []).forEach(c => {
+      const name = c.fishType?.name || "Cá khác";
+      fishTypeGroups[name] = (fishTypeGroups[name] || 0) + 1;
+    });
 
-  const topCatches = Object.entries(fishTypeGroups)
-    .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count);
+    const topCatches = Object.entries(fishTypeGroups)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
 
-  const todayRevenue = Number(todayRevenueAgg._sum.amount || 0);
-  const todayCatchesCount = todayCatches.length;
+    const todayRevenue = Number(todayRevenueAgg?._sum?.amount || 0);
+    const todayCatchesCount = (todayCatches || []).length;
 
-  const days = eachDayOfInterval({ start: startOf7Days, end: new Date() });
-  const revenueChart = days.map(day => {
-    const dayStr = format(day, "dd/MM");
-    const dayTotal = sevenDaysTransactions
-      .filter(t => format(new Date(t.createdAt), "yyyy-MM-dd") === format(day, "yyyy-MM-dd"))
-      .reduce((sum, t) => sum + Number(t.amount), 0);
+    let revenueChart: { date: string; amount: number }[] = [];
+    try {
+      const days = eachDayOfInterval({ start: startOf7Days, end: new Date() });
+      revenueChart = days.map(day => {
+        const dayStr = format(day, "dd/MM");
+        const dayTotal = (sevenDaysTransactions || [])
+          .filter(t => format(new Date(t.createdAt), "yyyy-MM-dd") === format(day, "yyyy-MM-dd"))
+          .reduce((sum, t) => sum + Number(t.amount || 0), 0);
 
-    return {
-      date: dayStr,
-      amount: dayTotal
+        return {
+          date: dayStr,
+          amount: dayTotal
+        };
+      });
+    } catch {
+      revenueChart = [];
+    }
+
+    const initialData = {
+      activeSessions: (activeSessionsList || []).length,
+      activeSessionsList: JSON.parse(JSON.stringify(activeSessionsList || [])),
+      todayRevenue,
+      totalCustomers: totalCustomers || 0,
+      todayCatchesCount,
+      topCatches,
+      spotsCount: spotsCount || 0,
+      revenueChart,
+      recentTransactions: (recentTransactions || []).map(tx => ({
+        id: tx.id,
+        amount: Number(tx.amount || 0),
+        type: tx.type,
+        category: tx.category,
+        description: tx.description || "Giao dịch hệ thống",
+        createdAt: tx.createdAt ? new Date(tx.createdAt).toISOString() : new Date().toISOString()
+      }))
     };
-  });
 
-  const initialData = {
-    activeSessions: activeSessionsList.length,
-    activeSessionsList: JSON.parse(JSON.stringify(activeSessionsList)),
-    todayRevenue,
-    totalCustomers,
-    todayCatchesCount,
-    topCatches,
-    spotsCount,
-    revenueChart,
-    recentTransactions: recentTransactions.map(tx => ({
-      id: tx.id,
-      amount: Number(tx.amount),
-      type: tx.type,
-      category: tx.category,
-      description: tx.description || "Giao dịch hệ thống",
-      createdAt: tx.createdAt.toISOString()
-    }))
-  };
-
-  return <DashboardClient initialData={initialData} />;
+    return <DashboardClient initialData={initialData} />;
+  } catch (err) {
+    console.error("Error loading DashboardPage:", err);
+    const fallbackData = {
+      activeSessions: 0,
+      activeSessionsList: [],
+      todayRevenue: 0,
+      totalCustomers: 0,
+      todayCatchesCount: 0,
+      topCatches: [],
+      spotsCount: 0,
+      revenueChart: [],
+      recentTransactions: []
+    };
+    return <DashboardClient initialData={fallbackData} />;
+  }
 }

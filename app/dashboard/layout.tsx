@@ -23,12 +23,16 @@ export default async function DashboardLayout({
   let expiryDate: string | null = null;
 
   if (session.user.role !== UserRole.SUPER_ADMIN) {
-    const lakeId = await getActiveLakeId();
-    if (lakeId) {
-      const sub = await getLakeSubscription(lakeId);
-      isExpired = sub.isExpired;
-      planName = sub.limits.name;
-      expiryDate = sub.expiresAt ? sub.expiresAt.toISOString() : null;
+    try {
+      const lakeId = await getActiveLakeId();
+      if (lakeId) {
+        const sub = await getLakeSubscription(lakeId);
+        isExpired = Boolean(sub?.isExpired);
+        planName = sub?.limits?.name || "Gói Dùng Thử (TRIAL)";
+        expiryDate = sub?.expiresAt ? new Date(sub.expiresAt).toISOString() : null;
+      }
+    } catch (layoutErr) {
+      console.error("DashboardLayout subscription check error:", layoutErr);
     }
   }
 

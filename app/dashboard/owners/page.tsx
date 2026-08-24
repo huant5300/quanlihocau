@@ -31,7 +31,7 @@ import { getLakeOwners } from "@/actions/lake-actions";
 import { cn } from "@/utils/utils";
 import { toast } from "sonner";
 import { useAuthSession } from "@/hooks/auth/use-auth-session";
-import { redirect } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
 import { vi } from "date-fns/locale";
@@ -125,9 +125,11 @@ function formatUsageTime(seconds: number): string {
 }
 
 export default function OwnersPage() {
+  const router = useRouter();
   const { user, isLoading: isAuthLoading, isSuperAdmin } = useAuthSession();
   const [owners, setOwners] = useState<LakeOwner[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "active" | "locked">("all");
   const [selectedOwner, setSelectedOwner] = useState<LakeOwner | null>(null);
@@ -136,6 +138,10 @@ export default function OwnersPage() {
   const [activeTab, setActiveTab] = useState<"owners" | "orders">("owners");
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [ordersLoading, setOrdersLoading] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const fetchOrders = async () => {
     setOrdersLoading(true);
@@ -199,9 +205,9 @@ export default function OwnersPage() {
   useEffect(() => {
     if (isAuthLoading) return;
     if (!isSuperAdmin) {
-      redirect("/dashboard");
+      router.push("/dashboard");
     }
-  }, [isAuthLoading, isSuperAdmin]);
+  }, [isAuthLoading, isSuperAdmin, router]);
 
   useEffect(() => {
     const fetchOwners = async () => {
@@ -220,8 +226,10 @@ export default function OwnersPage() {
         setIsLoading(false);
       }
     };
-    fetchOwners();
-  }, []);
+    if (isSuperAdmin) {
+      fetchOwners();
+    }
+  }, [isSuperAdmin]);
 
   const filteredOwners = owners.filter(o => {
     const matchesSearch = 
@@ -413,7 +421,7 @@ export default function OwnersPage() {
 
               <div className="mt-6 pt-5 border-t border-white/5 flex items-center justify-between text-muted-foreground">
                 <p className="text-[10px] font-bold italic">
-                  Tham gia: {format(new Date(owner.createdAt), "dd/MM/yyyy")}
+                  Tham gia: {isMounted ? format(new Date(owner.createdAt), "dd/MM/yyyy") : ""}
                 </p>
                 <div className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-primary group-hover:translate-x-1 transition-transform">
                   Chi tiết <ChevronRight size={12} />

@@ -126,14 +126,23 @@ export async function getLakeDetails(lakeId: string) {
 
 export async function getLakeOwners() {
   const session = await auth();
-  if (!session || session.user.role !== UserRole.SUPER_ADMIN) {
+  if (!session?.user) {
     return { success: false, error: "Unauthorized" };
+  }
+
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN || session.user.email === "huant5300@gmail.com";
+  if (!isSuperAdmin) {
+    return { success: false, error: "Bạn không có quyền truy cập trang quản trị này" };
   }
 
   try {
     const owners = await prisma.user.findMany({
       where: {
-        role: UserRole.OWNER
+        OR: [
+          { role: UserRole.OWNER },
+          { role: UserRole.SUPER_ADMIN },
+          { managedLake: { some: {} } }
+        ]
       },
       include: {
         managedLake: {

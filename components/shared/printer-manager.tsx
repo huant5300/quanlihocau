@@ -33,6 +33,11 @@ export function PrinterManager() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [showTestSuccess, setShowTestSuccess] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Kiểm tra trạng thái kết nối thực tế định kỳ và cập nhật store
   useEffect(() => {
@@ -79,6 +84,8 @@ export function PrinterManager() {
       setTimeout(() => setShowTestSuccess(false), 3000);
     }
   };
+
+  if (!isMounted) return null;
 
   return (
     <>

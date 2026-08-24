@@ -199,42 +199,52 @@ export default function LoginPage() {
               >
                 <form onSubmit={handleLogin} className="space-y-3.5">
                   {/* Ô nhập Số điện thoại hoặc Email */}
-                  <div className="relative">
-                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                    <input
-                      id="loginId"
-                      name="loginId"
-                      type="text"
-                      autoComplete="username"
-                      placeholder="Số điện thoại (0855550813) hoặc Email"
-                      value={loginId}
-                      onChange={(e) => setLoginId(e.target.value)}
-                      className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
-                      required
-                    />
+                  <div>
+                    <label htmlFor="identifier" className="sr-only">
+                      Số điện thoại hoặc Email
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        id="identifier"
+                        name="identifier"
+                        type="text"
+                        autoComplete="username"
+                        placeholder="Số điện thoại (0855550813) hoặc Email"
+                        value={loginId}
+                        onChange={(e) => setLoginId(e.target.value)}
+                        className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                        required
+                      />
+                    </div>
                   </div>
 
                   {/* Ô nhập Mật khẩu */}
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                    <input
-                      id="loginPassword"
-                      name="loginPassword"
-                      type={showLoginPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      placeholder="Mật khẩu của bạn"
-                      value={loginPassword}
-                      onChange={(e) => setLoginPassword(e.target.value)}
-                      className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowLoginPassword(!showLoginPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                    >
-                      {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                  <div>
+                    <label htmlFor="password" className="sr-only">
+                      Mật khẩu
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        id="password"
+                        name="password"
+                        type={showLoginPassword ? "text" : "password"}
+                        autoComplete="current-password"
+                        placeholder="Mật khẩu của bạn"
+                        value={loginPassword}
+                        onChange={(e) => setLoginPassword(e.target.value)}
+                        className="w-full h-12 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-sm font-medium"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowLoginPassword(!showLoginPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        {showLoginPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Nút Đăng nhập */}
@@ -319,91 +329,116 @@ export default function LoginPage() {
 
                 <form onSubmit={handleRegister} className="space-y-3">
                   {/* Họ tên */}
-                  <div className="relative">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                    <input
-                      id="regName"
-                      name="regName"
-                      type="text"
-                      autoComplete="name"
-                      placeholder="Họ tên hoặc Tên hồ câu"
-                      value={regName}
-                      onChange={(e) => setRegName(e.target.value)}
-                      className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
-                      required
-                    />
-                  </div>
-
-                  {/* SĐT hoặc Email */}
-                  {regMethod === "phone" ? (
+                  <div>
+                    <label htmlFor="regName" className="sr-only">
+                      Họ tên hoặc Tên hồ câu
+                    </label>
                     <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
                       <input
-                        id="regPhone"
-                        name="regPhone"
-                        type="tel"
-                        autoComplete="tel"
-                        placeholder="Số điện thoại của bạn (vd: 0855550813)"
-                        value={regPhone}
-                        onChange={(e) => setRegPhone(e.target.value)}
+                        id="regName"
+                        name="regName"
+                        type="text"
+                        autoComplete="name"
+                        placeholder="Họ tên hoặc Tên hồ câu"
+                        value={regName}
+                        onChange={(e) => setRegName(e.target.value)}
                         className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
                         required
                       />
                     </div>
+                  </div>
+
+                  {/* SĐT hoặc Email */}
+                  {regMethod === "phone" ? (
+                    <div>
+                      <label htmlFor="regPhone" className="sr-only">
+                        Số điện thoại
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                        <input
+                          id="regPhone"
+                          name="regPhone"
+                          type="tel"
+                          autoComplete="tel"
+                          placeholder="Số điện thoại của bạn (vd: 0855550813)"
+                          value={regPhone}
+                          onChange={(e) => setRegPhone(e.target.value)}
+                          className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                          required
+                        />
+                      </div>
+                    </div>
                   ) : (
-                    <div className="relative">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                      <input
-                        id="regEmail"
-                        name="regEmail"
-                        type="email"
-                        autoComplete="email"
-                        placeholder="Địa chỉ Email của bạn"
-                        value={regEmail}
-                        onChange={(e) => setRegEmail(e.target.value)}
-                        className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-xs font-medium"
-                        required
-                      />
+                    <div>
+                      <label htmlFor="regEmail" className="sr-only">
+                        Địa chỉ Email
+                      </label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                        <input
+                          id="regEmail"
+                          name="regEmail"
+                          type="email"
+                          autoComplete="email"
+                          placeholder="Địa chỉ Email của bạn"
+                          value={regEmail}
+                          onChange={(e) => setRegEmail(e.target.value)}
+                          className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all text-xs font-medium"
+                          required
+                        />
+                      </div>
                     </div>
                   )}
 
                   {/* Mật khẩu */}
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                    <input
-                      id="regPassword"
-                      name="regPassword"
-                      type={showRegPassword ? "text" : "password"}
-                      autoComplete="new-password"
-                      placeholder="Mật khẩu tự đặt (tối thiểu 6 ký tự)"
-                      value={regPassword}
-                      onChange={(e) => setRegPassword(e.target.value)}
-                      className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowRegPassword(!showRegPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
-                    >
-                      {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                    </button>
+                  <div>
+                    <label htmlFor="regPassword" className="sr-only">
+                      Mật khẩu
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        id="regPassword"
+                        name="regPassword"
+                        type={showRegPassword ? "text" : "password"}
+                        autoComplete="new-password"
+                        placeholder="Mật khẩu tự đặt (tối thiểu 6 ký tự)"
+                        value={regPassword}
+                        onChange={(e) => setRegPassword(e.target.value)}
+                        className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-11 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowRegPassword(!showRegPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                      >
+                        {showRegPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                      </button>
+                    </div>
                   </div>
 
                   {/* Xác nhận mật khẩu */}
-                  <div className="relative">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
-                    <input
-                      id="regConfirmPassword"
-                      name="regConfirmPassword"
-                      type="password"
-                      autoComplete="new-password"
-                      placeholder="Nhập lại mật khẩu"
-                      value={regConfirmPassword}
-                      onChange={(e) => setRegConfirmPassword(e.target.value)}
-                      className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
-                      required
-                    />
+                  <div>
+                    <label htmlFor="regConfirmPassword" className="sr-only">
+                      Nhập lại mật khẩu
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={17} />
+                      <input
+                        id="regConfirmPassword"
+                        name="regConfirmPassword"
+                        type="password"
+                        autoComplete="new-password"
+                        placeholder="Nhập lại mật khẩu"
+                        value={regConfirmPassword}
+                        onChange={(e) => setRegConfirmPassword(e.target.value)}
+                        className="w-full h-11 bg-white/[0.04] border border-white/10 rounded-xl pl-11 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 transition-all text-xs font-medium"
+                        required
+                      />
+                    </div>
                   </div>
 
                   {/* Badge dùng thử */}

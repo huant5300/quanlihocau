@@ -1,66 +1,76 @@
-const CACHE_NAME = 'fishing-saas-v3';
-// Chỉ cache những đường dẫn chắc chắn tồn tại
+const CACHE_NAME = 'fishing-saas-v5';
+
+// Only pre-cache static assets that never change per session
 const ASSETS_TO_CACHE = [
   '/',
-  '/login',
   '/manifest.json'
 ];
 
-// Install Event - cache core static assets safely
+// Install Event - cache core static assets safely and activate immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      console.log('SW: Pre-caching core assets');
-      // Dùng Promise.allSettled để không crash nếu 1 asset lỗi
       return Promise.allSettled(
-        ASSETS_TO_CACHE.map(url =>
-          cache.add(url).catch(err => console.warn('SW: Could not cache', url, err))
+        ASSETS_TO_CACHE.map((url) =>
+          cache.add(url).catch((err) => console.warn('SW: Could not pre-cache', url, err))
         )
       );
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - clean up old caches
+// Activate Event - immediately clear all old caches and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cache) => {
-          if (cache !== CACHE_NAME) {
-            console.log('SW: Clearing old cache:', cache);
-            return caches.delete(cache);
-          }
-        })
-      );
-    }).then(() => self.clients.claim())
+    caches
+      .keys()
+      .then((cacheNames) => {
+        return Promise.all(
+          cacheNames.map((cache) => {
+            if (cache !== CACHE_NAME) {
+              console.log('SW: Deleting outdated cache:', cache);
+              return caches.delete(cache);
+            }
+          })
+        );
+      })
+      .then(() => self.clients.claim())
   );
 });
 
-// Fetch Event - Stale-while-revalidate strategy for internal GET requests
+// Fetch Event - network-first / bypass for all auth, API, and dynamic routes
 self.addEventListener('fetch', (event) => {
-  // CRITICAL FIX: Only handle GET requests. Skip POST, PUT, DELETE, etc.
+  // Only handle GET requests
   if (event.request.method !== 'GET') {
     return;
   }
 
   const url = new URL(event.request.url);
 
-  // Skip browser extensions (e.g. chrome-extension://)
+  // Skip non-http protocols (e.g. chrome-extension://)
   if (!url.protocol.startsWith('http')) {
     return;
   }
 
-  // Skip dynamic API requests to prevent caching authentication/token responses or breaking live data syncing
-  if (url.pathname.startsWith('/api/') || url.pathname.includes('/_next/data/')) {
-    return;
+  // CRITICAL: NEVER cache or serve from cache for Auth, API, Dashboard or parameterized URLs
+  const isAuthOrDynamic =
+    Boolean(url.search) ||
+    url.pathname.startsWith('/api/') ||
+    url.pathname.startsWith('/login') ||
+    url.pathname.startsWith('/auth') ||
+    url.pathname.startsWith('/dashboard') ||
+    url.pathname.includes('/_next/data/');
+
+  if (isAuthOrDynamic) {
+    return; // Let browser perform direct network fetch
   }
 
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          // Only cache successful basic internal HTTP requests
+          // Only cache successful basic internal HTTP responses
           if (
             networkResponse && 
             networkResponse.ok && 
@@ -73,7 +83,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => cachedResponse); // Fallback to cache on network error
+        .catch(() => cachedResponse);
 
       return cachedResponse || fetchPromise;
     })

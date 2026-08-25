@@ -12,13 +12,20 @@ import {
 import { Plus, Loader2 } from "lucide-react";
 import { productService } from "@/services/api/product-service";
 import { toast } from "sonner";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import type { ProductInsert } from "@/types";
 
 export function ProductModal({ children }: { children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
+
+  const { data: categories = [] } = useQuery({
+    queryKey: ["product-categories"],
+    queryFn: () => productService.getCategories(),
+    enabled: isOpen,
+    retry: false,
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,7 +37,7 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
       const price = Number(formData.get("price"));
       const stock = Number(formData.get("stock"));
 
-      if (!name || !categoryId || Number.isNaN(price) || Number.isNaN(stock)) {
+      if (!name || Number.isNaN(price) || Number.isNaN(stock)) {
         toast.error("Dữ liệu sản phẩm không hợp lệ");
         setIsSaving(false);
         return;
@@ -48,7 +55,8 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
       queryClient.invalidateQueries({ queryKey: ["products"] });
       setIsOpen(false);
     } catch (error: any) {
-      toast.error(error?.response?.data?.message ?? "Không thể thêm sản phẩm");
+      const msg = error?.response?.data?.message ?? error?.message ?? "Không thể thêm sản phẩm";
+      toast.error(msg);
     } finally {
       setIsSaving(false);
     }
@@ -84,14 +92,24 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
               <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Danh mục</label>
               <select 
                 name="categoryId"
-                required
                 className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold appearance-none"
               >
-                <option value="cat_bait">Mồi câu</option>
-                <option value="cat_drink">Đồ uống</option>
-                <option value="cat_food">Đồ ăn</option>
-                <option value="cat_equipment">Dụng cụ</option>
-                <option value="cat_other">Khác</option>
+                <option value="">-- Không phân loại --</option>
+                {categories.length > 0 ? (
+                  categories.map((category: any) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))
+                ) : (
+                  <>
+                    <option value="Mồi câu">Mồi câu</option>
+                    <option value="Đồ uống">Đồ uống</option>
+                    <option value="Đồ ăn">Đồ ăn</option>
+                    <option value="Dụng cụ">Dụng cụ</option>
+                    <option value="Khác">Khác</option>
+                  </>
+                )}
               </select>
             </div>
             <div className="space-y-2">

@@ -98,10 +98,16 @@ export async function getLakeSubscription(lakeId: string) {
     const expiresAt = lake.subscriptionExpiresAt;
 
     let isExpired = false;
+    // Chỉ block khi status là EXPIRED (chủ động set bởi admin)
+    // Không tự block chỉ vì ngày hết hạn (tránh khoá hệ thống bất ngờ)
     if (status === "EXPIRED") {
       isExpired = true;
-    } else if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
-      isExpired = true;
+    }
+    // Chỉ block PAID plan khi quá hạn (FREE/TRIAL không tự block)
+    if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
+      if (plan !== "FREE" && plan !== "TRIAL") {
+        isExpired = true;
+      }
     }
 
     const limits = PLAN_LIMITS[plan] || PLAN_LIMITS.FREE;

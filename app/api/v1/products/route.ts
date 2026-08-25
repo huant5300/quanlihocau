@@ -57,17 +57,24 @@ export async function POST(req: NextRequest) {
 
     let categoryId = body.categoryId;
 
-    // Handle hardcoded or missing category gracefully
-    if (!categoryId || categoryId === "cmp5ikhn00000w9ts0i0n76fh") {
-      const defaultCat = await prisma!.productCategory.findFirst();
-      if (defaultCat) {
-        categoryId = defaultCat.id;
-      } else {
-        const newCat = await prisma!.productCategory.create({
-          data: { name: "Khác" }
-        });
-        categoryId = newCat.id;
+    // Handle missing, hardcoded, or invalid category gracefully
+    const isValidId = categoryId && categoryId !== "cmp5ikhn00000w9ts0i0n76fh" && !["Mồi câu", "Đồ uống", "Đồ ăn", "Dụng cụ", "Khác", ""].includes(categoryId);
+    
+    if (isValidId) {
+      // Verify the category exists
+      const catExists = await prisma!.productCategory.findUnique({ where: { id: categoryId } }).catch(() => null);
+      if (!catExists) categoryId = null;
+    } else {
+      categoryId = null;
+    }
+
+    if (!categoryId) {
+      // Try to find or create a default category
+      let defaultCat = await prisma!.productCategory.findFirst().catch(() => null);
+      if (!defaultCat) {
+        defaultCat = await prisma!.productCategory.create({ data: { name: "Khác" } });
       }
+      categoryId = defaultCat.id;
     }
 
     const product = await ProductRepository.create({

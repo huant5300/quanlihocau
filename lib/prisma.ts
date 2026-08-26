@@ -1,8 +1,4 @@
 import { PrismaClient } from "@prisma/client";
-import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool, PoolConfig } from "pg";
-
-const connectionString = process.env.DATABASE_URL;
 
 const isTransientConnectionError = (error: any): boolean => {
   if (!error) return false;
@@ -31,25 +27,10 @@ const isTransientConnectionError = (error: any): boolean => {
   );
 };
 
-const poolConfig: PoolConfig = {
-  connectionString,
-  max: process.env.NODE_ENV === "production" ? 2 : 5, // Tối ưu Serverless: giảm max connection để tránh lỗi 'too many clients' khi scale lambdas
-  idleTimeoutMillis: 5000, // Giải phóng connection nhanh hơn trong môi trường Serverless (5 giây)
-  connectionTimeoutMillis: 10000,
-  keepAlive: true,
-  keepAliveInitialDelayMillis: 10000,
-  ssl: connectionString?.includes("localhost") || connectionString?.includes("127.0.0.1")
-    ? false
-    : { rejectUnauthorized: false },
-};
-
 const createPrismaClient = () => {
-  const pool = new Pool(poolConfig);
-  pool.on("error", (err) => {
-    console.warn("[Database Pool] Connection error caught safely:", err.message);
+  const baseClient = new PrismaClient({
+    log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
-  const adapter = new PrismaPg(pool);
-  const baseClient = new PrismaClient({ adapter });
 
   return baseClient.$extends({
     query: {
@@ -90,3 +71,4 @@ const prisma = (globalThis.__prisma ?? createPrismaClient()) as ExtendedPrismaCl
 globalThis.__prisma = prisma;
 
 export default prisma;
+

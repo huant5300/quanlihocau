@@ -18,10 +18,11 @@ import { cn } from "@/utils/utils";
 interface ExtendSessionModalProps {
   sessionId: string;
   hutNumber: string;
+  hourlyRate?: number;
   className?: string;
 }
 
-export function ExtendSessionModal({ sessionId, hutNumber, className }: ExtendSessionModalProps) {
+export function ExtendSessionModal({ sessionId, hutNumber, hourlyRate = 50000, className }: ExtendSessionModalProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const queryClient = useQueryClient();
@@ -83,7 +84,7 @@ export function ExtendSessionModal({ sessionId, hutNumber, className }: ExtendSe
                     const costInput = document.getElementById("cost-input") as HTMLInputElement;
                     if (input && costInput) {
                       input.value = h.toString();
-                      costInput.value = (h * 50000).toString();
+                      costInput.value = (h * hourlyRate).toString();
                     }
                   }}
                   className="h-12 rounded-xl bg-accent/50 hover:bg-primary hover:text-white font-black text-xs transition-all"
@@ -108,7 +109,7 @@ export function ExtendSessionModal({ sessionId, hutNumber, className }: ExtendSe
                 onChange={(e) => {
                   const costInput = document.getElementById("cost-input") as HTMLInputElement;
                   if (costInput) {
-                    costInput.value = (parseFloat(e.target.value || "0") * 50000).toString();
+                    costInput.value = (parseFloat(e.target.value || "0") * hourlyRate).toString();
                   }
                 }}
               />

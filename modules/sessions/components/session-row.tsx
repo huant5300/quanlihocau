@@ -24,6 +24,7 @@ import { FishBuybackModal } from "./fish-buyback-modal";
 import { PaymentModal } from "@/modules/payment/components/payment-modal";
 import { useUIStore } from "@/stores/ui-store";
 import Link from "next/link";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -42,6 +43,7 @@ export function SessionRow({ session }: SessionRowProps) {
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const { addNotification, removeNotificationByHut } = useUIStore();
+  const queryClient = useQueryClient();
 
   React.useEffect(() => {
     setIsMounted(true);
@@ -342,7 +344,8 @@ export function SessionRow({ session }: SessionRowProps) {
                 
                 <ExtendSessionModal 
                   sessionId={session.id} 
-                  hutNumber={formattedHutNumber} 
+                  hutNumber={formattedHutNumber}
+                  hourlyRate={Number(session.hourlyRate || 50000)}
                   className="h-14 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 rounded-xl flex items-center justify-center gap-1 font-black text-xs uppercase tracking-wider transition-all active:scale-95 text-center px-1 shrink-0 outline-none border border-blue-500/20"
                 />
                 
@@ -382,7 +385,11 @@ export function SessionRow({ session }: SessionRowProps) {
       {/* Modal thanh toán đồng bộ */}
       <PaymentModal 
         isOpen={isPaymentOpen}
-        onClose={() => setIsPaymentOpen(false)}
+        onClose={() => {
+          setIsPaymentOpen(false);
+          queryClient.invalidateQueries({ queryKey: ["active-sessions"] });
+          queryClient.invalidateQueries({ queryKey: ["sessions"] });
+        }}
         billData={{
           sessionId: session.id,
           hutNumber: formattedHutNumber,

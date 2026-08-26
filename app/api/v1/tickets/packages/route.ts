@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
 
     const lakeId = await getActiveLakeId();
     if (!lakeId) {
-      return NextResponse.json({ success: false, message: "Lake ID not found" }, { status: 400 });
+      return NextResponse.json([]);
     }
 
     const packages = await prisma.fishingPackage.findMany({

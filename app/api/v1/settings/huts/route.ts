@@ -13,6 +13,9 @@ export async function GET(req: NextRequest) {
     }
 
     const lakeId = await getActiveLakeId();
+    if (!lakeId) {
+      return NextResponse.json([]);
+    }
     const huts = await prisma.fishingArea.findMany({
       where: { lakeId },
       orderBy: { name: "asc" }

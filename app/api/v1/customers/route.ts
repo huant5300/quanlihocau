@@ -44,37 +44,68 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const lakeId = await getActiveLakeId();
+    let lakeId = (await getActiveLakeId()) || "";
 
-    if (!body.phone) {
-      return NextResponse.json({ success: false, message: "Số điện thoại là bắt buộc" }, { status: 400 });
+    if (!lakeId) {
+      const firstLake = await prisma.fishingLake.findFirst();
+      lakeId = firstLake?.id || "";
     }
 
-    // Check unique phone globally to prevent duplicate key database crashes
+    const fullName = (body.fullName || body.full_name || body.name || "Khách quen").trim();
+    // Tạo số điện thoại tạm thời duy nhất nếu khách không có SĐT
+    let phone = (body.phone || body.phone_number || "").trim();
+    if (!phone) {
+      phone = `KH_${Date.now().toString().slice(-8)}`;
+    }
+
+    // Kiểm tra xem số điện thoại đã tồn tại chưa để tránh lỗi trùng lặp (Unique constraint)
     const existing = await prisma.customer.findUnique({
-      where: { phone: body.phone }
+      where: { phone: phone }
     });
 
     if (existing) {
+      // Cập nhật thông tin khách hàng hiện tại
+      const updated = await prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          fullName: fullName !== "Khách quen" ? fullName : existing.fullName,
+          address: body.address || existing.address,
+          notes: body.notes || existing.notes,
+          lakeId: lakeId || existing.lakeId,
+        }
+      });
+
       return NextResponse.json({ 
         success: true,
         alreadyExisted: true,
-        message: `Số điện thoại ${body.phone} đã thuộc về "${existing.fullName}". Đã tự động chọn khách này.`,
-        ...existing
+        message: `Khách hàng "${updated.fullName}" (${phone}) đã có trong hệ thống, đã tự động chọn!`,
+        ...updated
       }, { status: 200 });
     }
 
-    const customer = await CustomerRepository.create({
-      fullName: body.fullName || body.full_name || "Khách quen",
-      phone: body.phone,
-      address: body.address,
-      notes: body.notes,
-      lakeId: lakeId,
+    // Tạo khách hàng mới
+    const customer = await prisma.customer.create({
+      data: {
+        fullName: fullName,
+        phone: phone,
+        address: body.address || null,
+        notes: body.notes || null,
+        lakeId: lakeId,
+        visitCount: 0,
+        totalSpent: 0,
+        debtBalance: 0,
+      }
     });
 
-    return NextResponse.json(customer);
+    return NextResponse.json({
+      success: true,
+      ...customer
+    });
   } catch (error: any) {
     console.error("[Customers API POST Error]:", error.message);
-    return NextResponse.json({ success: false, message: error.message || "Không thể tạo khách hàng, vui lòng thử lại" }, { status: 500 });
+    return NextResponse.json({ 
+      success: false, 
+      message: error.message || "Không thể tạo khách hàng, vui lòng thử lại" 
+    }, { status: 500 });
   }
 }

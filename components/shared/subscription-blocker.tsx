@@ -22,7 +22,7 @@ export function SubscriptionBlocker({
   const router = useRouter();
 
   // Không chặn nếu gói cước chưa hết hạn, hoặc người dùng đang ở trang settings để thanh toán
-  const shouldBlock = isExpired && pathname !== "/dashboard/settings";
+  const shouldBlock = isExpired && pathname !== "/dashboard/billing" && pathname !== "/dashboard/settings";
 
   if (!shouldBlock) {
     return <>{children}</>;
@@ -71,7 +71,7 @@ export function SubscriptionBlocker({
 
         {/* Action Button */}
         <button
-          onClick={() => router.push("/dashboard/settings")}
+          onClick={() => router.push("/dashboard/billing")}
           className="w-full h-14 bg-destructive hover:bg-destructive/90 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center gap-3 shadow-xl shadow-destructive/25 active:scale-[0.98] transition-all"
         >
           <CreditCard size={18} />

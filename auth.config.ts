@@ -29,12 +29,25 @@ export const authConfig = {
       const isDashboard = nextUrl.pathname.startsWith("/dashboard");
       const isOnboarding = nextUrl.pathname.startsWith("/onboarding");
 
+      // Check if user is expired
+      const isExpired = (auth?.user as any)?.isExpired;
+      const isBillingPage = nextUrl.pathname.startsWith("/dashboard/billing");
+      
+      // If user is logged in but expired, force them to the billing page
+      if (isLoggedIn && isExpired && isDashboard && !isBillingPage) {
+        return Response.redirect(new URL("/dashboard/billing", nextUrl));
+      }
+
       // Logged-in users are always allowed on /dashboard and /onboarding regardless of lakeId
       if (isDashboard || isOnboarding) {
         return isLoggedIn;
       }
-      // Redirect already logged-in users away from /login to /dashboard
+      
+      // Redirect already logged-in users away from /login to /dashboard (or billing if expired)
       if (isLoggedIn && nextUrl.pathname === "/login") {
+        if (isExpired) {
+          return Response.redirect(new URL("/dashboard/billing", nextUrl));
+        }
         return Response.redirect(new URL("/dashboard", nextUrl));
       }
       return true;

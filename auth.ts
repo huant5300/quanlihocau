@@ -135,7 +135,29 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           // Check if user account is locked/inactive
           if (user.isActive === false) {
             console.warn(`[Auth:Authorize] Fail: Account is locked (isActive: false) for '${loginId}'`);
-            return null;
+            
+            // Send notification to super admin about the failed login attempt
+            try {
+              const superAdmins = await prisma.user.findMany({
+                where: { role: UserRole.SUPER_ADMIN, isActive: true },
+                select: { id: true }
+              });
+              
+              if (superAdmins.length > 0) {
+                await prisma.notification.createMany({
+                  data: superAdmins.map(admin => ({
+                    userId: admin.id,
+                    title: "Cảnh báo truy cập",
+                    message: `Tài khoản bị khóa '${user.name}' (${loginId}) vừa cố gắng đăng nhập.`,
+                    type: "WARNING"
+                  }))
+                });
+              }
+            } catch (notifErr) {
+              console.error("[Auth:Authorize] Failed to send notification to super admin", notifErr);
+            }
+            
+            throw new Error("LOCKED_ACCOUNT");
           }
 
           // Ensure lake onboarding for OWNER, safely caught so login never fails
@@ -231,7 +253,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
           if (user.isActive === false) {
             console.warn(`[Firebase Phone] User account ${user.id} is inactive`);
-            return null;
+            
+            try {
+              const superAdmins = await prisma.user.findMany({
+                where: { role: UserRole.SUPER_ADMIN, isActive: true },
+                select: { id: true }
+              });
+              
+              if (superAdmins.length > 0) {
+                await prisma.notification.createMany({
+                  data: superAdmins.map(admin => ({
+                    userId: admin.id,
+                    title: "Cảnh báo truy cập",
+                    message: `Tài khoản bị khóa '${user.name}' (${phone}) vừa cố gắng đăng nhập qua OTP.`,
+                    type: "WARNING"
+                  }))
+                });
+              }
+            } catch (notifErr) {
+              console.error("[Firebase Phone] Failed to send notification to super admin", notifErr);
+            }
+            
+            throw new Error("LOCKED_ACCOUNT");
           }
 
           return {
@@ -399,24 +442,56 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.appUsageTime = (user as any).appUsageTime || 0;
       } 
       // 2. Only query DB if token.role is missing and we don't have user info yet
-      else if (!token.role || !token.id) {
+      else if (!token.role || !token.id || token.isExpired === undefined) {
         try {
           const dbUser = await prisma.user.findFirst({
             where: {
               OR: [
                 ...(token.id ? [{ id: token.id as string }] : []),
                 ...(token.sub ? [{ id: token.sub as string }] : []),
-                ...(token.email ? [{ email: token.email }, { username: token.email }] : []),
+                ...(token.email ? [{ email: token.email as string }, { username: token.email as string }] : []),
               ]
             },
-            select: { role: true, id: true, lakeId: true, phone: true, appUsageTime: true },
+            select: { 
+              role: true, 
+              id: true, 
+              lakeId: true, 
+              phone: true, 
+              appUsageTime: true,
+              lake: {
+                select: {
+                  subscriptionPlan: true,
+                  subscriptionStatus: true,
+                  subscriptionExpiresAt: true
+                }
+              }
+            },
           });
+          
           if (dbUser) {
             token.role = dbUser.role;
             token.id = dbUser.id;
             token.lakeId = dbUser.lakeId || null;
             token.phone = dbUser.phone || null;
             token.appUsageTime = dbUser.appUsageTime || 0;
+            
+            // Compute isExpired
+            let isExpired = false;
+            if (dbUser.lake) {
+              const status = dbUser.lake.subscriptionStatus || "ACTIVE";
+              const plan = dbUser.lake.subscriptionPlan || "FREE";
+              const expiresAt = dbUser.lake.subscriptionExpiresAt;
+              
+              if (status === "EXPIRED") {
+                isExpired = true;
+              }
+              if (expiresAt && new Date(expiresAt).getTime() < Date.now()) {
+                if (plan !== "FREE" && plan !== "TRIAL") {
+                  isExpired = true;
+                }
+              }
+            }
+            token.isExpired = isExpired;
           }
         } catch (dbErr) {
           console.error("JWT DB Lookup Error (non-fatal):", dbErr);
@@ -426,6 +501,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       // 3. Fallback defaults
       token.role = token.role || UserRole.STAFF;
       token.id = token.id || token.sub;
+      token.isExpired = token.isExpired || false;
 
       if (token.email === "huant5300@gmail.com") {
         token.role = UserRole.SUPER_ADMIN;
@@ -439,6 +515,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.lakeId = (token.lakeId as string) || "";
         (session.user as any).phone = (token.phone as string) || "";
         (session.user as any).appUsageTime = (token.appUsageTime as number) || 0;
+        (session.user as any).isExpired = token.isExpired;
       }
       if (session.user?.email === "huant5300@gmail.com") {
         session.user.role = UserRole.SUPER_ADMIN;

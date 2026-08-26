@@ -14,15 +14,21 @@ export async function GET(req: NextRequest) {
     const searchParams = req.nextUrl.searchParams;
     const search = searchParams.get("search") || undefined;
     
-    const lakeId = await getActiveLakeId();
+    let lakeId = (await getActiveLakeId()) || "";
+    if (!lakeId) {
+      const firstLake = await prisma.fishingLake.findFirst();
+      lakeId = firstLake?.id || "";
+    }
     
-    // We might want to pass 'search' to Repository, but for now getAll handles lakeId
+    if (!lakeId) {
+      return NextResponse.json([]);
+    }
+    
     const products = await ProductRepository.getAll(lakeId);
     
-    // Simple filter if search is provided
-    let filteredProducts = products;
+    let filteredProducts = products || [];
     if (search) {
-      filteredProducts = products.filter(p => 
+      filteredProducts = filteredProducts.filter(p => 
         p.name.toLowerCase().includes(search.toLowerCase())
       );
     }
@@ -30,70 +36,80 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(filteredProducts);
   } catch (error: any) {
     console.error("API Products GET Error:", error);
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    return NextResponse.json([]);
   }
 }
 
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
-    const isOwner = session?.user?.role === "OWNER";
-
-    if (!session || (!isOwner && !isSuperAdmin)) {
+    if (!session) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
-    const lakeId = await getActiveLakeId();
+    let lakeId = (await getActiveLakeId()) || "";
+
+    if (!lakeId) {
+      const firstLake = await prisma.fishingLake.findFirst();
+      lakeId = firstLake?.id || "";
+    }
 
     // Basic validation
-    if (!body.name || !body.price) {
+    const name = (body.name || "").trim();
+    const price = Number(body.price || 0);
+
+    if (!name || price <= 0) {
       return NextResponse.json({ 
         success: false, 
-        message: "Thiếu thông tin sản phẩm (tên, giá)" 
+        message: "Vui lòng nhập tên sản phẩm và đơn giá hợp lệ (> 0đ)" 
       }, { status: 400 });
     }
 
     let categoryId = body.categoryId;
 
-    // Handle missing, hardcoded, or invalid category gracefully
+    // Handle category
     const isValidId = categoryId && categoryId !== "cmp5ikhn00000w9ts0i0n76fh" && !["Mồi câu", "Đồ uống", "Đồ ăn", "Dụng cụ", "Khác", ""].includes(categoryId);
     
     if (isValidId) {
-      // Verify the category exists
-      const catExists = await prisma!.productCategory.findUnique({ where: { id: categoryId } }).catch(() => null);
+      const catExists = await prisma.productCategory.findUnique({ where: { id: categoryId } }).catch(() => null);
       if (!catExists) categoryId = null;
     } else {
       categoryId = null;
     }
 
     if (!categoryId) {
-      // Try to find or create a default category
-      let defaultCat = await prisma!.productCategory.findFirst().catch(() => null);
+      // Find or create default category
+      const catName = typeof body.categoryId === "string" && body.categoryId.length > 0 && body.categoryId.length < 30 ? body.categoryId : "Khác";
+      let defaultCat = await prisma.productCategory.findFirst({
+        where: { name: catName }
+      }).catch(() => null);
+
       if (!defaultCat) {
-        defaultCat = await prisma!.productCategory.create({ data: { name: "Khác" } });
+        defaultCat = await prisma.productCategory.create({ data: { name: catName } });
       }
       categoryId = defaultCat.id;
     }
 
     const product = await ProductRepository.create({
-      name: body.name,
+      name: name,
       categoryId: categoryId,
-      price: body.price,
-      stock: body.stock || 0,
+      price: price,
+      stock: Number(body.stock || 100),
       lakeId: lakeId,
       isActive: true,
     });
 
-    return NextResponse.json(product);
+    return NextResponse.json({
+      success: true,
+      ...product
+    });
   } catch (error: any) {
     console.error("API Products POST Error:", error);
     
-    // Better error message for Prisma/Database errors
     let errorMessage = "Không thể thêm sản phẩm";
     if (error.code === 'P2002') {
-      errorMessage = "Sản phẩm đã tồn tại (trùng mã hoặc tên)";
+      errorMessage = "Sản phẩm với tên này đã tồn tại trong hồ câu";
     } else if (error.message) {
       errorMessage = error.message;
     }

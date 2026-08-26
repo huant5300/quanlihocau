@@ -1,12 +1,11 @@
 import { z } from "zod";
 
 export const openSessionSchema = z.object({
-  phone_number: z.string().optional().refine((val) => !val || val.length >= 10, {
-    message: "Số điện thoại không hợp lệ (ít nhất 10 số)",
-  }),
+  customer_id: z.string().optional(),
+  phone_number: z.string().optional(),
   customer_name: z.string().optional(),
-  hut_id: z.string().min(1, "Vui lòng chọn chòi"),
-  package_id: z.string().min(1, "Vui lòng chọn gói câu"),
+  hut_id: z.string().min(1, "Vui lòng chọn vị trí/chòi câu"),
+  package_id: z.string().min(1, "Vui lòng chọn gói thời gian câu"),
   products: z.array(z.object({
     id: z.string(),
     quantity: z.number().min(1),

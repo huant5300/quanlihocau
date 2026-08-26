@@ -7,25 +7,82 @@ import { checkResourceLimit } from "@/utils/saas-helpers";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
-export async function createCustomerAction(data: { fullName: string; phone: string; address?: string; notes?: string }) {
+export async function createCustomerAction(data: { fullName: string; phone?: string; address?: string; notes?: string }) {
   try {
-    const lakeId = await getActiveLakeId();
+    let lakeId = await getActiveLakeId();
     if (!lakeId) {
-      return { success: false, error: "Không tìm thấy hồ câu hoạt động" };
+      const firstLake = await prisma.fishingLake.findFirst();
+      lakeId = firstLake?.id || "";
     }
 
-    // Check SaaS Resource Limit
-    const limitCheck = await checkResourceLimit(lakeId, "customers");
-    if (!limitCheck.allowed) {
-      return { success: false, error: limitCheck.message };
+    if (lakeId) {
+      // Check SaaS Resource Limit
+      const limitCheck = await checkResourceLimit(lakeId, "customers");
+      if (!limitCheck.allowed) {
+        return { success: false, error: limitCheck.message };
+      }
     }
 
-    const customer = await CustomerRepository.create({ ...data, lakeId });
+    const fullName = (data.fullName || "Khách quen").trim();
+    let phone = (data.phone || "").trim();
+    if (!phone) {
+      phone = `KH_${Date.now().toString().slice(-8)}`;
+    }
+
+    // Kiểm tra xem số điện thoại đã tồn tại chưa
+    const existing = await prisma.customer.findUnique({
+      where: { phone: phone }
+    });
+
+    if (existing) {
+      const updated = await prisma.customer.update({
+        where: { id: existing.id },
+        data: {
+          fullName: fullName !== "Khách quen" ? fullName : existing.fullName,
+          address: data.address || existing.address,
+          notes: data.notes || existing.notes,
+          lakeId: lakeId || existing.lakeId,
+        }
+      });
+      revalidatePath("/dashboard/customers");
+      revalidatePath("/dashboard/crm");
+      return { 
+        success: true, 
+        data: {
+          ...updated,
+          totalSpent: Number(updated.totalSpent),
+          debtBalance: Number(updated.debtBalance)
+        }, 
+        alreadyExisted: true 
+      };
+    }
+
+    const customer = await prisma.customer.create({
+      data: {
+        fullName,
+        phone,
+        address: data.address || null,
+        notes: data.notes || null,
+        lakeId: lakeId || null,
+        visitCount: 0,
+        totalSpent: 0,
+        debtBalance: 0,
+      }
+    });
+
     revalidatePath("/dashboard/customers");
     revalidatePath("/dashboard/crm");
-    return { success: true, data: customer };
+    return { 
+      success: true, 
+      data: {
+        ...customer,
+        totalSpent: Number(customer.totalSpent),
+        debtBalance: Number(customer.debtBalance)
+      } 
+    };
   } catch (error: any) {
-    return { success: false, error: error.message };
+    console.error("createCustomerAction error:", error);
+    return { success: false, error: error.message || "Không thể tạo khách hàng" };
   }
 }
 
@@ -53,9 +110,20 @@ export async function deleteCustomerAction(id: string) {
 
 export async function getCustomersAction() {
   try {
-    const lakeId = await getActiveLakeId();
+    let lakeId = await getActiveLakeId();
+    if (!lakeId) {
+      const firstLake = await prisma.fishingLake.findFirst();
+      lakeId = firstLake?.id || "";
+    }
     const customers = await CustomerRepository.getAll(lakeId || "").catch(() => []);
-    return { success: true, data: customers || [] };
+    return { 
+      success: true, 
+      data: customers.map((c: any) => ({
+        ...c,
+        totalSpent: Number(c.totalSpent || 0),
+        debtBalance: Number(c.debtBalance || 0),
+      })) 
+    };
   } catch (error: any) {
     console.error("getCustomersAction error:", error);
     return { success: true, data: [] };

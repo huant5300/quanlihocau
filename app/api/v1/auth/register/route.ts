@@ -6,7 +6,16 @@ import { UserRole, AreaStatus } from "@prisma/client";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { name, email, password, phone } = body;
+    const { 
+      name, 
+      email, 
+      password, 
+      phone,
+      lakeName,
+      lakePhone,
+      lakeProvince,
+      lakeAddress
+    } = body;
 
     // Validation
     if (!password || password.length < 6) {
@@ -35,11 +44,12 @@ export async function POST(req: NextRequest) {
     }
 
     // Check for duplicate phone
-    if (phone) {
-      const existingByPhone = await prisma.user.findFirst({ where: { phone } });
+    const contactPhone = (phone || lakePhone || "").trim();
+    if (contactPhone) {
+      const existingByPhone = await prisma.user.findFirst({ where: { phone: contactPhone } });
       if (existingByPhone) {
         return NextResponse.json(
-          { error: "Số điện thoại này đã được đăng ký. Vui lòng đăng nhập." },
+          { error: `Số điện thoại ${contactPhone} này đã được đăng ký. Vui lòng đăng nhập.` },
           { status: 409 }
         );
       }
@@ -50,26 +60,39 @@ export async function POST(req: NextRequest) {
     trialExpiry.setDate(trialExpiry.getDate() + 5);
 
     const displayName = name?.trim() || "Chủ Hồ";
+    
+    // Tên hồ câu thực tế
+    const finalLakeName = (lakeName || "").trim() || `Hồ Câu ${displayName}`;
+    
+    // Địa chỉ hồ câu thực tế
+    let finalAddress = (lakeAddress || "").trim();
+    if (lakeProvince && !finalAddress.includes(lakeProvince)) {
+      finalAddress = finalAddress ? `${finalAddress}, ${lakeProvince}` : lakeProvince;
+    }
+    if (!finalAddress) finalAddress = "Chưa cập nhật";
+
+    // Số điện thoại hồ câu
+    const finalLakePhone = (lakePhone || contactPhone || "Chưa cập nhật").trim();
 
     // 1. Create user
     const user = await prisma.user.create({
       data: {
         name: displayName,
-        email: email || null,
-        phone: phone || null,
+        email: email ? email.trim().toLowerCase() : null,
+        phone: contactPhone || null,
         password: hashedPassword,
         role: UserRole.OWNER,
         isActive: true,
       },
     });
 
-    // 2. Create default lake with 5-day FREE trial
+    // 2. Create lake with 5-day FREE trial & real owner info
     const lake = await prisma.fishingLake.create({
       data: {
-        name: `Hồ Câu ${displayName}`,
+        name: finalLakeName,
         description: "Hồ câu dịch vụ chuyên nghiệp, thoáng mát và tiện nghi.",
-        address: "Chưa cập nhật",
-        phone: phone || email || "Chưa cập nhật",
+        address: finalAddress,
+        phone: finalLakePhone,
         managerId: user.id,
         totalSpots: 10,
         subscriptionPlan: "TRIAL",
@@ -86,7 +109,7 @@ export async function POST(req: NextRequest) {
 
     // 4. Create 5 default fishing areas (chòi)
     await prisma.fishingArea.createMany({
-      data: [1, 2, 3, 4, 5].map((n) => ({
+      data: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
         name: `Chòi ${n}`,
         lakeId: lake.id,
         status: AreaStatus.AVAILABLE,
@@ -103,19 +126,28 @@ export async function POST(req: NextRequest) {
         action: "REGISTER",
         details: {
           method: email ? "email" : "phone",
+          lakeName: finalLakeName,
+          lakePhone: finalLakePhone,
+          lakeAddress: finalAddress,
           trialDays: 5,
         },
       },
     });
 
     return NextResponse.json(
-      { success: true, userId: user.id, lakeId: lake.id },
+      { 
+        success: true, 
+        userId: user.id, 
+        lakeId: lake.id,
+        lakeName: finalLakeName,
+        lakePhone: finalLakePhone,
+        lakeAddress: finalAddress
+      },
       { status: 201 }
     );
   } catch (error: any) {
     console.error("[REGISTER ERROR]", error);
 
-    // Prisma unique constraint violation
     if (error?.code === "P2002") {
       const field = error?.meta?.target?.[0];
       if (field === "email") {

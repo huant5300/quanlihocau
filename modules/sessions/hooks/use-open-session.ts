@@ -24,6 +24,7 @@ export function useOpenSession() {
   const form = useForm<OpenSessionInput>({
     resolver: zodResolver(openSessionSchema),
     defaultValues: {
+      customer_id: "",
       phone_number: "",
       customer_name: "",
       hut_id: "",
@@ -55,9 +56,9 @@ export function useOpenSession() {
       return sessionService.createSession({
         areaId: data.hut_id,
         startTime: new Date().toISOString(),
-        customerId: undefined,
-        customer_name: data.customer_name,
-        phone: data.phone_number,
+        customerId: data.customer_id || undefined,
+        customer_name: data.customer_name || "Khách lẻ",
+        phone: data.phone_number || undefined,
         hourlyRate: Number(selectedPkg.price) / durationHours,
         packageId: data.package_id,
         prepaidAmount: data.prepaid_amount,
@@ -88,7 +89,6 @@ export function useOpenSession() {
         status: "ACTIVE",
         FishingPackage: selectedPkg,
         sessionAmount: newSessionData.prepaid_amount,
-        // Mock nested relations so UI doesn't crash
         area: { id: newSessionData.hut_id, name: "Vị trí đang mở..." },
         invoices: [],
         fishCatches: []
@@ -121,7 +121,7 @@ export function useOpenSession() {
         printerService.printBill({
           sessionId: result.id,
           hutNumber: result.area?.name || "N/A",
-          customerName: result.customer?.fullName || "Khách lẻ",
+          customerName: result.customer?.fullName || variables.customer_name || "Khách lẻ",
           sessionFee: Number(selectedPkg?.price || 0),
           products: variables.products.map(p => ({
             name: p.name,

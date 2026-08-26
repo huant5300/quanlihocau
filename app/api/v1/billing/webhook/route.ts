@@ -3,16 +3,16 @@ import prisma from "@/lib/prisma";
 
 /**
  * Webhook tự động nhận thông báo biến động số dư ngân hàng (SePay / Casso / Bank IPN)
- * Khi khách chuyển khoản:
- * - 99.000đ (hoặc cú pháp HOCAU <MÃ HỒ> SILVER) -> Tự động kích hoạt GÓI BẠC (+30 ngày)
- * - 199.000đ (hoặc cú pháp HOCAU <MÃ HỒ> GOLD) -> Tự động kích hoạt GÓI VÀNG (+30 ngày, tối đa 5 hồ)
+ * Khi khách chuyển khoản qua VietQR:
+ * - Cú pháp: HOCAU <MÃ_HỒ> <GÓI> (VD: HOCAU 1A2B3C SILVER hoặc HOCAU 1A2B3C GOLD)
+ * - Tự động kích hoạt gói cước ngay lập tức 24/7 và cập nhật Database Realtime.
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     console.log("[BANK_WEBHOOK_RECEIVED]", JSON.stringify(body));
 
-    // Hỗ trợ cấu trúc đa dạng của SePay, Casso, PayOS, Napas IPN
+    // Hỗ trợ cấu trúc đa dạng của SePay, Casso, PayOS, Napas, MB, Vietin, BIDV IPN
     const amount = Number(
       body.transferAmount ||
       body.amount ||
@@ -30,31 +30,65 @@ export async function POST(req: NextRequest) {
       ""
     ).toUpperCase();
 
-    // 1. Phân tích nội dung chuyển khoản tìm mã hồ câu (Ví dụ: "HOCAU A1B2C3 SILVER" hoặc "HOCAU A1B2C3")
-    const match = description.match(/HOCAU\s*([A-Z0-9]+)/i);
-    const lakeCode = match ? match[1].trim() : null;
+    // 1. Phân tích nội dung chuyển khoản
+    // Tìm cú pháp: HOCAU <MÃ_HỒ> hoặc FISHING_SAAS_SUB_<ORDER_ID>
+    const hocauMatch = description.match(/HOCAU\s*([A-Z0-9]+)/i);
+    const lakeCode = hocauMatch ? hocauMatch[1].trim().toUpperCase() : null;
 
-    // 2. Xác định gói cước cần kích hoạt
-    let targetPlan: "SILVER" | "GOLD" | null = null;
+    const orderMatch = description.match(/FISHING_SAAS_SUB_([A-Z0-9]+)/i);
+    const orderIdCode = orderMatch ? orderMatch[1].trim() : null;
+
+    // 2. Xác định gói cước và số tháng dựa trên số tiền hoặc nội dung
+    let targetPlan: "SILVER" | "GOLD" = "SILVER";
+    let durationMonths = 1;
+    let bonusMonths = 0;
+
     if (description.includes("GOLD") || amount >= 199000) {
       targetPlan = "GOLD";
-    } else if (description.includes("SILVER") || amount >= 99000) {
+      if (amount >= 2388000) {
+        durationMonths = 12;
+        bonusMonths = 3; // 15 tháng
+      } else if (amount >= 1194000) {
+        durationMonths = 6;
+        bonusMonths = 1; // 7 tháng
+      } else {
+        durationMonths = 1;
+        bonusMonths = 0;
+      }
+    } else {
       targetPlan = "SILVER";
+      if (amount >= 1188000) {
+        durationMonths = 12;
+        bonusMonths = 3; // 15 tháng
+      } else if (amount >= 594000) {
+        durationMonths = 6;
+        bonusMonths = 1; // 7 tháng
+      } else {
+        durationMonths = 1;
+        bonusMonths = 0;
+      }
     }
 
-    if (!targetPlan) {
-      return NextResponse.json({ 
-        success: false, 
-        message: "Số tiền hoặc nội dung không khớp gói cước (99k hoặc 199k)" 
-      }, { status: 200 });
-    }
+    const totalActiveMonths = durationMonths + bonusMonths;
 
-    // 3. Tìm hồ câu trong database
+    // 3. Tìm hồ câu và đơn hàng trong database
     let targetLake = null;
-    if (lakeCode) {
+    let targetOrder = null;
+
+    if (orderIdCode) {
+      targetOrder = await prisma.subscriptionOrder.findFirst({
+        where: { id: { contains: orderIdCode } },
+        include: { lake: true },
+      });
+      if (targetOrder?.lake) {
+        targetLake = targetOrder.lake;
+      }
+    }
+
+    if (!targetLake && lakeCode) {
       // Tìm theo đuôi ID (6 ký tự) hoặc ID đầy đủ
       const allLakes = await prisma.fishingLake.findMany({
-        select: { id: true, name: true, managerId: true, subscriptionExpiresAt: true }
+        select: { id: true, name: true, managerId: true, subscriptionExpiresAt: true },
       });
       targetLake = allLakes.find(l => 
         l.id.toUpperCase() === lakeCode || 
@@ -62,10 +96,10 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Nếu không tìm thấy bằng code, thử tìm theo description chứa id
+    // Nếu vẫn chưa tìm thấy, tìm trong description xem có chứa lake ID không
     if (!targetLake) {
       const allLakes = await prisma.fishingLake.findMany({
-        select: { id: true, name: true, managerId: true, subscriptionExpiresAt: true }
+        select: { id: true, name: true, managerId: true, subscriptionExpiresAt: true },
       });
       targetLake = allLakes.find(l => description.includes(l.id.slice(-6).toUpperCase()));
     }
@@ -74,60 +108,82 @@ export async function POST(req: NextRequest) {
       console.warn(`[BANK_WEBHOOK] Không tìm thấy hồ câu khớp với mã: ${lakeCode || description}`);
       return NextResponse.json({ 
         success: true, 
-        message: "Đã nhận webhook nhưng không tìm thấy hồ câu tương ứng để tự động gán." 
+        message: "Webhook đã nhận nhưng không tìm thấy hồ câu tương ứng." 
       });
     }
 
-    // 4. Tính toán thời hạn gia hạn (+30 ngày)
+    // 4. Tính toán thời hạn gia hạn (+ totalActiveMonths)
     const now = new Date();
     let newExpiresAt = new Date();
 
     if (targetLake.subscriptionExpiresAt && new Date(targetLake.subscriptionExpiresAt) > now) {
-      // Nếu gói vẫn còn hạn, cộng dồn tiếp 30 ngày từ ngày hết hạn hiện tại
+      // Nếu gói vẫn còn hạn, cộng dồn tiếp
       newExpiresAt = new Date(targetLake.subscriptionExpiresAt);
-      newExpiresAt.setDate(newExpiresAt.getDate() + 30);
+      newExpiresAt.setMonth(newExpiresAt.getMonth() + totalActiveMonths);
     } else {
-      // Nếu đã hết hạn hoặc đang dùng thử, tính 30 ngày từ thời điểm hiện tại
-      newExpiresAt.setDate(now.getDate() + 30);
+      // Nếu đã hết hạn hoặc dùng thử, tính từ hôm nay
+      newExpiresAt.setMonth(now.getMonth() + totalActiveMonths);
     }
 
-    // 5. Cập nhật hồ câu
-    const updatedLake = await prisma.fishingLake.update({
-      where: { id: targetLake.id },
-      data: {
-        subscriptionPlan: targetPlan,
-        subscriptionStatus: "ACTIVE",
-        subscriptionExpiresAt: newExpiresAt,
-      },
-    });
-
-    // 6. Ghi nhận nhật ký hoạt động
-    if (targetLake.managerId) {
-      await prisma.activityLog.create({
+    // 5. Cập nhật database trong Transaction
+    const updatedLake = await prisma.$transaction(async (tx) => {
+      const lake = await tx.fishingLake.update({
+        where: { id: targetLake.id },
         data: {
-          userId: targetLake.managerId,
+          subscriptionPlan: targetPlan,
+          subscriptionStatus: "ACTIVE",
+          subscriptionExpiresAt: newExpiresAt,
+        },
+      });
+
+      if (targetOrder) {
+        await tx.subscriptionOrder.update({
+          where: { id: targetOrder.id },
+          data: { status: "APPROVED" },
+        });
+      } else {
+        await tx.subscriptionOrder.create({
+          data: {
+            lakeId: targetLake.id,
+            plan: targetPlan,
+            durationMonths: durationMonths,
+            amount: amount || (targetPlan === "GOLD" ? 199000 : 99000),
+            status: "APPROVED",
+            paymentMethod: "AUTO_BANK_WEBHOOK",
+            notes: `Tự động duyệt qua Webhook ngân hàng: ${description}`,
+          },
+        });
+      }
+
+      await tx.activityLog.create({
+        data: {
+          userId: targetLake.managerId || "SYSTEM",
           lakeId: targetLake.id,
-          action: "PAYMENT_UPGRADE",
+          action: "AUTO_PAYMENT_UPGRADE",
           details: {
             plan: targetPlan,
             amount: amount,
-            durationDays: 30,
+            durationMonths: durationMonths,
+            bonusMonths: bonusMonths,
+            totalMonths: totalActiveMonths,
             expiresAt: newExpiresAt.toISOString(),
             method: "AUTO_BANK_TRANSFER",
             description: description,
           },
         },
       });
-    }
 
-    console.log(`[BANK_WEBHOOK SUCCESS] Đã tự động kích hoạt gói ${targetPlan} cho hồ: ${targetLake.name} (${targetLake.id}) đến ngày ${newExpiresAt.toLocaleDateString("vi-VN")}`);
+      return lake;
+    });
+
+    console.log(`[BANK_WEBHOOK SUCCESS] Đã tự động kích hoạt thành công gói ${targetPlan} (+${totalActiveMonths} tháng) cho hồ: ${targetLake.name} (${targetLake.id}) đến ngày ${newExpiresAt.toLocaleDateString("vi-VN")}`);
 
     return NextResponse.json({
       success: true,
-      message: `Tự động kích hoạt thành công gói ${targetPlan}`,
+      message: `Tự động kích hoạt thành công gói ${targetPlan} (+${totalActiveMonths} tháng)`,
       lakeId: updatedLake.id,
       plan: targetPlan,
-      expiresAt: newExpiresAt,
+      expiresAt: newExpiresAt.toISOString(),
     });
 
   } catch (error: any) {

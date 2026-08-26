@@ -10,18 +10,18 @@ export default async function CRMPage() {
   const customers = result.success ? result.data || [] : [];
 
   const totalCustomers = customers.length;
-  const vipCustomers = customers.filter((c: any) => c.visitCount > 10).length;
+  const vipCustomers = customers.filter((c: any) => (c.visitCount || 0) > 10).length;
   const totalDebt = customers.reduce((sum: number, c: any) => sum + Number(c.debtBalance || 0), 0);
   
   return (
-    <div className="space-y-10">
+    <div className="space-y-8 select-none">
       <DashboardHeader 
         title="Quản lý Hội viên" 
         subtitle="Chăm sóc và theo dõi lịch sử khách hàng tại hồ câu."
         actions={<CustomerModal />}
       />
 
-      <div className="space-y-10">
+      <div className="space-y-8">
         {/* CRM Overview Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="glass-card p-6 rounded-[2rem] flex items-center gap-4">

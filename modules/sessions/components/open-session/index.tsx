@@ -107,6 +107,7 @@ export function OpenSessionModal({ isOpen, onClose }: OpenSessionModalProps) {
                   name={form.watch("customer_name") || ""}
                   onPhoneChange={(val) => form.setValue("phone_number", val)}
                   onNameChange={(val) => form.setValue("customer_name", val)}
+                  onCustomerSelect={(id) => form.setValue("customer_id", id)}
                 />
               </div>
 

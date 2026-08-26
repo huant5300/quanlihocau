@@ -426,3 +426,26 @@ export async function updateLakeDetails(data: { name: string; address: string; p
     return { success: false, error: error.message || "Failed to update lake details" };
   }
 }
+
+export async function toggleUserStatus(userId: string, isActive: boolean) {
+  const session = await auth();
+  if (!session?.user) return { success: false, error: "Unauthorized" };
+  
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN || session.user.email === "huant5300@gmail.com";
+  if (!isSuperAdmin) {
+    return { success: false, error: "Bạn không có quyền thực hiện hành động này" };
+  }
+
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: { isActive },
+      select: { id: true, name: true, email: true, phone: true, isActive: true }
+    });
+
+    return { success: true, data: updatedUser };
+  } catch (error: any) {
+    console.error("Error toggling user status:", error);
+    return { success: false, error: error.message || "Failed to update user status" };
+  }
+}

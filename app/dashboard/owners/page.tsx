@@ -608,6 +608,26 @@ function OwnerDetailModal({ owner, onClose, onRefreshOwners }: OwnerDetailModalP
                 <span className="text-[9px] font-black uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20">
                   CHỦ HỒ
                 </span>
+                
+                <button
+                  onClick={async () => {
+                    if (!confirm(`Bạn có chắc muốn ${owner.isActive ? 'khóa' : 'mở khóa'} tài khoản này?`)) return;
+                    const { toggleUserStatus } = await import("@/actions/lake-actions");
+                    const res = await toggleUserStatus(owner.id, !owner.isActive);
+                    if (res.success) {
+                      toast.success(`Đã ${owner.isActive ? 'khóa' : 'mở khóa'} tài khoản thành công!`);
+                      onRefreshOwners();
+                    } else {
+                      toast.error(res.error || "Có lỗi xảy ra");
+                    }
+                  }}
+                  className={cn(
+                    "ml-2 px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all",
+                    owner.isActive ? "bg-red-500 hover:bg-red-600 text-white" : "bg-green-500 hover:bg-green-600 text-white"
+                  )}
+                >
+                  {owner.isActive ? "Khóa TK" : "Mở Khóa TK"}
+                </button>
               </div>
               <div className="flex flex-col md:flex-row gap-x-6 gap-y-1.5 text-xs text-muted-foreground font-bold">
                 <span className="flex items-center gap-1.5">

@@ -205,7 +205,7 @@ export function Sidebar() {
 
           if (!hasChildren) {
             return (
-              <Link key={item.id} href={item.href || "#"}>
+              <Link key={item.id} href={item.href || "#"} id={item.id === "home" ? "tour-sidebar-dashboard" : item.id === "settings" ? "tour-sidebar-settings" : undefined}>
                 <div
                   className={cn(
                     "flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all group active:scale-[0.98]",
@@ -233,6 +233,7 @@ export function Sidebar() {
               <button
                 type="button"
                 onClick={() => toggleGroup(item.id)}
+                id={item.id === "sessions" ? "tour-sidebar-sessions" : undefined}
                 className={cn(
                   "w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl transition-all text-left group active:scale-[0.98]",
                   isParentActive && !isGroupOpen
@@ -264,6 +265,7 @@ export function Sidebar() {
                         return (
                           <button
                             key={idx}
+                            id="tour-sidebar-create-ticket"
                             onClick={() => setOpenSessionModalOpen(true)}
                             className="w-full text-left py-2 px-3 rounded-lg text-[11px] font-medium text-emerald-600 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 flex items-center gap-2 transition-colors active:scale-[0.98]"
                           >

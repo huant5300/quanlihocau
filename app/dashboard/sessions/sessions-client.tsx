@@ -187,7 +187,7 @@ export function SessionsClient({ initialSessions }: SessionsClientProps) {
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
               <AnimatePresence mode="popLayout">
                 {filteredSessions.map((session: any) => (
-                  <SessionRow key={session.id} session={session} />
+                  <SessionCard key={session.id} session={session} />
                 ))}
               </AnimatePresence>
             </div>

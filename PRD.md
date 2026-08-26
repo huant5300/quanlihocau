@@ -43,7 +43,7 @@ Hệ thống sử dụng NextAuth.js với 3 phương thức đăng nhập:
 2. **Đăng nhập Zalo (OAuth Zalo):** Hỗ trợ đăng ký/đăng nhập nhanh bằng tài khoản Zalo.
 3. **Đăng nhập thông thường (Credentials):** Đăng nhập bằng Email và Mật khẩu (được mã hóa mật khẩu bằng bcrypt).
 
-# 2. 🧩 Cấu trúc hệ thống (Modules)
+## 2. 🧩 Cấu trúc hệ thống (Modules)
 
 ## 2.1 Header toàn hệ thống
 
@@ -68,7 +68,7 @@ Luôn hiển thị:
 - Cài đặt hồ
 - Billing (SaaS)
 
-# 3. 🎣 MODULE CORE: QUẢN LÝ VÉ CÂU
+## 3. 🎣 MODULE CORE: QUẢN LÝ VÉ CÂU
 
 ## 3.1 Trang: TẠO VÉ CÂU
 
@@ -141,7 +141,7 @@ Hệ thống sẽ:
 - In bill
 - Lưu lịch sử
 
-# 4. 📦 MODULE SẢN PHẨM
+## 4. 📦 MODULE SẢN PHẨM
 
 Chức năng:
 
@@ -150,7 +150,7 @@ Chức năng:
 - Danh mục
 - Tồn kho (tùy chọn)
 
-# 5. 🐟 MODULE CÁ
+## 5. 🐟 MODULE CÁ
 
 Chức năng:
 
@@ -158,7 +158,7 @@ Chức năng:
 - Giá thu lại / kg
 - Lịch sử nhập cá
 
-# 6. 👥 MODULE KHÁCH HÀNG
+## 6. 👥 MODULE KHÁCH HÀNG
 
 Lưu trữ:
 
@@ -166,14 +166,14 @@ Lưu trữ:
 - Lịch sử câu
 - Tổng chi tiêu
 
-# 7. 👨‍💼 MODULE NHÂN VIÊN
+## 7. 👨‍💼 MODULE NHÂN VIÊN
 
 Chức năng:
 
 - Tạo tài khoản
 - Phân quyền (Admin hồ, Nhân viên, Thu ngân)
 
-# 8. 📊 MODULE BÁO CÁO
+## 8. 📊 MODULE BÁO CÁO
 
 Dashboard gồm:
 
@@ -182,39 +182,45 @@ Dashboard gồm:
 - Cá thu lại
 - Top sản phẩm
 
-# 9. ⚙️ MODULE CÀI ĐẶT HỒ (LAKE SETTINGS) & ONBOARDING GATEKEEPER
+## 9. ⚙️ MODULE CÀI ĐẶT HỒ (LAKE SETTINGS) & ONBOARDING GATEKEEPER
 
 Cấu hình riêng từng hồ và cơ chế kích hoạt tài khoản sử dụng app:
 
-### 9.1 Thông tin Hồ câu Bắt buộc (Mandatory Lake Info):
+### 9.1 Thông tin Hồ câu Bắt buộc (Mandatory Lake Info)
+
 - **Ghi chú bắt buộc:** Tất cả các trường quan trọng đều được đánh dấu sao đỏ (**`*`**) và thông báo trực quan trên giao diện:
   1. **Tên Hồ câu (`*`):** Tên thương hiệu của hồ câu (Tối thiểu 2 ký tự).
   2. **Số điện thoại liên hệ (`*`):** Số điện thoại quản lý/chủ hồ (10 chữ số chuẩn di động Việt Nam: `03`, `05`, `07`, `08`, `09`).
   3. **Địa chỉ hồ câu (`*`):** Địa chỉ chi tiết nơi đặt hồ câu (Tối thiểu 5 ký tự).
   4. **Lời chào chân hóa đơn:** Lời nhắn in ở cuối bill nhiệt gửi khách hàng.
 
-### 9.2 Ràng buộc Số điện thoại Duy nhất (1 Tài khoản / 1 Hồ = 1 SĐT):
+### 9.2 Ràng buộc Số điện thoại Duy nhất (1 Tài khoản / 1 Hồ = 1 SĐT)
+
 - Mỗi hồ câu/tài khoản chủ hồ chỉ được đăng ký duy nhất một số điện thoại trên toàn hệ thống SaaS.
 - Hệ thống thực hiện kiểm tra `unique` tại cả tầng API route và Server Action. Nếu phát hiện số điện thoại đã tồn tại ở hồ khác, hệ thống sẽ từ chối lưu và hiển thị thông báo lỗi rõ ràng.
 
-### 9.3 Cơ chế Duyệt & Chặn sử dụng nếu thiếu thông tin (Onboarding Gatekeeper):
+### 9.3 Cơ chế Duyệt & Chặn sử dụng nếu thiếu thông tin (Onboarding Gatekeeper)
+
 - Nếu chủ hồ mới tạo tài khoản hoặc chưa điền đầy đủ các trường thông tin bắt buộc nêu trên (hoặc còn mang giá trị mặc định *"Chưa cập nhật"*), hệ thống sẽ bật modal **Onboarding Wizard** toàn màn hình.
 - Người dùng **bắt buộc phải điền đầy đủ Tên hồ, Địa chỉ và SĐT hợp lệ** mới được hệ thống phê duyệt mở khóa các chức năng vận hành (Tạo vé, quản lý ca câu, in hóa đơn...).
 
-### 9.4 Cấu hình Tài khoản Nhận tiền VietQR (Mã QR Thanh toán Tự động):
+### 9.4 Cấu hình Tài khoản Nhận tiền VietQR (Mã QR Thanh toán Tự động)
+
 - **Ngân hàng nhận tiền:** Tự động ánh xạ mã BIN ngân hàng chuẩn NAPAS.
 - **Số tài khoản & Tên chủ tài khoản:** Dùng để tự động tạo mã VietQR động/tĩnh trên màn hình thu ngân và in trực tiếp mã QR trên bill nhiệt cho khách quét chuyển khoản.
 
-### 9.5 Cấu hình Gói câu, Chòi/Vị trí & Nhân sự:
+### 9.5 Cấu hình Gói câu, Chòi/Vị trí & Nhân sự
+
 - Quản lý các gói ca câu định sẵn (ca 5h, ca 10h, tính theo giờ).
 - Quản lý danh sách ô câu/chòi và giá niêm yết.
 - Quản lý tài khoản nhân viên vận hành và thu ngân.
 
-# 10. 💳 MODULE BILLING (GÓI DỊCH VỤ SAAS)
+## 10. 💳 MODULE BILLING (GÓI DỊCH VỤ SAAS)
 
 Hệ thống cung cấp 2 gói cước thương mại hóa tối ưu cho ngành hồ câu:
 
 ### 10.1 Gói Cơ Bản - BASIC: `99.000đ / tháng`
+
 - **Hạn ngạch:** **1 Hồ câu độc quyền**, **Tối đa 2 Nhân viên / Thu ngân**.
 - **Tính năng:** **FULL TOÀN BỘ TÍNH NĂNG NGHIỆP VỤ HỒ CÂU:**
   - Tạo vé câu / Check-in phân bước siêu tốc & chọn sản phẩm ngay tại bước 1.
@@ -232,6 +238,7 @@ Hệ thống cung cấp 2 gói cước thương mại hóa tối ưu cho ngành 
   - Chế độ hoạt động Offline khi mất kết nối mạng (Dexie.js).
 
 ### 10.2 Gói Chuyên Nghiệp (Chuỗi Hồ) - PREMIUM: `199.000đ / tháng`
+
 - **Hạn ngạch:** **Quản lý lên đến 5 Hồ câu độc lập**, **Tối đa 10 Nhân viên / Thu ngân**.
 - **Tính năng:** **FULL TÍNH NĂNG NHƯ BASIC** + **QUẢN LÝ CHUỖI ĐA HỒ:**
   - Quản lý tập trung chuỗi 5 hồ câu trên cùng 1 tài khoản chủ hồ.
@@ -241,7 +248,8 @@ Hệ thống cung cấp 2 gói cước thương mại hóa tối ưu cho ngành 
   - Không giới hạn số lượng khách hàng lưu trữ.
   - Ưu tiên cập nhật tính năng mới & Hỗ trợ kỹ thuật 24/7.
 
-### 10.3 Chính Sách Khuyến Mãi Có Hạn (Limited-Time Offer - Tặng Thêm Tháng):
+### 10.3 Chính Sách Khuyến Mãi Có Hạn (Limited-Time Offer - Tặng Thêm Tháng)
+
 - **Đăng ký 1 Năm (12 Tháng):** **TẶNG NGAY 3 THÁNG MIỄN PHÍ** $\rightarrow$ **Tổng nhận 15 Tháng sử dụng**:
   - Gói Basic: `1.188.000đ` (Tương đương chỉ **~79.200đ / tháng**).
   - Gói Premium: `2.388.000đ` (Tương đương chỉ **~159.200đ / tháng**).
@@ -251,7 +259,7 @@ Hệ thống cung cấp 2 gói cước thương mại hóa tối ưu cho ngành 
 - **Tự động kích hoạt:** Hệ thống Super Admin khi phê duyệt đơn hàng 12 tháng hoặc 6 tháng sẽ tự động cộng dồn đúng số tháng quà tặng vào thời hạn sử dụng của hồ câu (`expiresAtNew = baseDate + durationMonths + bonusMonths`).
 - Tích hợp quét mã chuyển khoản VietQR tự động khớp tiền và nội dung thanh toán.
 
-# 11 🔐 PHÂN QUYỀN
+## 11 🔐 PHÂN QUYỀN
 
 Hệ thống phân chia 4 vai trò rõ rệt:
 
@@ -260,7 +268,7 @@ Hệ thống phân chia 4 vai trò rõ rệt:
 - **STAFF (Nhân viên):** Có quyền tạo vé, thao tác phiên câu, thêm dịch vụ.
 - **CASHIER (Thu ngân):** Thực hiện tính tiền, thu cá, in hóa đơn và bàn giao ca.
 
-# 12 🗄️ DATA MODEL (Cơ sở dữ liệu Prisma)
+## 12 🗄️ DATA MODEL (Cơ sở dữ liệu Prisma)
 
 Hệ thống sử dụng các Model dữ liệu chuẩn hóa sau:
 
@@ -281,7 +289,7 @@ Hệ thống sử dụng các Model dữ liệu chuẩn hóa sau:
 - **Transaction:** Nhật ký dòng tiền (Thu/Chi) để phục vụ báo cáo tài chính.
 - **FishStock:** Theo dõi lượng cá tồn kho dưới lòng hồ (thả thêm cá, cá chết, cá bị câu).
 
-# 13 🔥 YÊU CẦU KỸ THUẬT
+## 13 🔥 YÊU CẦU KỸ THUẬT
 
 - **Realtime Countdown:** Đồng hồ đếm ngược thời gian ca câu chạy realtime trên giao diện.
 - **SOS Warning:** Tự động highlight đỏ nhấp nháy hào quang và phát âm thanh (Web Audio API) khi ca câu còn dưới 15 phút.
@@ -290,13 +298,13 @@ Hệ thống sử dụng các Model dữ liệu chuẩn hóa sau:
 - **Thermal Printer Integration:** Hỗ trợ in hóa đơn nhiệt khổ 58mm (PT-210) qua giao thức Web Bluetooth API (ESC/POS) trực tiếp từ trình duyệt di động/máy tính mà không cần cài đặt driver.
 - **Responsive Design:** Giao diện tối ưu hoàn hảo cho cả thiết bị di động (nhân viên dùng tại lòng hồ) và máy tính để bàn (thu ngân dùng tại quầy).
 
-# 14 🚀 ROADMAP
+## 14 🚀 ROADMAP
 
 - **Phase 1 (MVP):** Vé câu, Đang câu, Kết thúc, Sản phẩm cơ bản.
 - **Phase 2:** Báo cáo, Cá, CRM.
 - **Phase 3:** SaaS, Thanh toán, Multi-tenant full.
 
-# 15 🔥 ƯU ĐIỂM VƯỢT TRỘI PHỤC VỤ THƯƠNG MẠI HÓA (SAAS)
+## 15 🔥 ƯU ĐIỂM VƯỢT TRỘI PHỤC VỤ THƯƠNG MẠI HÓA (SAAS)
 
 Hệ thống được thiết kế đặc thù để thương mại hóa (bán cho các chủ hồ câu) nhờ sở hữu các ưu thế cạnh tranh vượt trội mà các phần mềm POS thông thường không có:
 

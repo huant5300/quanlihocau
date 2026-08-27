@@ -275,6 +275,21 @@ export async function payInvoiceDebtAction(data: {
           },
         },
       });
+
+      // 6. Ghi AuditLog kiểm toán đối soát công nợ
+      await tx.auditLog.create({
+        data: {
+          userId: authResult.user.userId,
+          lakeId: invoice.lakeId,
+          action: "DEBT_ADJUSTMENT",
+          details: {
+            invoiceId: invoice.id,
+            customerId: invoice.customerId,
+            amount: data.amount,
+            note: data.note || "Thu nợ công nợ",
+          },
+        },
+      });
     });
 
     revalidatePath("/dashboard/invoices");

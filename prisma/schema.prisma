@@ -24,6 +24,7 @@ model User {
   deletedAt     DateTime?
   accounts      Account[]
   activityLogs  ActivityLog[]
+  auditLogs     AuditLog[]
   attendances   Attendance[]
   managedLake   FishingLake[]  @relation("LakeManager")
   lake          FishingLake?   @relation("LakeUsers", fields: [lakeId], references: [id])
@@ -123,6 +124,7 @@ model FishingLake {
   expenses           Expense[]
   transactions       Transaction[]
   activityLogs       ActivityLog[]
+  auditLogs          AuditLog[]
   fishStocks         FishStock[]
   shiftSessions      ShiftSession[]
   shiftCloses        ShiftClose[]
@@ -405,6 +407,20 @@ model ActivityLog {
   deletedAt  DateTime?
   user       User         @relation(fields: [userId], references: [id])
   lake       FishingLake? @relation(fields: [lakeId], references: [id])
+}
+
+model AuditLog {
+  id        String       @id @default(cuid())
+  userId    String
+  lakeId    String?
+  action    String       // SESSION_CANCEL, PRICE_OVERRIDE, DEBT_ADJUSTMENT, DELETE_DATA
+  details   Json?
+  createdAt DateTime     @default(now())
+  user      User         @relation(fields: [userId], references: [id])
+  lake      FishingLake? @relation(fields: [lakeId], references: [id])
+
+  @@index([lakeId])
+  @@index([userId])
 }
 
 model Settings {

@@ -117,3 +117,102 @@ export async function completeFishingAction(sessionId: string) {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * Hủy ca câu (Critical Action -> Log vào AuditLog)
+ */
+export async function cancelFishingAction(sessionId: string, reason: string) {
+  try {
+    const session_auth = await auth();
+    if (!session_auth?.user?.id) return { success: false, error: "Unauthorized" };
+
+    const session = await prisma.fishingSession.findUnique({
+      where: { id: sessionId },
+      include: { area: true },
+    });
+
+    if (!session) return { success: false, error: "Không tìm thấy ca câu" };
+
+    const updated = await prisma.fishingSession.update({
+      where: { id: sessionId },
+      data: {
+        status: "CANCELLED",
+        endTime: new Date(),
+      },
+    });
+
+    // Giải phóng ô câu
+    await prisma.fishingArea.update({
+      where: { id: session.areaId },
+      data: { status: "AVAILABLE" },
+    });
+
+    // Ghi Audit Trail
+    const { logAuditTrail } = await import("@/lib/audit-trail");
+    await logAuditTrail({
+      userId: session_auth.user.id,
+      lakeId: session.lakeId,
+      action: "SESSION_CANCEL",
+      details: {
+        sessionId: session.id,
+        areaName: session.area?.name,
+        reason,
+      },
+    });
+
+    revalidatePath("/dashboard/sessions");
+    revalidatePath("/dashboard");
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Error in cancelFishingAction:", error);
+    return { success: false, error: error.message || "Lỗi khi hủy ca câu" };
+  }
+}
+
+/**
+ * Điều chỉnh đơn giá / Miễn giảm giờ câu (Critical Action -> Log vào AuditLog)
+ */
+export async function overrideSessionPriceAction(sessionId: string, newHourlyRate: number, reason: string) {
+  try {
+    const session_auth = await auth();
+    if (!session_auth?.user?.id) return { success: false, error: "Unauthorized" };
+
+    const session = await prisma.fishingSession.findUnique({
+      where: { id: sessionId },
+      include: { area: true },
+    });
+
+    if (!session) return { success: false, error: "Không tìm thấy ca câu" };
+
+    const oldHourlyRate = Number(session.hourlyRate);
+
+    const updated = await prisma.fishingSession.update({
+      where: { id: sessionId },
+      data: {
+        hourlyRate: newHourlyRate,
+      },
+    });
+
+    // Ghi Audit Trail
+    const { logAuditTrail } = await import("@/lib/audit-trail");
+    await logAuditTrail({
+      userId: session_auth.user.id,
+      lakeId: session.lakeId,
+      action: "PRICE_OVERRIDE",
+      details: {
+        sessionId: session.id,
+        areaName: session.area?.name,
+        oldHourlyRate,
+        newHourlyRate,
+        reason,
+      },
+    });
+
+    revalidatePath("/dashboard/sessions");
+    return { success: true, data: updated };
+  } catch (error: any) {
+    console.error("Error in overrideSessionPriceAction:", error);
+    return { success: false, error: error.message || "Lỗi khi điều chỉnh giá ca câu" };
+  }
+}
+

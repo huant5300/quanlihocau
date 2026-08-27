@@ -56,7 +56,14 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
     const diff = end - now;
 
     if (diff <= 0) {
-      setTimeLeft("00:00:00");
+      const overdueMs = Math.abs(diff);
+      const oHours = Math.floor(overdueMs / (1000 * 60 * 60));
+      const oMinutes = Math.floor((overdueMs % (1000 * 60 * 60)) / (1000 * 60));
+      const oSeconds = Math.floor((overdueMs % (1000 * 60)) / 1000);
+
+      setTimeLeft(
+        `+${oHours.toString().padStart(2, "0")}:${oMinutes.toString().padStart(2, "0")}:${oSeconds.toString().padStart(2, "0")}`
+      );
       setTimerColor("red");
       if (!hasExpiredRef.current) {
         hasExpiredRef.current = true;

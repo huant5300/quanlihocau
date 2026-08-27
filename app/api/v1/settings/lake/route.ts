@@ -247,7 +247,22 @@ export async function PATCH(req: NextRequest) {
       bankBin: targetLake.bankBin || "",
     });
   } catch (error: any) {
-    console.error("Update Lake Settings Error:", error);
-    return NextResponse.json({ success: false, message: error.message || "Lỗi cập nhật hồ câu" }, { status: 500 });
+    console.error("[Update Lake Settings Error Details]:", {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+      stack: error.stack,
+    });
+
+    let friendlyMessage = "Lỗi khi lưu thông tin hồ câu. Vui lòng thử lại.";
+    if (error.code === "P2002") {
+      friendlyMessage = "Số điện thoại này đã được đăng ký bởi một hồ câu khác!";
+    } else if (error.code === "P1001" || error.code === "P1017") {
+      friendlyMessage = "Mất kết nối đến cơ sở dữ liệu. Vui lòng thử lại sau giây lát.";
+    } else if (error.message) {
+      friendlyMessage = error.message;
+    }
+
+    return NextResponse.json({ success: false, message: friendlyMessage }, { status: 400 });
   }
 }

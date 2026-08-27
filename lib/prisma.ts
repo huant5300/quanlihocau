@@ -1,11 +1,19 @@
-import { Pool } from "pg";
+import { Pool, PoolConfig } from "pg";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 const isTransientConnectionError = (error: any): boolean => {
   if (!error) return false;
-  const msg = String(error?.message || error || "").toLowerCase();
-  const code = String(error?.code || "");
+  const msg = (
+    String(error?.message || "") +
+    " " +
+    String(error?.cause?.message || "") +
+    " " +
+    String(error?.stack || "") +
+    " " +
+    String(error || "")
+  ).toLowerCase();
+  const code = String(error?.code || error?.cause?.code || "");
   return (
     msg.includes("server has closed the connection") ||
     msg.includes("connection terminated unexpectedly") ||
@@ -17,7 +25,10 @@ const isTransientConnectionError = (error: any): boolean => {
     msg.includes("p1017") ||
     msg.includes("p1001") ||
     msg.includes("p2024") ||
+    msg.includes("p2010") ||
     msg.includes("closed the connection") ||
+    msg.includes("can't reach database server") ||
+    msg.includes("terminating connection") ||
     code === "57P01" ||
     code === "57P02" ||
     code === "57P03" ||
@@ -31,7 +42,20 @@ const isTransientConnectionError = (error: any): boolean => {
 
 const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
-  const pool = new Pool({ connectionString });
+  const poolConfig: PoolConfig = {
+    connectionString,
+    max: 10,
+    idleTimeoutMillis: 10000,
+    connectionTimeoutMillis: 10000,
+    allowExitOnIdle: true,
+  };
+
+  const pool = new Pool(poolConfig);
+
+  pool.on("error", (err) => {
+    console.warn("[PG Pool Warning] Idle client connection drop:", err.message);
+  });
+
   const adapter = new PrismaPg(pool);
 
   const baseClient = new PrismaClient({

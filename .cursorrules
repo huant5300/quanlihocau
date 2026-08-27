@@ -1,0 +1,5 @@
+# QUY TẮC DỰ ÁN SaaS QUẢN LÝ HỒ CÂU
+- Stack: Next.js 15 App Router, Prisma, NextAuth v5, Tailwind, Shadcn.
+- Bảo mật Multi-tenant: MỌI truy vấn Database và Server Action BẮT BUỘC filter theo `lakeId` lấy từ current session.
+- Quy tắc Xóa mềm (Soft Delete): TUYỆT ĐỐI KHÔNG dùng lệnh `DELETE` trong DB. Bắt buộc dùng `deletedAt` để cập nhật ngày xóa. Mọi truy vấn `GET` phải kèm điều kiện `deletedAt: null`.
+- Chỉ output code cần thiết, không xin lỗi, không giải thích dài dòng.

@@ -44,11 +44,9 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    let lakeId = (await getActiveLakeId()) || "";
-
+    const lakeId = await getActiveLakeId();
     if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst();
-      lakeId = firstLake?.id || "";
+      return NextResponse.json({ success: false, message: "Không tìm thấy hồ câu hoạt động" }, { status: 403 });
     }
 
     const fullName = (body.fullName || body.full_name || body.name || "Khách quen").trim();

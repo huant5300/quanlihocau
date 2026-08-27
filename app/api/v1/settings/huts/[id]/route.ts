@@ -8,7 +8,7 @@ export async function PATCH(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
     const isOwner = session?.user?.role === "OWNER";
 
     if (!session || (!isOwner && !isSuperAdmin)) {
@@ -39,7 +39,7 @@ export async function DELETE(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
     const isOwner = session?.user?.role === "OWNER";
 
     if (!session || (!isOwner && !isSuperAdmin)) {

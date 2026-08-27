@@ -10,17 +10,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    let lakeId: string | null | undefined = await getActiveLakeId();
-    if (!lakeId && session_auth.user.lakeId) {
-      lakeId = session_auth.user.lakeId;
-    }
-    
-    if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst({
-        where: { managerId: session_auth.user.id }
-      });
-      lakeId = firstLake?.id;
-    }
+    const lakeId = (await getActiveLakeId()) || session_auth.user.lakeId;
 
     if (!lakeId) {
       return NextResponse.json({

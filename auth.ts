@@ -9,6 +9,12 @@ import { UserRole } from "@prisma/client";
 
 import { authConfig } from "./auth.config";
 
+const authSecret = process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+
+if (process.env.NODE_ENV === "production" && !authSecret) {
+  throw new Error("AUTH_SECRET or NEXTAUTH_SECRET must be configured in production.");
+}
+
 // Lightweight and fast onboarding helper to avoid serverless connection exhaustion
 async function setupOnboardingData(userId: string, userName: string) {
   try {
@@ -65,7 +71,7 @@ async function setupOnboardingData(userId: string, userName: string) {
 export const { handlers, auth, signIn, signOut } = NextAuth({
   ...authConfig,
   debug: false,
-  secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || "quanlihocau_secret_key_2026_safe",
+  secret: authSecret,
   basePath: "/api/auth",
   session: { strategy: "jwt" },
   trustHost: true,
@@ -86,7 +92,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       Google({
         clientId: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        allowDangerousEmailAccountLinking: true,
       }),
     ] : []),
     Credentials({
@@ -503,9 +508,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       token.id = token.id || token.sub;
       token.isExpired = token.isExpired || false;
 
-      if (token.email === "huant5300@gmail.com") {
-        token.role = UserRole.SUPER_ADMIN;
-      }
       return token;
     },
     async session({ session, token }) {
@@ -516,9 +518,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         (session.user as any).phone = (token.phone as string) || "";
         (session.user as any).appUsageTime = (token.appUsageTime as number) || 0;
         (session.user as any).isExpired = token.isExpired;
-      }
-      if (session.user?.email === "huant5300@gmail.com") {
-        session.user.role = UserRole.SUPER_ADMIN;
       }
       return session;
     },

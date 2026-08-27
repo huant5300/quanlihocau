@@ -130,7 +130,7 @@ export async function getLakeOwners() {
     return { success: false, error: "Unauthorized" };
   }
 
-  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN || session.user.email === "huant5300@gmail.com";
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
   if (!isSuperAdmin) {
     return { success: false, error: "Bạn không có quyền truy cập trang quản trị này" };
   }
@@ -292,7 +292,7 @@ export async function updateLakeDetails(data: { name: string; address: string; p
   const session = await auth();
   if (!session?.user) return { success: false, error: "Unauthorized" };
   
-  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN || session.user.email === "huant5300@gmail.com";
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
   if (session.user.role !== UserRole.OWNER && !isSuperAdmin) {
     return { success: false, error: "Bạn không có quyền thực hiện hành động này" };
   }
@@ -431,7 +431,7 @@ export async function toggleUserStatus(userId: string, isActive: boolean) {
   const session = await auth();
   if (!session?.user) return { success: false, error: "Unauthorized" };
   
-  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN || session.user.email === "huant5300@gmail.com";
+  const isSuperAdmin = session.user.role === UserRole.SUPER_ADMIN;
   if (!isSuperAdmin) {
     return { success: false, error: "Bạn không có quyền thực hiện hành động này" };
   }

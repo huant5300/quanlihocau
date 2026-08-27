@@ -12,11 +12,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    let lakeId = await getActiveLakeId();
-    if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst();
-      lakeId = firstLake?.id || "";
-    }
+    const lakeId = await getActiveLakeId();
 
     if (!lakeId) {
       return NextResponse.json([]);
@@ -58,7 +54,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
     const isOwner = session?.user?.role === "OWNER";
 
     if (!session || (!isOwner && !isSuperAdmin)) {

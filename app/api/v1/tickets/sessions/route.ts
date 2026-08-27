@@ -2,13 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveLakeId } from "@/lib/lake-context";
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
+import { UserRole } from "@prisma/client";
 
 export async function GET(req: NextRequest) {
   try {
     const session_auth = await auth();
-    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+    const isOwner = session_auth?.user?.role === UserRole.OWNER || session_auth?.user?.role === UserRole.SUPER_ADMIN;
     
-    if (!session_auth && !isOwner) {
+    if (!session_auth) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
@@ -16,6 +17,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get("status") || undefined;
     
     const lakeId = await getActiveLakeId();
+    if (!lakeId) return NextResponse.json({ success: false, message: "Không tìm thấy hồ câu hoạt động" }, { status: 403 });
     
     const sessions = await prisma.fishingSession.findMany({
       where: { 
@@ -81,14 +83,15 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const session_auth = await auth();
-    const isOwner = session_auth?.user?.email === "huant5300@gmail.com";
+    const isOwner = session_auth?.user?.role === UserRole.OWNER || session_auth?.user?.role === UserRole.SUPER_ADMIN;
 
-    if (!session_auth && !isOwner) {
+    if (!session_auth) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
     const body = await req.json();
     const lakeId = await getActiveLakeId();
+    if (!lakeId) return NextResponse.json({ success: false, message: "Không tìm thấy hồ câu hoạt động" }, { status: 403 });
 
     const areaId = body.areaId || body.hut_id;
     const customerName = body.customer_name;

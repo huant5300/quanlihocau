@@ -129,11 +129,7 @@ export async function getCustomersAction() {
     const session = await auth();
     if (!session?.user) return { success: true, data: [] };
 
-    let lakeId = (await getActiveLakeId()) || session.user.lakeId;
-    if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst();
-      lakeId = firstLake?.id || "";
-    }
+    const lakeId = (await getActiveLakeId()) || session.user.lakeId;
 
     if (!lakeId) return { success: true, data: [] };
 

@@ -11,11 +11,9 @@ export const getActiveLakeId = cache(async () => {
     const cookieStore = await cookies();
     const cookieLakeId = cookieStore.get("lakeId")?.value;
 
-    // 1. If not logged in, fallback to cookie or first lake in DB
+    // Tenant context must never be derived for an unauthenticated request.
     if (!session?.user) {
-      if (cookieLakeId) return cookieLakeId;
-      const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
-      return firstLake?.id || "lake_01";
+      return "";
     }
 
     const { id: userId, role, lakeId: userLakeId } = session.user;
@@ -28,8 +26,7 @@ export const getActiveLakeId = cache(async () => {
         select: { lakeId: true }
       }).catch(() => null);
       if (assignedUser?.lakeId) return assignedUser.lakeId;
-      const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
-      return firstLake?.id || "";
+      return "";
     }
 
     // 3. For OWNER: Can switch lakes, but must only access their own managed lakes!
@@ -56,15 +53,13 @@ export const getActiveLakeId = cache(async () => {
       }).catch(() => null);
       if (assignedUser?.lakeId) return assignedUser.lakeId;
 
-      const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
-      return firstLake?.id || "";
+      return "";
     }
 
     // 4. For SUPER_ADMIN: Can access any lake
     if (cookieLakeId) return cookieLakeId;
     if (userLakeId) return userLakeId;
-    const firstLake = await prisma.fishingLake.findFirst().catch(() => null);
-    return firstLake?.id || "";
+    return "";
   } catch (err) {
     console.error("getActiveLakeId error (returning fallback):", err);
     return "";

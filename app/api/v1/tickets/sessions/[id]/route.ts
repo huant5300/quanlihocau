@@ -9,7 +9,7 @@ export async function GET(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
     if (!session && !isSuperAdmin) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
@@ -54,7 +54,7 @@ export async function PATCH(
 ) {
   try {
     const session = await auth();
-    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN" || session?.user?.email === "huant5300@gmail.com";
+    const isSuperAdmin = session?.user?.role === "SUPER_ADMIN";
     if (!session && !isSuperAdmin) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }

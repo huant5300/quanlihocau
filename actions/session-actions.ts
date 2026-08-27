@@ -5,6 +5,9 @@ import { getActiveLakeId } from "@/lib/lake-context";
 import { revalidatePath } from "next/cache";
 import { auth } from "@/auth";
 import { recordActivityLog } from "@/lib/activity-log";
+import { UserRole } from "@prisma/client";
+
+import { assertLakeWriteAccess } from "@/lib/subscription-guard";
 
 export async function getSessionsAction() {
   try {
@@ -36,10 +39,16 @@ export async function getSessionsAction() {
 export async function startFishingAction(areaId: string, customerId?: string, packageId?: string) {
   try {
     const session_auth = await auth();
-    const userEmail = session_auth?.user?.email;
-    const isOwner = userEmail === "huant5300@gmail.com";
+    const isOwner = session_auth?.user?.role === UserRole.OWNER || session_auth?.user?.role === UserRole.SUPER_ADMIN;
 
     const lakeId = await getActiveLakeId();
+    if (!lakeId) throw new Error("Không tìm thấy hồ câu hoạt động");
+
+    // Subscription check: Disallow starting sessions if subscription expired
+    const subCheck = await assertLakeWriteAccess(lakeId);
+    if (!subCheck.success) {
+      return { success: false, error: subCheck.error, code: subCheck.code };
+    }
     
     // Check if area exists
     const area = await prisma.fishingArea.findUnique({ where: { id: areaId } });
@@ -47,7 +56,10 @@ export async function startFishingAction(areaId: string, customerId?: string, pa
       throw new Error("Không tìm thấy hồ câu này");
     }
 
-    // Only check availability if not the owner (bypass for administrator)
+    if (area.lakeId !== lakeId) {
+      throw new Error("Bạn không có quyền truy cập khu vực này");
+    }
+
     if (area.status !== "AVAILABLE" && !isOwner) {
       throw new Error("Hồ câu này hiện không sẵn sàng (đang có người câu hoặc bảo trì)");
     }
@@ -215,4 +227,3 @@ export async function overrideSessionPriceAction(sessionId: string, newHourlyRat
     return { success: false, error: error.message || "Lỗi khi điều chỉnh giá ca câu" };
   }
 }
-

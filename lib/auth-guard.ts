@@ -47,8 +47,11 @@ export async function requireAuth(): Promise<
   }
 
   if (!lakeId && role !== UserRole.SUPER_ADMIN) {
-    const firstLake = await prisma.fishingLake.findFirst({ select: { id: true } });
-    lakeId = firstLake?.id || "";
+    return {
+      success: false,
+      error: "Tài khoản chưa được gán vào hồ câu hợp lệ.",
+      statusCode: 403,
+    };
   }
 
   return {
@@ -131,8 +134,13 @@ export async function getAuthLakeContext(
   }
 
   if (!lakeId && role !== UserRole.SUPER_ADMIN) {
-    const firstLake = await prisma.fishingLake.findFirst({ select: { id: true } });
-    lakeId = firstLake?.id || "";
+    return {
+      success: false,
+      response: NextResponse.json(
+        { success: false, error: "Tài khoản chưa được gán vào hồ câu hợp lệ." },
+        { status: 403 }
+      ),
+    };
   }
 
   let lake = null;

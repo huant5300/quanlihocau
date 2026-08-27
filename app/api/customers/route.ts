@@ -18,12 +18,7 @@ export async function GET(req: NextRequest) {
       lakeId = userLake?.id;
     }
     if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst();
-      lakeId = firstLake?.id;
-    }
-
-    if (!lakeId) {
-      return NextResponse.json({ success: true, data: [] });
+      return NextResponse.json({ success: false, message: "Không tìm thấy hồ câu hoạt động" }, { status: 403 });
     }
 
     const { searchParams } = new URL(req.url);

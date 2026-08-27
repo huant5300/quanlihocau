@@ -16,11 +16,12 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const orderId = searchParams.get("orderId");
-    let lakeId = searchParams.get("lakeId") || await getActiveLakeId();
+    const activeLakeId = await getActiveLakeId();
+    const requestedLakeId = searchParams.get("lakeId");
+    const lakeId = requestedLakeId || activeLakeId;
 
-    if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst();
-      lakeId = firstLake?.id || "";
+    if (requestedLakeId && requestedLakeId !== activeLakeId && session.user.role !== "SUPER_ADMIN") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     if (!lakeId) {

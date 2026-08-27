@@ -99,19 +99,12 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
     }
 
-    let lakeId = await getActiveLakeId();
+    const lakeId = await getActiveLakeId();
 
-    // Nếu không có lakeId, tìm hồ đầu tiên trong DB
     if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst({
-        orderBy: { createdAt: "asc" }
-      });
-      if (firstLake) {
-        lakeId = firstLake.id;
-      }
+      return NextResponse.json({ error: "Không tìm thấy hồ câu hoạt động" }, { status: 403 });
     }
 
-    // Nếu vẫn chưa có hồ nào trong hệ thống, tự động tạo hồ mặc định
     let lake = null;
     if (lakeId) {
       lake = await prisma.fishingLake.findUnique({
@@ -130,19 +123,7 @@ export async function GET(req: NextRequest) {
     }
 
     if (!lake) {
-      // Tự động tạo hồ ban đầu cho user
-      lake = await prisma.fishingLake.create({
-        data: {
-          name: "Hồ câu dịch vụ",
-          address: "Chưa cập nhật",
-          phone: (session.user as any)?.phone || "0912345678",
-          managerId: session.user.id,
-          subscriptionPlan: "TRIAL",
-          subscriptionStatus: "ACTIVE",
-          subscriptionExpiresAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-        },
-      });
-      lakeId = lake.id;
+      return NextResponse.json({ error: "Hồ câu hoạt động không tồn tại" }, { status: 404 });
     }
 
     // Tính số ngày còn lại realtime

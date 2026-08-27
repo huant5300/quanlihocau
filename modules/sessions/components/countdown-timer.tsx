@@ -5,6 +5,8 @@ import { Clock } from "lucide-react";
 import { cn } from "@/utils/utils";
 
 
+import { audioAlert } from "@/utils/audio-alert";
+
 interface CountdownTimerProps {
   endTime: string;
   startTime?: string;
@@ -12,11 +14,20 @@ interface CountdownTimerProps {
   onExpire?: () => void;
   onWarning?: () => void;
   showTimes?: boolean; // Show start/end time labels
+  enableSound?: boolean;
 }
 
 type TimerColor = "green" | "orange" | "red";
 
-export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarning, showTimes = false }: CountdownTimerProps) {
+export function CountdownTimer({ 
+  endTime, 
+  startTime, 
+  sessionId, 
+  onExpire, 
+  onWarning, 
+  showTimes = false,
+  enableSound = true 
+}: CountdownTimerProps) {
   const [timeLeft, setTimeLeft] = useState<string>("");
   const [timerColor, setTimerColor] = useState<TimerColor>("green");
   const [currentEndTime, setCurrentEndTime] = useState(endTime);
@@ -67,6 +78,7 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
       setTimerColor("red");
       if (!hasExpiredRef.current) {
         hasExpiredRef.current = true;
+        if (enableSound) audioAlert.playExpiredAlarm();
         onExpireRef.current?.();
       }
       return;
@@ -77,11 +89,12 @@ export function CountdownTimer({ endTime, startTime, sessionId, onExpire, onWarn
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
     const totalMinutes = hours * 60 + minutes;
 
-    // 3-tier color system
+    // 3-tier color system & SOS trigger
     if (totalMinutes < 15) {
       setTimerColor("red");
       if (!hasWarnedRef.current) {
         hasWarnedRef.current = true;
+        if (enableSound) audioAlert.playWarningBeep();
         onWarningRef.current?.();
       }
     } else if (totalMinutes < 60) {

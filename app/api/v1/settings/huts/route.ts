@@ -48,9 +48,10 @@ export async function GET(req: NextRequest) {
       });
     }
     
-    return NextResponse.json(huts);
+    return NextResponse.json(huts || []);
   } catch (error: any) {
-    return NextResponse.json({ success: false, message: error.message }, { status: 500 });
+    console.error("API /api/v1/settings/huts error:", error);
+    return NextResponse.json([], { status: 200 });
   }
 }
 

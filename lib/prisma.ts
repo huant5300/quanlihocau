@@ -60,9 +60,9 @@ const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
   const poolConfig: PoolConfig = {
     connectionString,
-    max: 10,
+    max: 5,
     idleTimeoutMillis: 10000,
-    connectionTimeoutMillis: 10000,
+    connectionTimeoutMillis: 15000,
     allowExitOnIdle: true,
   };
 
@@ -136,6 +136,6 @@ declare global {
 }
 
 const prisma = (globalThis.__prisma ?? createPrismaClient()) as ExtendedPrismaClient;
-if (process.env.NODE_ENV !== 'production') globalThis.__prisma = prisma;
+globalThis.__prisma = prisma;
 
 export default prisma;

@@ -9,9 +9,26 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const categories = await prisma.productCategory.findMany({
+    let categories = await prisma.productCategory.findMany({
       orderBy: { name: "asc" }
     });
+
+    if (categories.length === 0) {
+      await prisma.productCategory.createMany({
+        data: [
+          { name: "Mồi câu & Thính" },
+          { name: "Đồ uống & Giải khát" },
+          { name: "Đồ ăn & Thức ăn nhanh" },
+          { name: "Dụng cụ câu cá" },
+          { name: "Dịch vụ khác" },
+        ],
+        skipDuplicates: true,
+      }).catch(() => null);
+
+      categories = await prisma.productCategory.findMany({
+        orderBy: { name: "asc" }
+      });
+    }
     
     return NextResponse.json(categories);
   } catch (error: any) {

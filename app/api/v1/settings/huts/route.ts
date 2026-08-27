@@ -12,14 +12,41 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const lakeId = await getActiveLakeId();
+    let lakeId = await getActiveLakeId();
+    if (!lakeId) {
+      const firstLake = await prisma.fishingLake.findFirst();
+      lakeId = firstLake?.id || "";
+    }
+
     if (!lakeId) {
       return NextResponse.json([]);
     }
-    const huts = await prisma.fishingArea.findMany({
+
+    let huts = await prisma.fishingArea.findMany({
       where: { lakeId },
       orderBy: { name: "asc" }
     });
+
+    // Auto-seed 10 initial spots if lake has no spots yet
+    if (huts.length === 0) {
+      const defaultSpots = Array.from({ length: 10 }, (_, i) => ({
+        name: `Ô ${(i + 1).toString().padStart(2, "0")}`,
+        lakeId: lakeId,
+        hourlyRate: 50000,
+        status: "AVAILABLE" as any,
+        capacity: 1,
+        minDuration: 1,
+      }));
+
+      await prisma.fishingArea.createMany({
+        data: defaultSpots,
+      }).catch(() => null);
+
+      huts = await prisma.fishingArea.findMany({
+        where: { lakeId },
+        orderBy: { name: "asc" }
+      });
+    }
     
     return NextResponse.json(huts);
   } catch (error: any) {

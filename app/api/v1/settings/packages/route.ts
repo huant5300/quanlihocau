@@ -9,9 +9,31 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: false, message: "Unauthorized" }, { status: 401 });
     }
 
-    const packages = await prisma.fishingPackage.findMany({
+    let packages = await prisma.fishingPackage.findMany({
       orderBy: { durationHours: "asc" }
     });
+
+    // Auto-seed default packages if none exist
+    if (packages.length === 0) {
+      const defaultPackages = [
+        { id: "pkg_3h", name: "Gói 3 Tiếng", durationHours: 3, price: 150000, isActive: true },
+        { id: "pkg_5h", name: "Gói 5 Tiếng", durationHours: 5, price: 200000, isActive: true },
+        { id: "pkg_8h", name: "Gói 8 Tiếng", durationHours: 8, price: 300000, isActive: true },
+        { id: "pkg_12h", name: "Gói Câu Đêm (12h)", durationHours: 12, price: 400000, isActive: true },
+      ];
+
+      for (const p of defaultPackages) {
+        await prisma.fishingPackage.upsert({
+          where: { id: p.id },
+          update: {},
+          create: p,
+        }).catch(() => null);
+      }
+
+      packages = await prisma.fishingPackage.findMany({
+        orderBy: { durationHours: "asc" }
+      });
+    }
     
     return NextResponse.json(packages);
   } catch (error: any) {

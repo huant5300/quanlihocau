@@ -75,14 +75,13 @@ export async function createCustomerAction(data: {
     const customer = await prisma.customer.create({
       data: {
         fullName,
-        phone: phone || null,
-        address: data.address || null,
-        notes: data.notes || null,
+        phone: phone || undefined,
+        address: data.address || undefined,
+        notes: data.notes || undefined,
         lakeId,
         visitCount: 0,
         totalSpent: 0,
         debtBalance: 0,
-        deletedAt: null,
       },
     });
 

@@ -123,7 +123,7 @@ export function CustomerDetailDrawer({ customer, isOpen, onClose }: CustomerDeta
                     <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Số điện thoại</label>
                     <input 
                       name="phone"
-                      defaultValue={customer.phone}
+                      defaultValue={customer.phone || ""}
                       required
                       className="w-full h-14 px-4 bg-accent/50 rounded-2xl border-2 border-transparent focus:border-primary/20 outline-none font-bold"
                     />

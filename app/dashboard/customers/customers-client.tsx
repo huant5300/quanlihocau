@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { Plus, Search, UserPlus, Phone, MapPin, MoreHorizontal, User, FileDown, Crown } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Search, UserPlus, FileDown } from "lucide-react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { 
   Table, 
   TableBody, 
@@ -13,31 +11,38 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { createCustomerAction } from "@/actions/customer-actions";
 import { toast } from "sonner";
 import { exportToExcel } from "@/utils/export-excel";
 import { exportToPDF } from "@/utils/export-pdf";
 import { cn } from "@/utils/utils";
 
-export function CustomersClient({ initialCustomers }: any) {
-  const [customers, setCustomers] = useState(initialCustomers);
+export function CustomersClient({ initialCustomers = [] }: { initialCustomers?: any[] }) {
+  const [customers, setCustomers] = useState<any[]>(initialCustomers || []);
   const [search, setSearch] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const filteredCustomers = customers.filter((c: any) => 
-    c.fullName.toLowerCase().includes(search.toLowerCase()) || 
-    c.phone.includes(search)
-  );
+  useEffect(() => {
+    setCustomers(initialCustomers || []);
+  }, [initialCustomers]);
+
+  const filteredCustomers = (customers || []).filter((c: any) => {
+    if (!c) return false;
+    const query = (search || "").toLowerCase().trim();
+    if (!query) return true;
+    const nameMatch = (c?.fullName || "").toLowerCase().includes(query);
+    const phoneMatch = (c?.phone || "").includes(query);
+    return nameMatch || phoneMatch;
+  });
 
   const handleAddCustomer = async (formData: FormData) => {
     const fullName = formData.get("fullName") as string;
     const phone = formData.get("phone") as string;
     
     const result = await createCustomerAction({ fullName, phone });
-    if (result.success) {
+    if (result.success && result.data) {
       toast.success("Đã thêm hội viên mới thành công");
-      setCustomers([result.data, ...customers]);
+      setCustomers((prev) => [result.data, ...prev]);
       setIsModalOpen(false);
     } else {
       toast.error(result.error || "Không thể thêm hội viên");
@@ -45,32 +50,38 @@ export function CustomersClient({ initialCustomers }: any) {
   };
 
   const handleExportExcel = () => {
-    if (customers.length === 0) return toast.error("Không có dữ liệu để xuất");
+    if (!customers || customers.length === 0) return toast.error("Không có dữ liệu để xuất");
     const data = customers.map((c: any, i: number) => ({
       "STT": i + 1,
-      "Tên khách hàng": c.fullName,
-      "SĐT": c.phone,
-      "Số lần câu": c.visitCount,
-      "Tổng chi (VNĐ)": Number(c.totalSpent),
-      "Công nợ (VNĐ)": Number(c.debtBalance),
-      "Hạng": c.isVip ? "VIP" : c.loyaltyTier || "BRONZE",
-      "Điểm": c.loyaltyPoints || 0
+      "Tên khách hàng": c?.fullName || "Khách câu",
+      "SĐT": c?.phone || "--",
+      "Số lần câu": c?.visitCount || 0,
+      "Tổng chi (VNĐ)": Number(c?.totalSpent || 0),
+      "Công nợ (VNĐ)": Number(c?.debtBalance || 0),
+      "Hạng": c?.isVip ? "VIP" : c?.loyaltyTier || "BRONZE",
+      "Điểm": c?.loyaltyPoints || 0,
     }));
     exportToExcel(data, `danh_sach_khach_hang`);
     toast.success("Xuất Excel thành công");
   };
 
   const handleExportPDF = () => {
-    if (customers.length === 0) return toast.error("Không có dữ liệu để xuất");
+    if (!customers || customers.length === 0) return toast.error("Không có dữ liệu để xuất");
     const headers = ["STT", "Khách hàng", "SĐT", "Số lần câu", "Tổng chi", "Công nợ", "Hạng"];
     const rows = customers.map((c: any, i: number) => [
-      i + 1, c.fullName, c.phone, c.visitCount, Number(c.totalSpent).toLocaleString() + "đ", Number(c.debtBalance).toLocaleString() + "đ", c.isVip ? "VIP" : (c.loyaltyTier || "BRONZE")
+      i + 1,
+      c?.fullName || "Khách câu",
+      c?.phone || "--",
+      c?.visitCount || 0,
+      Number(c?.totalSpent || 0).toLocaleString() + "đ",
+      Number(c?.debtBalance || 0).toLocaleString() + "đ",
+      c?.isVip ? "VIP" : (c?.loyaltyTier || "BRONZE"),
     ]);
     exportToPDF({
       title: "Danh sách khách hàng & Cần thủ",
       headers,
       rows,
-      filename: "danh_sach_khach_hang"
+      filename: "danh_sach_khach_hang",
     });
     toast.success("Xuất PDF thành công");
   };
@@ -94,7 +105,7 @@ export function CustomersClient({ initialCustomers }: any) {
         <div className="flex items-center gap-2 flex-wrap">
           <button 
             onClick={handleExportExcel}
-            className="h-9 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="h-9 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <FileDown size={14} />
             <span>Xuất Excel</span>
@@ -102,7 +113,7 @@ export function CustomersClient({ initialCustomers }: any) {
           
           <button 
             onClick={handleExportPDF}
-            className="h-9 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors"
+            className="h-9 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer"
           >
             <FileDown size={14} />
             <span>Xuất PDF</span>
@@ -110,7 +121,7 @@ export function CustomersClient({ initialCustomers }: any) {
 
           <button 
             onClick={() => setIsModalOpen(true)}
-            className="h-9 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/25 transition-all"
+            className="h-9 px-4 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-emerald-600/25 transition-all cursor-pointer"
           >
             <UserPlus size={15} className="stroke-[2.5]" />
             <span>Thêm hội viên</span>
@@ -138,29 +149,29 @@ export function CustomersClient({ initialCustomers }: any) {
                   <TableCell className="pl-6 py-3.5">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center font-bold text-xs border border-emerald-500/20 shrink-0">
-                        {customer.fullName[0]?.toUpperCase() || "K"}
+                        {(customer?.fullName || "K")[0]?.toUpperCase() || "K"}
                       </div>
                       <div>
                         <Link href={`/dashboard/customers/${customer.id}`} className="text-xs font-bold text-slate-900 dark:text-white hover:text-emerald-600 transition-colors">
-                          {customer.fullName}
+                          {customer?.fullName || "Khách quen"}
                         </Link>
-                        {customer.isVip && (
+                        {customer?.isVip && (
                           <span className="ml-2 text-[9px] font-extrabold px-1.5 py-0.5 rounded bg-amber-100 text-amber-700">VIP</span>
                         )}
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell className="text-xs font-medium text-slate-600 dark:text-zinc-400">{customer.phone || "--"}</TableCell>
-                  <TableCell className="text-xs font-bold text-slate-900 dark:text-white text-center">{customer.visitCount}</TableCell>
-                  <TableCell className="text-xs font-extrabold text-slate-900 dark:text-white text-right">{Number(customer.totalSpent).toLocaleString()} đ</TableCell>
+                  <TableCell className="text-xs font-medium text-slate-600 dark:text-zinc-400">{customer?.phone || "--"}</TableCell>
+                  <TableCell className="text-xs font-bold text-slate-900 dark:text-white text-center">{customer?.visitCount || 0}</TableCell>
+                  <TableCell className="text-xs font-extrabold text-slate-900 dark:text-white text-right">{Number(customer?.totalSpent || 0).toLocaleString()} đ</TableCell>
                   <TableCell className="text-right">
-                    <span className={cn("text-xs font-bold", Number(customer.debtBalance) > 0 ? "text-rose-600" : "text-slate-400")}>
-                      {Number(customer.debtBalance).toLocaleString()} đ
+                    <span className={cn("text-xs font-bold", Number(customer?.debtBalance || 0) > 0 ? "text-rose-600" : "text-slate-400")}>
+                      {Number(customer?.debtBalance || 0).toLocaleString()} đ
                     </span>
                   </TableCell>
                   <TableCell className="pr-6 text-right">
                     <Link href={`/dashboard/customers/${customer.id}`}>
-                      <button className="h-7 px-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg text-[11px] font-bold text-slate-700 dark:text-zinc-300 transition-colors">
+                      <button className="h-7 px-2.5 bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 rounded-lg text-[11px] font-bold text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer">
                         Chi tiết
                       </button>
                     </Link>
@@ -200,20 +211,19 @@ export function CustomersClient({ initialCustomers }: any) {
                   type="tel"
                   placeholder="Vd: 0912345678" 
                   className="w-full h-10 px-3.5 bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 rounded-xl text-xs outline-none focus:border-emerald-500 text-slate-800 dark:text-zinc-200" 
-                  required 
                 />
               </div>
               <div className="flex gap-3 pt-4 border-t border-slate-100 dark:border-zinc-800">
                 <button 
                   type="button" 
                   onClick={() => setIsModalOpen(false)} 
-                  className="flex-1 h-10 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 transition-colors"
+                  className="flex-1 h-10 rounded-xl font-bold text-xs bg-slate-100 hover:bg-slate-200 dark:bg-zinc-800 dark:hover:bg-zinc-700 text-slate-700 dark:text-zinc-300 transition-colors cursor-pointer"
                 >
                   Hủy
                 </button>
                 <button 
                   type="submit" 
-                  className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-sm shadow-emerald-600/25 transition-all"
+                  className="flex-1 h-10 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-bold text-xs shadow-sm shadow-emerald-600/25 transition-all cursor-pointer"
                 >
                   Lưu hội viên
                 </button>

@@ -172,6 +172,7 @@ model FishingLake {
   expiresAt          DateTime?
   
   users              User[]
+  customers          Customer[]
   sessions           FishingSession[]
   invoices           Invoice[]
   
@@ -180,11 +181,37 @@ model FishingLake {
   deletedAt          DateTime?
 }
 
+model Customer {
+  id                 String             @id @default(uuid())
+  lakeId             String
+  lake               FishingLake        @relation(fields: [lakeId], references: [id])
+  
+  fullName           String
+  phone              String?
+  visitCount         Int                @default(0)
+  totalSpent         Float              @default(0)
+  debtBalance        Float              @default(0)
+  isVip              Boolean            @default(false)
+  loyaltyTier        String             @default("BRONZE")
+  loyaltyPoints      Int                @default(0)
+  
+  sessions           FishingSession[]
+  invoices           Invoice[]
+  
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  deletedAt          DateTime?
+
+  @@index([lakeId])
+}
+
 model FishingSession {
   id            String        @id @default(uuid())
   lakeId        String
   lake          FishingLake   @relation(fields: [lakeId], references: [id])
   
+  customerId    String?
+  customer      Customer?     @relation(fields: [customerId], references: [id])
   customerName  String
   customerPhone String?
   status        SessionStatus @default(FISHING)
@@ -207,6 +234,9 @@ model Invoice {
   id            String         @id @default(uuid())
   lakeId        String
   lake          FishingLake    @relation(fields: [lakeId], references: [id])
+  
+  customerId    String?
+  customer      Customer?      @relation(fields: [customerId], references: [id])
   
   sessionId     String         @unique
   session       FishingSession @relation(fields: [sessionId], references: [id])

@@ -58,9 +58,9 @@ export async function POST(req: NextRequest) {
       phone = `KH_${Date.now().toString().slice(-8)}`;
     }
 
-    // Kiểm tra xem số điện thoại đã tồn tại chưa để tránh lỗi trùng lặp (Unique constraint)
-    const existing = await prisma.customer.findUnique({
-      where: { phone: phone }
+    // Kiểm tra xem số điện thoại đã tồn tại chưa trong hồ
+    const existing = await prisma.customer.findFirst({
+      where: { phone: phone, lakeId: lakeId || undefined }
     });
 
     if (existing) {

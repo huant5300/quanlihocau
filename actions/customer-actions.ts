@@ -7,78 +7,97 @@ import { checkResourceLimit } from "@/utils/saas-helpers";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
 
-export async function createCustomerAction(data: { fullName: string; phone?: string; address?: string; notes?: string }) {
+export async function createCustomerAction(data: {
+  fullName: string;
+  phone?: string;
+  address?: string;
+  notes?: string;
+}) {
   try {
-    let lakeId = await getActiveLakeId();
+    const session = await auth();
+    if (!session?.user) {
+      return { success: false, error: "Unauthorized" };
+    }
+
+    const fullName = (data.fullName || "").trim();
+    if (!fullName) {
+      return { success: false, error: "Vui lòng nhập tên khách hàng" };
+    }
+
+    let lakeId = (await getActiveLakeId()) || session.user.lakeId;
     if (!lakeId) {
       const firstLake = await prisma.fishingLake.findFirst();
       lakeId = firstLake?.id || "";
     }
 
-    if (lakeId) {
-      // Check SaaS Resource Limit
-      const limitCheck = await checkResourceLimit(lakeId, "customers");
-      if (!limitCheck.allowed) {
-        return { success: false, error: limitCheck.message };
-      }
+    if (!lakeId) {
+      return { success: false, error: "Không tìm thấy hồ câu đang hoạt động" };
     }
 
-    const fullName = (data.fullName || "Khách quen").trim();
-    let phone = (data.phone || "").trim();
-    if (!phone) {
-      phone = `KH_${Date.now().toString().slice(-8)}`;
+    // Check SaaS Resource Limit
+    const limitCheck = await checkResourceLimit(lakeId, "customers");
+    if (!limitCheck.allowed) {
+      return { success: false, error: limitCheck.message };
     }
 
-    // Kiểm tra xem số điện thoại đã tồn tại chưa
-    const existing = await prisma.customer.findUnique({
-      where: { phone: phone }
-    });
+    const phone = (data.phone || "").trim();
 
-    if (existing) {
-      const updated = await prisma.customer.update({
-        where: { id: existing.id },
-        data: {
-          fullName: fullName !== "Khách quen" ? fullName : existing.fullName,
-          address: data.address || existing.address,
-          notes: data.notes || existing.notes,
-          lakeId: lakeId || existing.lakeId,
-        }
+    // Check if phone already exists in this lake
+    if (phone) {
+      const existing = await prisma.customer.findFirst({
+        where: {
+          lakeId,
+          phone,
+          deletedAt: null,
+        },
       });
-      revalidatePath("/dashboard/customers");
-      revalidatePath("/dashboard/crm");
-      return { 
-        success: true, 
-        data: {
-          ...updated,
-          totalSpent: Number(updated.totalSpent),
-          debtBalance: Number(updated.debtBalance)
-        }, 
-        alreadyExisted: true 
-      };
+
+      if (existing) {
+        const updated = await prisma.customer.update({
+          where: { id: existing.id },
+          data: {
+            fullName: fullName || existing.fullName,
+            address: data.address || existing.address,
+            notes: data.notes || existing.notes,
+          },
+        });
+        revalidatePath("/dashboard/customers");
+        revalidatePath("/dashboard/crm");
+        return {
+          success: true,
+          data: {
+            ...updated,
+            totalSpent: Number(updated.totalSpent),
+            debtBalance: Number(updated.debtBalance),
+          },
+          alreadyExisted: true,
+        };
+      }
     }
 
     const customer = await prisma.customer.create({
       data: {
         fullName,
-        phone,
+        phone: phone || null,
         address: data.address || null,
         notes: data.notes || null,
-        lakeId: lakeId || null,
+        lakeId,
         visitCount: 0,
         totalSpent: 0,
         debtBalance: 0,
-      }
+        deletedAt: null,
+      },
     });
 
     revalidatePath("/dashboard/customers");
     revalidatePath("/dashboard/crm");
-    return { 
-      success: true, 
+    return {
+      success: true,
       data: {
         ...customer,
         totalSpent: Number(customer.totalSpent),
-        debtBalance: Number(customer.debtBalance)
-      } 
+        debtBalance: Number(customer.debtBalance),
+      },
     };
   } catch (error: any) {
     console.error("createCustomerAction error:", error);
@@ -110,19 +129,32 @@ export async function deleteCustomerAction(id: string) {
 
 export async function getCustomersAction() {
   try {
-    let lakeId = await getActiveLakeId();
+    const session = await auth();
+    if (!session?.user) return { success: true, data: [] };
+
+    let lakeId = (await getActiveLakeId()) || session.user.lakeId;
     if (!lakeId) {
       const firstLake = await prisma.fishingLake.findFirst();
       lakeId = firstLake?.id || "";
     }
-    const customers = await CustomerRepository.getAll(lakeId || "").catch(() => []);
-    return { 
-      success: true, 
+
+    if (!lakeId) return { success: true, data: [] };
+
+    const customers = await prisma.customer.findMany({
+      where: {
+        lakeId,
+        deletedAt: null,
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return {
+      success: true,
       data: customers.map((c: any) => ({
         ...c,
         totalSpent: Number(c.totalSpent || 0),
         debtBalance: Number(c.debtBalance || 0),
-      })) 
+      })),
     };
   } catch (error: any) {
     console.error("getCustomersAction error:", error);
@@ -144,17 +176,17 @@ export async function getCustomerDetailsAction(id: string) {
             area: true,
             FishingPackage: true,
             fishCatches: {
-              include: { fishType: true }
-            }
-          }
+              include: { fishType: true },
+            },
+          },
         },
         invoices: {
           orderBy: { createdAt: "desc" },
           include: {
-            payments: true
-          }
-        }
-      }
+            payments: true,
+          },
+        },
+      },
     });
 
     if (!customer) {
@@ -200,7 +232,7 @@ export async function getCustomerDetailsAction(id: string) {
           status: inv.status,
           createdAt: inv.createdAt.toISOString(),
         };
-      })
+      }),
     };
 
     return { success: true, data: mappedCustomer };

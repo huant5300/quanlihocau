@@ -109,12 +109,17 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange, onCus
     setSearchQuery("");
   }
 
+  const [createError, setCreateError] = useState<string | null>(null);
+
   const handleCreateNewCustomer = async () => {
+    setCreateError(null);
     const trimmedName = newCustomerName.trim();
     const trimmedPhone = newCustomerPhone.trim();
 
     if (!trimmedName && !trimmedPhone) {
-      toast.error("Vui lòng nhập ít nhất Tên khách hoặc Số điện thoại");
+      const err = "Vui lòng nhập ít nhất Họ tên hoặc Số điện thoại của khách hàng";
+      setCreateError(err);
+      toast.error(err, { position: "top-center", duration: 5000 });
       return;
     }
 
@@ -130,14 +135,17 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange, onCus
         setShowCreateForm(false);
         setNewCustomerName("");
         setNewCustomerPhone("");
+        setCreateError(null);
         if (result.alreadyExisted) {
-          toast.info(result.message || "Khách hàng đã có trong hệ thống, đã tự động chọn!");
+          toast.info(result.message || "Khách hàng đã có trong hệ thống, đã tự động chọn!", { position: "top-center" });
         } else {
-          toast.success(`Đã thêm khách hàng "${result.fullName || trimmedName}"! 🎉`);
+          toast.success(`Đã thêm khách hàng "${result.fullName || trimmedName}"! 🎉`, { position: "top-center" });
         }
       }
     } catch (error: any) {
-      toast.error(error.message || "Không thể tạo khách hàng");
+      const errorMsg = error?.response?.data?.message || error?.message || "Không thể tạo khách hàng, vui lòng kiểm tra lại";
+      setCreateError(errorMsg);
+      toast.error(errorMsg, { position: "top-center", duration: 6000 });
     } finally {
       setIsCreating(false);
     }
@@ -248,6 +256,13 @@ export function CustomerSearch({ phone, name, onPhoneChange, onNameChange, onCus
                     <X size={16} />
                   </button>
                 </div>
+
+                {createError && (
+                  <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-2 animate-in fade-in-50">
+                    <span className="w-2 h-2 rounded-full bg-red-500 shrink-0" />
+                    <span>{createError}</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">

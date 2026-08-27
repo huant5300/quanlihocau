@@ -19,6 +19,7 @@ import type { ProductInsert } from "@/types";
 export function ProductModal({ children }: { children?: React.ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: categories = [] } = useQuery({
@@ -30,16 +31,27 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setErrorMessage(null);
     setIsSaving(true);
     try {
       const formData = new FormData(e.currentTarget);
-      const name = formData.get("name") as string;
+      const name = (formData.get("name") as string || "").trim();
       const categoryId = formData.get("categoryId") as string;
       const price = Number(formData.get("price"));
       const stock = Number(formData.get("stock"));
 
-      if (!name || Number.isNaN(price) || Number.isNaN(stock)) {
-        toast.error("Dữ liệu sản phẩm không hợp lệ");
+      if (!name) {
+        const err = "Vui lòng nhập tên sản phẩm / dịch vụ";
+        setErrorMessage(err);
+        toast.error(err, { position: "top-center", duration: 5000 });
+        setIsSaving(false);
+        return;
+      }
+
+      if (Number.isNaN(price) || price <= 0) {
+        const err = "Đơn giá sản phẩm phải lớn hơn 0đ";
+        setErrorMessage(err);
+        toast.error(err, { position: "top-center", duration: 5000 });
         setIsSaving(false);
         return;
       }
@@ -48,23 +60,28 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
         name,
         categoryId,
         price,
-        stock,
+        stock: Number.isNaN(stock) ? 0 : stock,
       };
 
       await productService.createProduct(product);
-      toast.success("Đã thêm sản phẩm mới");
+      toast.success(`Đã thêm sản phẩm "${name}" thành công! 🎉`, { position: "top-center" });
       queryClient.invalidateQueries({ queryKey: ["products"] });
+      setErrorMessage(null);
       setIsOpen(false);
     } catch (error: any) {
-      const msg = error?.response?.data?.message ?? error?.message ?? "Không thể thêm sản phẩm";
-      toast.error(msg);
+      const msg = error?.response?.data?.message ?? error?.message ?? "Không thể thêm sản phẩm, vui lòng thử lại";
+      setErrorMessage(msg);
+      toast.error(msg, { position: "top-center", duration: 6000 });
     } finally {
       setIsSaving(false);
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      setIsOpen(open);
+      if (!open) setErrorMessage(null);
+    }}>
       <DialogTrigger asChild>
         {children || (
           <button className="h-14 px-6 bg-primary text-white rounded-2xl font-black flex items-center gap-3 shadow-xl shadow-primary/20 hover:scale-105 active:scale-95 transition-all">
@@ -80,7 +97,15 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
             Nhập thông tin mặt hàng, giá bán và số lượng tồn kho.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+
+        {errorMessage && (
+          <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 dark:text-red-400 text-xs font-bold flex items-center gap-2.5 animate-in fade-in-50">
+            <span className="w-2.5 h-2.5 rounded-full bg-red-500 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6 pt-2">
           <div className="space-y-2">
             <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-1">Tên sản phẩm</label>
             <input 

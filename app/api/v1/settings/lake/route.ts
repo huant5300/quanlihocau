@@ -17,26 +17,26 @@ export async function GET(req: NextRequest) {
     if (lakeId) {
       lake = await prisma.fishingLake.findUnique({
         where: { id: lakeId }
-      });
+      }).catch(() => null);
     }
 
     if (!lake && session_auth.user.id) {
       lake = await prisma.fishingLake.findFirst({
         where: { managerId: session_auth.user.id }
-      });
+      }).catch(() => null);
     }
 
     if (!lake && session_auth.user.lakeId) {
       lake = await prisma.fishingLake.findUnique({
         where: { id: session_auth.user.lakeId }
-      });
+      }).catch(() => null);
     }
 
     if (!lake) {
-      lake = await prisma.fishingLake.findFirst();
+      lake = await prisma.fishingLake.findFirst().catch(() => null);
     }
 
-    if (!lake) {
+    if (!lake && session_auth.user.id) {
       lake = await prisma.fishingLake.create({
         data: {
           name: session_auth.user.name ? `Hồ câu ${session_auth.user.name}` : "Hồ câu dịch vụ",
@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
           totalSpots: 10,
           description: "Chúc quý khách giật được nhiều cá khủng!",
         }
-      });
+      }).catch(() => null);
     }
 
     return NextResponse.json({

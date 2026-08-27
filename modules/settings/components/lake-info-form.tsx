@@ -14,7 +14,17 @@ import { VIET_BANKS } from "@/utils/vietqr";
 export function LakeInfoForm() {
   const queryClient = useQueryClient();
   const { register, handleSubmit, reset, setValue, watch, formState: { errors } } = useForm<LakeSettingsInput>({
-    resolver: zodResolver(lakeSettingsSchema),
+    resolver: zodResolver(lakeSettingsSchema) as any,
+    defaultValues: {
+      name: "",
+      address: "",
+      phone: "",
+      receiptFooter: "",
+      bankName: "",
+      bankAccount: "",
+      bankHolder: "",
+      bankBin: "",
+    },
   });
 
   const selectedBankName = watch("bankName");

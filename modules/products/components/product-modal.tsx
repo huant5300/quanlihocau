@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -75,6 +76,9 @@ export function ProductModal({ children }: { children?: React.ReactNode }) {
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="text-2xl font-black uppercase">Thêm sản phẩm mới</DialogTitle>
+          <DialogDescription className="text-xs text-muted-foreground">
+            Nhập thông tin mặt hàng, giá bán và số lượng tồn kho.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6 pt-4">
           <div className="space-y-2">

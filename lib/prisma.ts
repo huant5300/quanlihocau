@@ -40,6 +40,22 @@ const isTransientConnectionError = (error: any): boolean => {
   );
 };
 
+const SOFT_DELETE_MODELS = new Set([
+  "User",
+  "Customer",
+  "FishingLake",
+  "FishingArea",
+  "FishingSession",
+  "Product",
+  "Invoice",
+  "InvoiceItem",
+  "FishCatch",
+  "FishType",
+  "FishStock",
+  "InventoryTransaction",
+  "Expense",
+]);
+
 const createPrismaClient = () => {
   const connectionString = process.env.DATABASE_URL;
   const poolConfig: PoolConfig = {
@@ -67,15 +83,14 @@ const createPrismaClient = () => {
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
-          // Soft delete filtering logic
+          // Soft delete filtering logic - only for models with deletedAt and safe read operations
           const isSoftDeleteOperation = 
-            operation === "findUnique" ||
             operation === "findFirst" ||
             operation === "findMany" ||
             operation === "count" ||
             operation === "aggregate";
             
-          if (isSoftDeleteOperation) {
+          if (model && SOFT_DELETE_MODELS.has(model) && isSoftDeleteOperation) {
             // @ts-ignore
             if (!args.where) {
               // @ts-ignore

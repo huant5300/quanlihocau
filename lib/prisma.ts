@@ -1,3 +1,5 @@
+import { Pool } from "pg";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@prisma/client";
 
 const isTransientConnectionError = (error: any): boolean => {
@@ -28,7 +30,12 @@ const isTransientConnectionError = (error: any): boolean => {
 };
 
 const createPrismaClient = () => {
+  const connectionString = process.env.DATABASE_URL;
+  const pool = new Pool({ connectionString });
+  const adapter = new PrismaPg(pool);
+
   const baseClient = new PrismaClient({
+    adapter,
     log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
@@ -36,6 +43,28 @@ const createPrismaClient = () => {
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {
+          // Soft delete filtering logic
+          const isSoftDeleteOperation = 
+            operation === "findUnique" ||
+            operation === "findFirst" ||
+            operation === "findMany" ||
+            operation === "count" ||
+            operation === "aggregate";
+            
+          if (isSoftDeleteOperation) {
+            // @ts-ignore
+            if (!args.where) {
+              // @ts-ignore
+              args.where = { deletedAt: null };
+            } else {
+              // @ts-ignore
+              if (args.where.deletedAt === undefined) {
+                // @ts-ignore
+                args.where.deletedAt = null;
+              }
+            }
+          }
+
           const maxRetries = 3;
           let attempt = 0;
           while (true) {
@@ -68,7 +97,6 @@ declare global {
 }
 
 const prisma = (globalThis.__prisma ?? createPrismaClient()) as ExtendedPrismaClient;
-globalThis.__prisma = prisma;
+if (process.env.NODE_ENV !== 'production') globalThis.__prisma = prisma;
 
 export default prisma;
-

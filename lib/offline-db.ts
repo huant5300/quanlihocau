@@ -1,61 +1,77 @@
-import Dexie, { type Table } from 'dexie';
-import { FishingPackage, Product, FishingArea } from '@prisma/client';
+import Dexie, { Table } from 'dexie';
 
 export interface OfflineSession {
-  id: string;
+  id: string; // UUID sinh từ client
   lakeId: string;
   areaId: string;
-  customerId?: string;
   customerName?: string;
-  phone?: string;
-  startTime: string;
-  endTime?: string;
+  customerId?: string;
+  customerPhone?: string;
   packageId?: string;
-  prepaidAmount: number;
-  products: any[];
-  status: 'PENDING_SYNC' | 'SYNCED' | 'FAILED';
-  createdAt: string;
+  startTime: string;
+  hourlyRate: number;
+  prepaidAmount?: number;
+  syncStatus: 'PENDING' | 'SYNCED' | 'ERROR';
+  updatedAt: string;
 }
 
-export class FishingLakeDB extends Dexie {
-  packages!: Table<FishingPackage, string>;
-  products!: Table<Product, string>;
-  areas!: Table<FishingArea, string>;
-  pendingSessions!: Table<OfflineSession, string>;
+export interface OfflineInvoiceItem {
+  id: string;
+  sessionId: string;
+  productId?: string;
+  description: string;
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+  syncStatus: 'PENDING' | 'SYNCED';
+  updatedAt: string;
+}
+
+export interface MasterPackage { id: string; name: string; price: number; durationHours: number; }
+export interface MasterProduct { id: string; name: string; price: number; }
+export interface MasterArea { id: string; name: string; status: string; }
+
+export class FishingLakeOfflineDB extends Dexie {
+  sessions!: Table<OfflineSession, string>;
+  invoiceItems!: Table<OfflineInvoiceItem, string>;
+  packages!: Table<MasterPackage, string>;
+  products!: Table<MasterProduct, string>;
+  areas!: Table<MasterArea, string>;
 
   constructor() {
-    super('FishingLakeDB');
-    
-    // Define tables and indexes
-    this.version(1).stores({
-      packages: 'id, lakeId',
-      products: 'id, lakeId, categoryId',
-      areas: 'id, lakeId, status',
-      pendingSessions: 'id, lakeId, status'
+    super('FishingLakeOfflineDB');
+    this.version(3).stores({
+      sessions: 'id, lakeId, syncStatus, updatedAt',
+      invoiceItems: 'id, sessionId, syncStatus, updatedAt',
+      packages: 'id',
+      products: 'id',
+      areas: 'id'
     });
   }
 }
 
-export const db = new FishingLakeDB();
+export const offlineDB = new FishingLakeOfflineDB();
 
-// Helper to sync master data to indexedDB for offline use
-export const syncMasterDataToOffline = async (
-  packages: FishingPackage[], 
-  products: Product[], 
-  areas: FishingArea[]
-) => {
+export async function syncMasterDataToOffline(packages: any[], products: any[], areas: any[]) {
   try {
-    await db.transaction('rw', db.packages, db.products, db.areas, async () => {
-      await db.packages.clear();
-      await db.products.clear();
-      await db.areas.clear();
+    await offlineDB.transaction('rw', offlineDB.packages, offlineDB.products, offlineDB.areas, async () => {
+      await offlineDB.packages.clear();
+      await offlineDB.packages.bulkAdd(packages.map(p => ({
+        id: p.id, name: p.name, price: Number(p.price), durationHours: Number(p.durationHours)
+      })));
 
-      if (packages.length) await db.packages.bulkAdd(packages);
-      if (products.length) await db.products.bulkAdd(products);
-      if (areas.length) await db.areas.bulkAdd(areas);
+      await offlineDB.products.clear();
+      await offlineDB.products.bulkAdd(products.map(p => ({
+        id: p.id, name: p.name, price: Number(p.price)
+      })));
+
+      await offlineDB.areas.clear();
+      await offlineDB.areas.bulkAdd(areas.map(a => ({
+        id: a.id, name: a.name, status: a.status
+      })));
     });
-    console.log('Master data synced to Dexie for offline use');
-  } catch (error) {
-    console.error('Failed to sync master data to offline DB:', error);
+    console.log("Master data synced to offline DB");
+  } catch (err) {
+    console.error("Failed to sync master data to Dexie:", err);
   }
-};
+}

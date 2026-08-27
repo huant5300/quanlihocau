@@ -58,8 +58,9 @@ export class ProductRepository {
   }
 
   static async delete(id: string) {
-    return prisma.product.delete({
-      where: { id }
+    return prisma.product.update({
+      where: { id },
+      data: { deletedAt: new Date() }
     });
   }
 

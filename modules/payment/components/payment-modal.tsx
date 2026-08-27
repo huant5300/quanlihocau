@@ -10,6 +10,7 @@ import { FinalCalculationCard } from "./final-calculation-card";
 import { BillData } from "../types/payment.types";
 import { cn } from "@/utils/utils";
 import { printerService } from "@/services/printer/printer-service";
+import { VietQRDisplay } from "./vietqr-display";
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -108,6 +109,20 @@ export function PaymentModal({ isOpen, onClose, billData }: PaymentModalProps) {
                   selected={form.watch("paymentMethod")}
                   onSelect={(method) => form.setValue("paymentMethod", method)}
                 />
+
+                {form.watch("paymentMethod") === "QR Payment" && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="overflow-hidden"
+                  >
+                    <VietQRDisplay 
+                      amount={billData.totalAmount}
+                      info={`TT O SO ${billData.hutNumber.replace(/[^a-zA-Z0-9]/g, "")}`}
+                    />
+                  </motion.div>
+                )}
 
                 <FinalCalculationCard 
                   subtotal={billData.subtotal}

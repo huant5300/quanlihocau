@@ -10,12 +10,15 @@ import { useRouter } from "next/navigation";
 import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { FishingPackage } from "@prisma/client";
 import { printerService } from "@/services/printer/printer-service";
+import { useUIStore } from "@/stores/ui-store";
+import { offlineDB, OfflineInvoiceItem } from "@/lib/offline-db";
 
 export function useOpenSession() {
   const [isLoading, setIsLoading] = useState(false);
   const [packages, setPackages] = useState<FishingPackage[]>([]);
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { isOffline, currentLakeId } = useUIStore();
 
   useEffect(() => {
     sessionService.getPackages().then(setPackages);
@@ -35,7 +38,6 @@ export function useOpenSession() {
     },
   });
 
-  // Tự động điền số tiền tạm thu bằng tổng cộng khi gói câu hoặc sản phẩm thay đổi
   const watchedPackageId = form.watch("package_id");
   const watchedProducts = form.watch("products");
 
@@ -53,13 +55,58 @@ export function useOpenSession() {
       if (!selectedPkg) throw new Error("Vui lòng chọn gói câu");
 
       const durationHours = Number(selectedPkg.durationHours) || 2;
+      const hourlyRate = Number(selectedPkg.price) / durationHours;
+
+      // XỬ LÝ OFFLINE (Dexie.js)
+      if (isOffline) {
+        const fakeId = `offline-${Date.now()}`;
+        await offlineDB.sessions.add({
+          id: fakeId,
+          lakeId: currentLakeId || "default",
+          areaId: data.hut_id,
+          customerId: data.customer_id || undefined,
+          customerName: data.customer_name || "Khách lẻ",
+          customerPhone: data.phone_number || undefined,
+          packageId: data.package_id,
+          startTime: new Date().toISOString(),
+          hourlyRate: hourlyRate,
+          prepaidAmount: data.prepaid_amount,
+          syncStatus: "PENDING",
+          updatedAt: new Date().toISOString(),
+        });
+
+        // Save products locally if any
+        if (data.products && data.products.length > 0) {
+          const offlineProducts: OfflineInvoiceItem[] = data.products.map(p => ({
+            id: `off-prod-${Date.now()}-${Math.random()}`,
+            sessionId: fakeId,
+            productId: p.id,
+            description: p.name || "Sản phẩm",
+            quantity: p.quantity,
+            unitPrice: p.price,
+            totalPrice: p.price * p.quantity,
+            syncStatus: "PENDING",
+            updatedAt: new Date().toISOString()
+          }));
+          await offlineDB.invoiceItems.bulkAdd(offlineProducts);
+        }
+
+        return {
+          id: fakeId,
+          area: { name: "Đang lưu Offline..." },
+          customer: { fullName: data.customer_name || "Khách lẻ" },
+          isOfflineSaved: true
+        };
+      }
+
+      // NẾU ONLINE -> Gọi API chuẩn
       return sessionService.createSession({
         areaId: data.hut_id,
         startTime: new Date().toISOString(),
         customerId: data.customer_id || undefined,
         customer_name: data.customer_name || "Khách lẻ",
         phone: data.phone_number || undefined,
-        hourlyRate: Number(selectedPkg.price) / durationHours,
+        hourlyRate: hourlyRate,
         packageId: data.package_id,
         prepaidAmount: data.prepaid_amount,
         products: data.products.map(p => ({
@@ -89,7 +136,7 @@ export function useOpenSession() {
         status: "ACTIVE",
         FishingPackage: selectedPkg,
         sessionAmount: newSessionData.prepaid_amount,
-        area: { id: newSessionData.hut_id, name: "Vị trí đang mở..." },
+        area: { id: newSessionData.hut_id, name: "Đang mở..." },
         invoices: [],
         fishCatches: []
       };
@@ -112,8 +159,12 @@ export function useOpenSession() {
       queryClient.setQueryData(["active-sessions"], context?.previousActive);
       toast.error(err.message || "Đã có lỗi xảy ra");
     },
-    onSuccess: (result, variables) => {
-      toast.success("Đã mở lượt câu mới thành công");
+    onSuccess: (result: any, variables) => {
+      if (result.isOfflineSaved) {
+        toast.warning("Đã mở lượt câu (Lưu Offline). Dữ liệu sẽ tự đồng bộ khi có mạng.");
+      } else {
+        toast.success("Đã mở lượt câu mới thành công");
+      }
       
       if (!result) return;
       if (variables.should_print) {

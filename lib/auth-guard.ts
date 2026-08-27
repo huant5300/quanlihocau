@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { UserRole } from "@prisma/client";
+import { UserRole, SubscriptionStatus } from "@prisma/client";
 import { NextResponse } from "next/server";
 
 export interface AuthenticatedUserContext {
@@ -14,8 +14,10 @@ export interface AuthenticatedUserContext {
  * Lấy và xác thực thông tin người dùng đang đăng nhập cùng lakeId tương ứng.
  * Nếu không hợp lệ, trả về Response lỗi 401 hoặc 403.
  */
-export async function getAuthLakeContext(): Promise<
-  { success: true; context: AuthenticatedUserContext } | { success: false; response: NextResponse }
+export async function getAuthLakeContext(
+  isWriteOperation: boolean = false
+): Promise<
+  { success: true; context: AuthenticatedUserContext; lake: any } | { success: false; response: NextResponse }
 > {
   const session = await auth();
 
@@ -54,10 +56,29 @@ export async function getAuthLakeContext(): Promise<
     return {
       success: false,
       response: NextResponse.json(
-        { error: "Tài khoản chưa được liên kết với hồ câu nào" },
+        { error: "ERR_MISSING_LAKE_CONTEXT: Tài khoản chưa được liên kết với hồ câu nào" },
         { status: 403 }
       ),
     };
+  }
+
+  let lake = null;
+  if (lakeId) {
+    lake = await prisma.fishingLake.findUnique({
+      where: { id: lakeId }
+    });
+
+    if (lake && isWriteOperation) {
+      if (lake.subscriptionStatus === SubscriptionStatus.EXPIRED || lake.subscriptionStatus === SubscriptionStatus.SUSPENDED) {
+        return {
+          success: false,
+          response: NextResponse.json(
+            { error: "ERR_SUBSCRIPTION_EXPIRED: Gói dịch vụ của bạn đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng tính năng này." },
+            { status: 403 }
+          ),
+        };
+      }
+    }
   }
 
   return {
@@ -68,5 +89,13 @@ export async function getAuthLakeContext(): Promise<
       role: role,
       email: session.user.email,
     },
+    lake,
   };
+}
+
+export async function checkRoleAccess(allowedRoles: UserRole[], userRole: UserRole) {
+  if (!allowedRoles.includes(userRole) && userRole !== UserRole.SUPER_ADMIN) {
+    return false;
+  }
+  return true;
 }

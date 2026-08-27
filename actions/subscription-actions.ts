@@ -8,6 +8,8 @@ import { recordActivityLog } from "@/lib/activity-log";
 import { PLAN_LIMITS, SubscriptionPlan, getLakeSubscription } from "@/utils/saas-helpers";
 import { UserRole } from "@prisma/client";
 
+export type SubscriptionStatus = "ACTIVE" | "GRACE_PERIOD" | "EXPIRED" | "SUSPENDED";
+
 /**
  * Lấy thông tin chi tiết về gói cước và thực tế sử dụng tài nguyên của hồ
  */
@@ -309,7 +311,7 @@ export async function updateLakeSubscriptionDirect(data: {
       where: { id: data.lakeId },
       data: {
         subscriptionPlan: data.plan,
-        subscriptionStatus: data.status,
+        subscriptionStatus: data.status as SubscriptionStatus,
         subscriptionExpiresAt: expiresAtDate,
       },
     });

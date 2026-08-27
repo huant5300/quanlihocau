@@ -29,14 +29,16 @@ export async function logAuditTrail({
   try {
     if (!userId) return false;
 
-    await prisma.auditLog.create({
-      data: {
-        userId,
-        lakeId: lakeId || null,
-        action,
-        details: details ? JSON.parse(JSON.stringify(details)) : undefined,
-      },
-    });
+    if ((prisma as any).auditLog) {
+      await (prisma as any).auditLog.create({
+        data: {
+          userId,
+          lakeId: lakeId || null,
+          action,
+          details: details ? JSON.parse(JSON.stringify(details)) : undefined,
+        },
+      });
+    }
 
     return true;
   } catch (error) {

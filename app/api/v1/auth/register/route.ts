@@ -2,8 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { UserRole, AreaStatus } from "@prisma/client";
+import { rateLimitMiddleware } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  // Rate limit: max 5 registration attempts per 15 minutes per IP
+  const rateLimitResponse = rateLimitMiddleware(req, { interval: 15 * 60 * 1000, max: 5 });
+  if (rateLimitResponse) return rateLimitResponse;
+
   try {
     const body = await req.json();
     const { 

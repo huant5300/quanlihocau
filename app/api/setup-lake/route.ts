@@ -1,18 +1,30 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { sanitizeString } from "@/lib/validations";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const session = await auth();
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, phone, address } = await req.json();
+    const body = await req.json();
+    const name = sanitizeString(body.name);
+    const phone = sanitizeString(body.phone);
+    const address = sanitizeString(body.address);
 
     if (!name || !phone || !address) {
-      return NextResponse.json({ error: "Vui lòng cung cấp đầy đủ thông tin" }, { status: 400 });
+      return NextResponse.json({ error: "Vui lòng cung cấp đầy đủ tên hồ, số điện thoại và địa chỉ" }, { status: 400 });
+    }
+
+    const vnPhoneRegex = /^(0[35789])[0-9]{8}$/;
+    if (!vnPhoneRegex.test(phone)) {
+      return NextResponse.json(
+        { error: "Số điện thoại không đúng định dạng Việt Nam gồm 10 chữ số (vd: 0912345678)" },
+        { status: 400 }
+      );
     }
 
     // Kiểm tra SĐT đã tồn tại chưa (1 Hồ = 1 SĐT Duy nhất)

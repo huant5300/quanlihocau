@@ -6,6 +6,8 @@ import { getActiveLakeId } from "@/lib/lake-context";
 import { checkResourceLimit } from "@/utils/saas-helpers";
 import prisma from "@/lib/prisma";
 import { auth } from "@/auth";
+import { requireAuth } from "@/lib/auth-guard";
+import { CustomerSchema } from "@/lib/validations";
 
 export async function createCustomerAction(data: {
   fullName: string;
@@ -14,21 +16,18 @@ export async function createCustomerAction(data: {
   notes?: string;
 }) {
   try {
-    const session = await auth();
-    if (!session?.user) {
-      return { success: false, error: "Unauthorized" };
+    const authResult = await requireAuth();
+    if (!authResult.success) {
+      return { success: false, error: authResult.error };
     }
 
-    const fullName = (data.fullName || "").trim();
-    if (!fullName) {
-      return { success: false, error: "Vui lòng nhập tên khách hàng" };
+    const parseResult = CustomerSchema.safeParse(data);
+    if (!parseResult.success) {
+      return { success: false, error: parseResult.error.issues[0]?.message || "Dữ liệu không hợp lệ" };
     }
 
-    let lakeId = (await getActiveLakeId()) || session.user.lakeId;
-    if (!lakeId) {
-      const firstLake = await prisma.fishingLake.findFirst();
-      lakeId = firstLake?.id || "";
-    }
+    const { fullName, phone, address, notes } = parseResult.data;
+    const { lakeId } = authResult.user;
 
     if (!lakeId) {
       return { success: false, error: "Không tìm thấy hồ câu đang hoạt động" };
@@ -39,8 +38,6 @@ export async function createCustomerAction(data: {
     if (!limitCheck.allowed) {
       return { success: false, error: limitCheck.message };
     }
-
-    const phone = (data.phone || "").trim();
 
     // Check if phone already exists in this lake
     if (phone) {

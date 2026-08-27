@@ -8,11 +8,91 @@ export interface AuthenticatedUserContext {
   lakeId: string;
   role: UserRole;
   email?: string | null;
+  name?: string | null;
 }
 
 /**
- * Lấy và xác thực thông tin người dùng đang đăng nhập cùng lakeId tương ứng.
- * Nếu không hợp lệ, trả về Response lỗi 401 hoặc 403.
+ * Server Action / API Guard: Yêu cầu đăng nhập và lấy context Multi-tenant
+ */
+export async function requireAuth(): Promise<
+  | { success: true; user: AuthenticatedUserContext }
+  | { success: false; error: string; statusCode: number }
+> {
+  const session = await auth();
+
+  if (!session?.user?.id) {
+    return { success: false, error: "Vui lòng đăng nhập để tiếp tục", statusCode: 401 };
+  }
+
+  const role = (session.user.role as UserRole) || UserRole.STAFF;
+  let lakeId = session.user.lakeId;
+
+  if (!lakeId) {
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { lakeId: true, role: true },
+    });
+
+    if (user?.lakeId) {
+      lakeId = user.lakeId;
+    } else if (role === UserRole.OWNER || role === UserRole.MANAGER) {
+      const managedLake = await prisma.fishingLake.findFirst({
+        where: { managerId: session.user.id },
+        select: { id: true },
+      });
+      if (managedLake) {
+        lakeId = managedLake.id;
+      }
+    }
+  }
+
+  if (!lakeId && role !== UserRole.SUPER_ADMIN) {
+    const firstLake = await prisma.fishingLake.findFirst({ select: { id: true } });
+    lakeId = firstLake?.id || "";
+  }
+
+  return {
+    success: true,
+    user: {
+      userId: session.user.id,
+      lakeId: lakeId || "",
+      role,
+      email: session.user.email,
+      name: session.user.name,
+    },
+  };
+}
+
+/**
+ * Server Action / API Guard: Yêu cầu quyền hạn (RBAC) cụ thể (vd: OWNER, SUPER_ADMIN)
+ */
+export async function requireRole(allowedRoles: UserRole[]): Promise<
+  | { success: true; user: AuthenticatedUserContext }
+  | { success: false; error: string; statusCode: number }
+> {
+  const authResult = await requireAuth();
+  if (!authResult.success) {
+    return authResult;
+  }
+
+  const { role } = authResult.user;
+  if (role === UserRole.SUPER_ADMIN) {
+    return authResult;
+  }
+
+  if (!allowedRoles.includes(role)) {
+    return {
+      success: false,
+      error: "Bạn không có quyền hạn thực hiện thao tác quản trị này.",
+      statusCode: 403,
+    };
+  }
+
+  return authResult;
+}
+
+/**
+ * Lấy và xác thực thông tin người dùng đang đăng nhập cùng lakeId tương ứng cho Route Handlers.
  */
 export async function getAuthLakeContext(
   isWriteOperation: boolean = false
@@ -24,14 +104,13 @@ export async function getAuthLakeContext(
   if (!session?.user?.id) {
     return {
       success: false,
-      response: NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 }),
+      response: NextResponse.json({ success: false, error: "Chưa đăng nhập" }, { status: 401 }),
     };
   }
 
   const role = (session.user.role as UserRole) || UserRole.STAFF;
   let lakeId = session.user.lakeId;
 
-  // Nếu trong session chưa có lakeId, tìm từ database
   if (!lakeId) {
     const user = await prisma.user.findUnique({
       where: { id: session.user.id },
@@ -40,7 +119,7 @@ export async function getAuthLakeContext(
 
     if (user?.lakeId) {
       lakeId = user.lakeId;
-    } else if (role === UserRole.OWNER) {
+    } else if (role === UserRole.OWNER || role === UserRole.MANAGER) {
       const managedLake = await prisma.fishingLake.findFirst({
         where: { managerId: session.user.id },
         select: { id: true },
@@ -51,29 +130,30 @@ export async function getAuthLakeContext(
     }
   }
 
-  // Super Admin có thể thao tác mà không bị giới hạn 1 hồ cố định nếu có header riêng
   if (!lakeId && role !== UserRole.SUPER_ADMIN) {
-    return {
-      success: false,
-      response: NextResponse.json(
-        { error: "ERR_MISSING_LAKE_CONTEXT: Tài khoản chưa được liên kết với hồ câu nào" },
-        { status: 403 }
-      ),
-    };
+    const firstLake = await prisma.fishingLake.findFirst({ select: { id: true } });
+    lakeId = firstLake?.id || "";
   }
 
   let lake = null;
   if (lakeId) {
     lake = await prisma.fishingLake.findUnique({
-      where: { id: lakeId }
+      where: { id: lakeId },
     });
 
     if (lake && isWriteOperation) {
-      if (lake.subscriptionStatus === SubscriptionStatus.EXPIRED || lake.subscriptionStatus === SubscriptionStatus.SUSPENDED) {
+      if (
+        lake.subscriptionStatus === SubscriptionStatus.EXPIRED ||
+        lake.subscriptionStatus === SubscriptionStatus.SUSPENDED
+      ) {
         return {
           success: false,
           response: NextResponse.json(
-            { error: "ERR_SUBSCRIPTION_EXPIRED: Gói dịch vụ của bạn đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng tính năng này." },
+            {
+              success: false,
+              error:
+                "ERR_SUBSCRIPTION_EXPIRED: Gói dịch vụ của bạn đã hết hạn. Vui lòng gia hạn để tiếp tục sử dụng tính năng này.",
+            },
             { status: 403 }
           ),
         };
@@ -93,7 +173,7 @@ export async function getAuthLakeContext(
   };
 }
 
-export async function checkRoleAccess(allowedRoles: UserRole[], userRole: UserRole) {
+export async function checkRoleAccess(allowedRoles: UserRole[], userRole: UserRole): Promise<boolean> {
   if (!allowedRoles.includes(userRole) && userRole !== UserRole.SUPER_ADMIN) {
     return false;
   }

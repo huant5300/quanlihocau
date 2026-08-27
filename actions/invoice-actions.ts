@@ -6,6 +6,7 @@ import { getActiveLakeId } from "@/lib/lake-context";
 import { revalidatePath } from "next/cache";
 import { recordActivityLog } from "@/lib/activity-log";
 import { InvoiceStatus, PaymentMethod, UserRole } from "@prisma/client";
+import { requireAuth } from "@/lib/auth-guard";
 
 /**
  * Lấy danh sách hóa đơn kèm bộ lọc
@@ -186,16 +187,22 @@ export async function payInvoiceDebtAction(data: {
   paymentMethod: PaymentMethod;
   note?: string;
 }) {
-  const session = await auth();
-  if (!session) return { success: false, error: "Unauthorized" };
-
   try {
+    const authResult = await requireAuth();
+    if (!authResult.success) return { success: false, error: authResult.error };
+
     const invoice = await prisma.invoice.findUnique({
       where: { id: data.invoiceId },
       include: { payments: true, customer: true },
     });
 
     if (!invoice) return { success: false, error: "Không tìm thấy hóa đơn" };
+
+    // Strict Multi-tenant ownership check to prevent IDOR
+    if (invoice.lakeId && invoice.lakeId !== authResult.user.lakeId && authResult.user.role !== UserRole.SUPER_ADMIN) {
+      return { success: false, error: "Bạn không có quyền thao tác hóa đơn của hồ câu khác" };
+    }
+
     if (invoice.status === "PAID") return { success: false, error: "Hóa đơn này đã được thanh toán đầy đủ" };
 
     const totalPaidBefore = invoice.payments.reduce((sum, p) => sum + Number(p.amount), 0);
@@ -256,7 +263,7 @@ export async function payInvoiceDebtAction(data: {
       // 5. Ghi log hoạt động
       await tx.activityLog.create({
         data: {
-          userId: session.user.id,
+          userId: authResult.user.userId,
           lakeId: invoice.lakeId,
           action: "PAYMENT",
           details: {

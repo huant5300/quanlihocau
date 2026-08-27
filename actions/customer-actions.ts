@@ -45,7 +45,6 @@ export async function createCustomerAction(data: {
         where: {
           lakeId,
           phone,
-          deletedAt: null,
         },
       });
 
@@ -75,7 +74,7 @@ export async function createCustomerAction(data: {
     const customer = await prisma.customer.create({
       data: {
         fullName,
-        phone: phone || undefined,
+        phone: phone || "",
         address: data.address || undefined,
         notes: data.notes || undefined,
         lakeId,
@@ -135,7 +134,6 @@ export async function getCustomersAction() {
     const customers = await prisma.customer.findMany({
       where: {
         lakeId,
-        deletedAt: null,
       },
       orderBy: { createdAt: "desc" },
     });
